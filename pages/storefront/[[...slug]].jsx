@@ -96,8 +96,8 @@ export default function StorefrontDynamic({ store, slug }) {
     };
   }, [router.events]);
 
-  // if (!store) return <Global404 />;
-    console.log(slug)
+  if (!store) return <Global404 />;
+    console.log(slug, store)
       if (slug[0]===`storefront` && pathname.startsWith("/payment-success")) {
  return <PaymentSuccess />; 
 }
