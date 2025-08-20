@@ -57,8 +57,6 @@
 //   };
 // }
 
-import Global404 from "../../components/global404";
-import StoreFront404 from "../../storefrontComponents/storeFront404";
 import CartPage from "../../storefrontComponents/cart";
 import Storefront from "../../storefrontComponents/store";
 import { useRouter } from "next/router";
@@ -68,6 +66,8 @@ import PaymentPage from "../../storefrontComponents/paymentPage";
 import ShippingPage from "../../storefrontComponents/shipping";
 import ProductPage from "../../storefrontComponents/productPage";
 import PaymentSuccess from "../../storefrontComponents/success";
+import Global404 from "../../components/errors/global404";
+import StoreFront404 from "../../components/errors/storefront404";
 
 export default function StorefrontDynamic({ store, slug }) {
  
