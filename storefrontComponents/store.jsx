@@ -37,7 +37,7 @@ export default function Storefront({ store, products }) {
                   unoptimized
                 />
                 <motion.div
-                  className="absolute inset-0 bg-black bg-opacity-80 flex flex-col items-center justify-center text-white"
+                  className="absolute inset-0 bg-black bg-opacity-60 flex flex-col items-center justify-center text-white"
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   transition={{ delay: 0.4, duration: 0.5 }}
