@@ -80,7 +80,7 @@ export function middleware(req) {
   const hostname = req.headers.get("host") || "";
   const cleanHost = hostname.split(":")[0];
 
-  const rootDomain = "darlix.com";
+  const rootDomain = "darllix.shop";
   const isLocalhostRoot = cleanHost === "localhost" || cleanHost === "127.0.0.1";
   const isLocalhostSub = cleanHost.endsWith(".localhost") || cleanHost.endsWith(".127.0.0.1");
 
@@ -109,7 +109,6 @@ export function middleware(req) {
   return NextResponse.next();
 }
 
-// ⬇️ This is the important part
 export const config = {
   matcher: [
     /*
