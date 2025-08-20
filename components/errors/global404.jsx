@@ -19,7 +19,7 @@ export default function Global404() {
           This page could not be found.
         </p>
         <Button asChild className="h-11 px-6 text-base">
-          <Link href="/">
+          <Link href="https://darllix.shop">
             <Home className="mr-2 h-5 w-5" /> Back to Homepage
           </Link>
         </Button>

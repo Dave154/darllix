@@ -3,8 +3,8 @@
 // shadcn/ui assumed installed with Button, Input, Label, Separator, Checkbox, DropdownMenu components
 // Tailwind CSS already set up
 
-import React, { useMemo, useState } from "react";
-import { motion } from "framer-motion";
+import React, { useEffect, useMemo, useState } from "react";
+import { AnimatePresence, motion } from "framer-motion";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -24,6 +24,7 @@ import {
   DropdownMenuItem,
 } from "@/components/ui/dropdown-menu";
 import { Globe, ChevronDown, Eye, EyeOff, ShieldCheck, Mail, Lock, Apple, Chrome } from "lucide-react";
+import Image from "next/image";
 
 // Create Supabase client (client-side)
 const supabase = createClient(
@@ -64,8 +65,19 @@ export default function DarllixAuth() {
 
   const strength = useMemo(() => (password ? zxcvbn(password).score : 0), [password]);
   const strengthText = ["very weak", "weak", "fair", "good", "strong"][strength];
+const images = ["/vendor1.jpg", "/vendor6.jpg", "/vendor6.jpg"]; 
+ const [index, setIndex] = useState(0);
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setIndex((prev) => (prev + 1) % images.length);
+    }, 8000);
+    return () => clearInterval(interval);
+  }, []);
 
+
+ 
   async function onSubmit(values) {
+
     try {
       const { data, error } = await supabase.auth.signUp({
         email: values.email,
@@ -254,21 +266,35 @@ export default function DarllixAuth() {
         </div>
 
         {/* Right panel – promo visual */}
-        <div className="relative hidden md:block">
-          <img
-            src="/placeholder.jpg"
-            alt="Promo"
-            className="absolute inset-0 h-full w-full object-cover"
+        <div className="relative hidden md:block overflow-hidden">
+        <AnimatePresence mode="wait">
+        <motion.div
+          key={index}
+          initial={{ opacity: 0, x: 50 }}
+          animate={{ opacity: 1, x: 0 }}
+          exit={{ opacity: 0, x: -50 }}
+          transition={{ duration: 0.8, ease: "easeInOut" }}
+          className="absolute inset-0 flex items-center justify-center"
+        >
+          <Image
+            src={images[index]}
+            alt={`Promo ${index}`}
+            width={1200}
+            height={1200}
+            className="h-full w-full object-contain"
+            unoptimized
           />
-          <div className="absolute inset-0 bg-gradient-to-br from-color3 via-color1 to-color4" />
-          <div className="relative z-10 flex h-full flex-col justify-end p-10">
+        </motion.div>
+      </AnimatePresence>
+          <div className="absolute opacity-30 inset-0 bg-gradient-to-br from-color3 via-color1 to-color4 z-20 " />
+           <div className="relative z-10 flex h-full flex-col justify-end p-10">
             <blockquote className="max-w-md text-white">
               <p className="text-base opacity-90">
                "Lorem19 ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat."
               </p>
               <footer className="mt-3 text-sm opacity-70"> Daniel Oseni, Founder .....</footer>
             </blockquote>
-          </div>
+          </div> 
         </div>
       </motion.div>
     </div>

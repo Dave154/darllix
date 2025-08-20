@@ -16,10 +16,10 @@ module.exports = {
   		colors: {
   			background: 'var(--background)',
   			foreground: 'hsl(var(--foreground))',
-			color1: 'var(--color1)',
-			color2: 'var(--color2)',
-			color3: 'var(--color3)',
-			color4: 'var(--color4)',
+  			color1: 'var(--color1)',
+  			color2: 'var(--color2)',
+  			color3: 'var(--color3)',
+  			color4: 'var(--color4)',
   			card: {
   				DEFAULT: 'hsl(var(--card))',
   				foreground: 'hsl(var(--card-foreground))'
@@ -57,6 +57,16 @@ module.exports = {
   				'3': 'hsl(var(--chart-3))',
   				'4': 'hsl(var(--chart-4))',
   				'5': 'hsl(var(--chart-5))'
+  			},
+  			sidebar: {
+  				DEFAULT: 'hsl(var(--sidebar-background))',
+  				foreground: 'hsl(var(--sidebar-foreground))',
+  				primary: 'hsl(var(--sidebar-primary))',
+  				'primary-foreground': 'hsl(var(--sidebar-primary-foreground))',
+  				accent: 'hsl(var(--sidebar-accent))',
+  				'accent-foreground': 'hsl(var(--sidebar-accent-foreground))',
+  				border: 'hsl(var(--sidebar-border))',
+  				ring: 'hsl(var(--sidebar-ring))'
   			}
   		}
   	}
