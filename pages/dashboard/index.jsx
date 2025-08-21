@@ -6,6 +6,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ChevronDown, ChevronUp, CheckCircle2 } from "lucide-react";
+import TrialBanner from "../../components/dashboardComponents/trialBanner";
 
 export default function DashboardPage(){
   const [hasStore, setHasStore] = useState(true); 
@@ -33,19 +34,8 @@ export default function DashboardPage(){
 
   return (
     <DashboardLayout>
-      <div className="space-y-6 p-6">
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="bg-black text-white p-4 rounded-md flex justify-between items-center"
-        >
-          <span>
-            Extend your trial for ₦3000/month for 3 months on select plans.
-          </span>
-          <Button className="bg-white text-black hover:bg-gray-200">
-            Select a plan
-          </Button>
-        </motion.div>
+      <div className="space-y-6 p-1 md:p-6">
+        <TrialBanner />
         {hasStore && (
           <>
             {/* Stat Cards */}
