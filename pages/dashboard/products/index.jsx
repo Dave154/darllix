@@ -27,6 +27,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import TrialBanner from "../../../components/dashboardComponents/trialBanner";
 
 
 
@@ -37,47 +38,46 @@ export default function ProductsPage() {
   const [tab, setTab] = useState("All");
 
   const [products, setProducts] = useState([
-    // Clear this array to preview the empty-table state
-    // {
-    //   id: "p1",
-    //   name: "(Sample) Coconut Bar Soap",
-    //   status: "Active",
-    //   inventory: "0 in stock",
-    //   salesChannels: 1,
-    //   markets: 2,
-    //   category: "—",
-    //   vendor: "MyStore",
-    // },
-    // {
-    //   id: "p2",
-    //   name: "Copy of Custom Notebook",
-    //   status: "Draft",
-    //   inventory: "0 in stock for 24 variants",
-    //   salesChannels: 3,
-    //   markets: 2,
-    //   category: "Notebooks & Notepads",
-    //   vendor: "My Store",
-    // },
-    // {
-    //   id: "p3",
-    //   name: "Custom Handmade Mug",
-    //   status: "Active",
-    //   inventory: "Inventory not tracked",
-    //   salesChannels: 3,
-    //   markets: 2,
-    //   category: "Mug",
-    //   vendor: "JS Mob",
-    // },
-    // {
-    //   id: "p4",
-    //   name: "Custom Notebook",
-    //   status: "Active",
-    //   inventory: "5 in stock for 24 variants",
-    //   salesChannels: 3,
-    //   markets: 2,
-    //   category: "Notebooks & Notepads",
-    //   vendor: "My Store",
-    // },
+    {
+      id: "p1",
+      name: "(Sample) Coconut Bar Soap",
+      status: "Active",
+      inventory: "0 in stock",
+      salesChannels: 1,
+      markets: 2,
+      category: "—",
+      vendor: "MyStore",
+    },
+    {
+      id: "p2",
+      name: "Copy of Custom Notebook",
+      status: "Draft",
+      inventory: "0 in stock for 24 variants",
+      salesChannels: 3,
+      markets: 2,
+      category: "Notebooks & Notepads",
+      vendor: "My Store",
+    },
+    {
+      id: "p3",
+      name: "Custom Handmade Mug",
+      status: "Active",
+      inventory: "Inventory not tracked",
+      salesChannels: 3,
+      markets: 2,
+      category: "Mug",
+      vendor: "JS Mob",
+    },
+    {
+      id: "p4",
+      name: "Custom Notebook",
+      status: "Active",
+      inventory: "5 in stock for 24 variants",
+      salesChannels: 3,
+      markets: 2,
+      category: "Notebooks & Notepads",
+      vendor: "My Store",
+    },
   ]);
 
   // ----------- Derived list -----------
@@ -131,6 +131,7 @@ export default function ProductsPage() {
         animate={{ opacity: 1, y: 0 }}
         className="p-1 md:p-6 space-y-6"
       >
+        <TrialBanner />
         {/* Header row + actions */}
         <div className="flex items-center justify-between">
           <h1 className="text-xl md:text-2xl font-semibold">Products</h1>
