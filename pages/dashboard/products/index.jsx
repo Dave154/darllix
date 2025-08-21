@@ -32,52 +32,52 @@ import {
 
 export default function ProductsPage() {
   // ----------- Demo state & switches -----------
-  const [hasStore, setHasStore] = useState(true);
+  const [hasStore, setHasStore] = useState(false);
   const [query, setQuery] = useState("");
   const [tab, setTab] = useState("All");
 
   const [products, setProducts] = useState([
     // Clear this array to preview the empty-table state
-    {
-      id: "p1",
-      name: "(Sample) Coconut Bar Soap",
-      status: "Active",
-      inventory: "0 in stock",
-      salesChannels: 1,
-      markets: 2,
-      category: "—",
-      vendor: "MyStore",
-    },
-    {
-      id: "p2",
-      name: "Copy of Custom Notebook",
-      status: "Draft",
-      inventory: "0 in stock for 24 variants",
-      salesChannels: 3,
-      markets: 2,
-      category: "Notebooks & Notepads",
-      vendor: "My Store",
-    },
-    {
-      id: "p3",
-      name: "Custom Handmade Mug",
-      status: "Active",
-      inventory: "Inventory not tracked",
-      salesChannels: 3,
-      markets: 2,
-      category: "Mug",
-      vendor: "JS Mob",
-    },
-    {
-      id: "p4",
-      name: "Custom Notebook",
-      status: "Active",
-      inventory: "5 in stock for 24 variants",
-      salesChannels: 3,
-      markets: 2,
-      category: "Notebooks & Notepads",
-      vendor: "My Store",
-    },
+    // {
+    //   id: "p1",
+    //   name: "(Sample) Coconut Bar Soap",
+    //   status: "Active",
+    //   inventory: "0 in stock",
+    //   salesChannels: 1,
+    //   markets: 2,
+    //   category: "—",
+    //   vendor: "MyStore",
+    // },
+    // {
+    //   id: "p2",
+    //   name: "Copy of Custom Notebook",
+    //   status: "Draft",
+    //   inventory: "0 in stock for 24 variants",
+    //   salesChannels: 3,
+    //   markets: 2,
+    //   category: "Notebooks & Notepads",
+    //   vendor: "My Store",
+    // },
+    // {
+    //   id: "p3",
+    //   name: "Custom Handmade Mug",
+    //   status: "Active",
+    //   inventory: "Inventory not tracked",
+    //   salesChannels: 3,
+    //   markets: 2,
+    //   category: "Mug",
+    //   vendor: "JS Mob",
+    // },
+    // {
+    //   id: "p4",
+    //   name: "Custom Notebook",
+    //   status: "Active",
+    //   inventory: "5 in stock for 24 variants",
+    //   salesChannels: 3,
+    //   markets: 2,
+    //   category: "Notebooks & Notepads",
+    //   vendor: "My Store",
+    // },
   ]);
 
   // ----------- Derived list -----------
@@ -107,10 +107,8 @@ export default function ProductsPage() {
       <p className="text-sm text-muted-foreground mt-1 mb-5">
         Create your store to start adding products and managing inventory.
       </p>
-      <Button className="">Create Store</Button>
-      <div className="mt-6 text-xs text-muted-foreground">
-        (Toggle <code>hasStore</code> to preview other states)
-      </div>
+      <Button onClick={()=> setHasStore(true) } className="">Create Store</Button>
+      
     </div>
   );
 
@@ -272,7 +270,7 @@ export default function ProductsPage() {
         </Card>
 
         {/* Dev toggles for quick preview (remove in prod) */}
-        <Card className="bg-muted/30">
+        {/* <Card className="bg-muted/30">
           <CardHeader>
             <CardTitle className="text-sm">Preview toggles</CardTitle>
           </CardHeader>
@@ -288,7 +286,7 @@ export default function ProductsPage() {
             </Button>
             <Button variant="outline" onClick={() => setTab("All")}>Reset filters</Button>
           </CardContent>
-        </Card>
+        </Card> */}
       </motion.div>
     </DashboardLayout>
   );
