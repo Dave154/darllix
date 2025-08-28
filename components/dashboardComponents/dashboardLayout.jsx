@@ -15,12 +15,25 @@ import {
   Menu,
   X,
 } from "lucide-react";
+import { FaTruck } from "react-icons/fa";
+import { BsCreditCard2FrontFill} from "react-icons/bs";
+import { PiPiggyBankThin } from "react-icons/pi";
+import { RxLightningBolt } from "react-icons/rx";
+import { useRouter } from "next/router";
 
 const menuItems = [
   { title: "Dashboard", icon: Home, href: "/dashboard" },
   { title: "Products", icon: ShoppingBag, href: "/dashboard/products" },
   { title: "Customers", icon: Users, href: "/dashboard/customers" },
   { title: "Orders", icon: Package, href: "/dashboard/orders" },
+  { title: "Finance", icon: BsCreditCard2FrontFill, href: "/dashboard/darllix-capital" },
+  { title: "Fufilment", icon: FaTruck , href: "/dashboard/fufilment" },
+  { title: "Sell & Save", icon: PiPiggyBankThin, href: "/dashboard/sellandsave" },
+
+
+
+
+
 ];
 
 const storeSubItems = [
@@ -29,6 +42,7 @@ const storeSubItems = [
   { title: "Marketing", href: "/dashboard/store/marketing" },
   { title: "Settings", href: "/dashboard/store/settings" },
 ];
+
 
 export default function DashboardLayout({ children }) {
   const [openStore, setOpenStore] = React.useState(false);
@@ -174,20 +188,24 @@ export default function DashboardLayout({ children }) {
 
 /* Sidebar Content */
 function SidebarContent({ openStore, setOpenStore, setMobileOpen }) {
+  const router = useRouter();
+console.log(router.pathname);
   return (
-    <nav className="flex-1 px-2 py-4 space-y-1">
+    <nav className="flex-1 flex flex-col px-2 py-4 space-y-1">
+      <div className="flex-1">
+
       {menuItems.map((item, i) => (
         <motion.div
-          key={i}
-          whileHover={{ x: 5 }}
-          className="flex items-center gap-3 px-3 py-2 rounded-md cursor-pointer hover:bg-gray-300"
+        key={i}
+        whileHover={{ x: 5 }}
+        className={`flex  items-center gap-3 px-3 py-2 rounded-md cursor-pointer ${router.pathname === item.href && "bg-gray-200 "} hover:bg-gray-300`}
         >
           <item.icon className="h-5 w-5 text-gray-500" />
           <Link
             href={item.href}
             onClick={() => setMobileOpen(false)}
             className="flex-1"
-          >
+            >
             {item.title}
           </Link>
         </motion.div>
@@ -197,8 +215,8 @@ function SidebarContent({ openStore, setOpenStore, setMobileOpen }) {
       <div>
         <button
           onClick={() => setOpenStore(!openStore)}
-          className="flex w-full items-center justify-between px-3 py-2 rounded-md hover:bg-gray-300"
-        >
+          className="flex w-full flex-1 items-center justify-between px-3 py-2 rounded-md hover:bg-gray-300"
+          >
           <div className="flex items-center gap-3">
             <Store className="h-5 w-5 text-gray-500" />
             <span>My Store</span>
@@ -207,23 +225,23 @@ function SidebarContent({ openStore, setOpenStore, setMobileOpen }) {
             className={`h-4 w-4 transition-transform ${
               openStore ? "rotate-180" : ""
             }`}
-          />
+            />
         </button>
 
         <AnimatePresence>
           {openStore && (
             <motion.div
-              initial={{ height: 0, opacity: 0 }}
-              animate={{ height: "auto", opacity: 1 }}
-              exit={{ height: 0, opacity: 0 }}
-              className="pl-10 flex flex-col space-y-1"
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            className="pl-10 flex flex-col space-y-1"
             >
               {storeSubItems.map((sub, i) => (
                 <Link
-                  key={i}
-                  href={sub.href}
-                  onClick={() => setMobileOpen(false)}
-                  className="block py-1 text-sm text-gray-400 hover:text-color3 transition-all"
+                key={i}
+                href={sub.href}
+                onClick={() => setMobileOpen(false)}
+                className="block py-1 text-sm text-gray-400 hover:text-color3 transition-all"
                 >
                   {sub.title}
                 </Link>
@@ -232,11 +250,23 @@ function SidebarContent({ openStore, setOpenStore, setMobileOpen }) {
           )}
         </AnimatePresence>
       </div>
+          </div>
 
       {/* Divider */}
       <div className="border-t border-gray-300 my-3"></div>
 
       {/* Help */}
+
+          <motion.div
+        whileHover={{ x: 5 }}
+        className="flex items-center gap-3 px-3 py-2 rounded-md cursor-pointer bg-blue-300/50 backdrop-blur text-white shadow-md shadow-blue-200  rounded-xl hover:bg-gray-300"
+      >
+        <RxLightningBolt className="h-5 w-5 text-blue-300" />
+        <Link href="/dashboard/upgrade" onClick={() => setMobileOpen(false)}>
+          Upgrade your plan
+        </Link>
+      </motion.div>
+
       <motion.div
         whileHover={{ x: 5 }}
         className="flex items-center gap-3 px-3 py-2 rounded-md cursor-pointer hover:bg-gray-300"

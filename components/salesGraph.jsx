@@ -57,19 +57,19 @@ export default function SalesDashboard() {
         <div className="bg-gray-100 p-3 rounded-md"> 
           <p className="text-gray-500 text-xs">Total sales</p>
           <p className="text-xl font-semibold flex justify-center items-center gap-1">
-            ₦2,156
+            ₦0.00
           </p>
         </div>
         <div>
           <p className="text-gray-500 text-xs">Orders</p>
           <p className="text-xl font-semibold flex justify-center items-center gap-1">
-            <ShoppingBag className="w-4 h-4 text-blue-600" /> 40
+            <ShoppingBag className="w-4 h-4 text-blue-600" /> 0
           </p>
         </div>
         <div>
-          <p className="text-gray-500 text-xs">Conversion</p>
+          <p className="text-gray-500 text-xs">........</p>
           <p className="text-xl font-semibold flex justify-center items-center gap-1">
-            16.13%
+            0
           </p>
         </div>
       </div>
