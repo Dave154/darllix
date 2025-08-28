@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ChevronDown, ChevronUp, CheckCircle2 } from "lucide-react";
 import TrialBanner from "../../components/dashboardComponents/trialBanner";
+import SalesGraph from "../../components/salesGraph";
 
 export default function DashboardPage(){
   const [hasStore, setHasStore] = useState(true); 
@@ -34,42 +35,30 @@ export default function DashboardPage(){
 
   return (
     <DashboardLayout>
-      <div className="space-y-6 p-1 md:p-6">
+      <div className="space-y-6">
         <TrialBanner />
+        {
+         !hasStore && (
+          <Card className="bg-yellow-50 border-yellow-200">
+            <CardContent className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+              <div>
+                <h2 className="text-lg font-semibold">Welcome to Darllix!</h2>
+                <p className="text-sm text-gray-700">
+                  You don't have a store yet. Create your store to start selling products and managing your business.
+                </p>
+              </div>
+              <Button onClick={() => setHasStore(true)}>Create Store</Button>
+            </CardContent>
+          </Card>
+         )
+        }
         {hasStore && (
           <>
-            {/* Stat Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-              <Card className="bg-blue-600 text-white">
-                <CardHeader><CardTitle>Total Sales</CardTitle></CardHeader>
-                <CardContent>
-                  <p className="text-3xl font-bold">₦0.00</p>
-                  <p className="text-sm opacity-80">+0% this week</p>
-                </CardContent>
-              </Card>
-              <Card className="bg-indigo-600 text-white">
-                <CardHeader><CardTitle>Total Settled</CardTitle></CardHeader>
-                <CardContent>
-                  <p className="text-3xl font-bold">₦0.00</p>
-                  <p className="text-sm opacity-80">0% change</p>
-                </CardContent>
-              </Card>
-              <Card className="bg-purple-600 text-white">
-                <CardHeader><CardTitle>Total Orders</CardTitle></CardHeader>
-                <CardContent>
-                  <p className="text-3xl font-bold">0</p>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardHeader><CardTitle>Total Products</CardTitle></CardHeader>
-                <CardContent>
-                  <p className="text-3xl font-bold">0</p>
-                </CardContent>
-              </Card>
-            </div>
+       
 
             {/* Charts Section */}
-            {/* <DashboardCharts /> */}
+
+            <SalesGraph />
           </>
         )}
 

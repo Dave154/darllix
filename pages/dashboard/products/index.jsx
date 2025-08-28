@@ -129,7 +129,7 @@ export default function ProductsPage() {
       <motion.div
         initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
-        className="p-1 md:p-6 space-y-6"
+        className=" space-y-6"
       >
         <TrialBanner />
         {/* Header row + actions */}
