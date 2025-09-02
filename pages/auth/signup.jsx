@@ -255,7 +255,7 @@ const images = ["/vendor1.jpg", "/vendor6.jpg", "/vendor6.jpg"];
             </div>
 
             <p className="text-sm text-slate-500">
-              Already have a Darllix account? <a href="/login" className="underline">Log in</a>
+              Already have a Darllix account? <a href="/auth/login" className="underline">Log in</a>
             </p>
 
             <p className="text-xs text-slate-400">

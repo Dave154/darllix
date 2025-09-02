@@ -1,5 +1,5 @@
 "use client";
-
+import { createServerSupabaseClient } from "@/lib/supabaseClient";
 import DashboardLayout from "../../components/dashboardComponents/dashboardLayout";
 import { motion } from "framer-motion";
 import { useState } from "react";
@@ -8,6 +8,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ChevronDown, ChevronUp, CheckCircle2 } from "lucide-react";
 import TrialBanner from "../../components/dashboardComponents/trialBanner";
 import SalesGraph from "../../components/salesGraph";
+import { withAuth } from "../../lib/withAuth";
+
 
 export default function DashboardPage(){
   const [hasStore, setHasStore] = useState(true); 
@@ -143,3 +145,5 @@ export default function DashboardPage(){
     </DashboardLayout>
   );
 }
+
+export const getServerSideProps = withAuth();

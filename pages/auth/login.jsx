@@ -1,13 +1,14 @@
-// Packages assumed installed (same as signup)
-
+import { supabaseServer } from "@/lib/supabaseClient";
 import React, { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { createClient } from "@supabase/supabase-js";
 
-// shadcn/ui components
+
+
+
+// shadcn/ui
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -29,12 +30,25 @@ import {
   Chrome,
 } from "lucide-react";
 import Image from "next/image";
+import { useRouter } from "next/router";
 
-// Supabase client
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-);
+import { useSupabaseClient } from "@supabase/auth-helpers-react";
+import { supabaseBrowser, getSupabaseServer } from "@/lib/supabaseClient";
+
+
+export async function getServerSideProps(ctx) {
+  const supabase = getSupabaseServer(ctx);
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
+
+  if (session) {
+    return {
+      redirect: { destination: "/dashboard", permanent: false },
+    };
+  }
+  return { props: {} };
+}
 
 // Validation schema
 const schema = z.object({
@@ -42,10 +56,17 @@ const schema = z.object({
     .string()
     .min(1, "Email is required")
     .email("Enter a valid email address"),
-  password: z.string().min(1, "Password is required"),
-});
-
+    password: z.string().min(1, "Password is required"),
+  });
+  
+  
+  
+  
+ 
 export default function DarllixLogin() {
+    const supabase = useSupabaseClient();
+
+  const router = useRouter();
   const {
     register,
     handleSubmit,
@@ -56,29 +77,44 @@ export default function DarllixLogin() {
   const [country, setCountry] = useState("Nigeria");
   const [showPass, setShowPass] = useState(false);
 
-  const images = ["/vendor1.jpg", "/vendor6.jpg", "/vendor6.jpg"]; 
-   const [index, setIndex] = useState(0);
-    useEffect(() => {
-      const interval = setInterval(() => {
-        setIndex((prev) => (prev + 1) % images.length);
-      }, 8000);
-      return () => clearInterval(interval);
-    }, []);
+  // Slideshow images
+  const images = ["/vendor1.jpg", "/vendor6.jpg", "/vendor6.jpg"];
+  const [index, setIndex] = useState(0);
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setIndex((prev) => (prev + 1) % images.length);
+    }, 8000);
+    return () => clearInterval(interval);
+  }, []);
 
+  // Handle login
 
-  async function onSubmit(values) {
+   async function onSubmit(values) {
     try {
-      const { error } = await supabase.auth.signInWithPassword({
-        email: values.email,
-        password: values.password,
-      });
-      if (error) throw error;
-      alert("Logged in successfully!");
-    } catch (err) {
-      setError("email", { message: err?.message || "Failed to log in" });
-    }
-  }
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email: values.email,
+      password: values.password,
+    });
 
+    if (error) throw error;
+
+    const { data: { session }, error: sessionError } =
+      await supabase.auth.getSession();
+
+    if (sessionError) throw sessionError;
+
+    console.log("Session after login:", session);
+
+    router.push("/dashboard");
+   } catch (err) {
+     setError("email", {
+       type: "manual",
+       message: err?.message || "Failed to log in",
+     });
+   }
+ }
+
+  // OAuth
   const oauth = async (provider) => {
     await supabase.auth.signInWithOAuth({
       provider,
@@ -106,6 +142,7 @@ export default function DarllixLogin() {
             <span className="text-xl font-bold">Darllix</span>
           </div>
 
+          {/* Country dropdown */}
           <div className="mb-4 flex items-center justify-end gap-2 text-sm text-slate-500">
             <Globe className="h-4 w-4" />
             <span>I’m located in</span>
@@ -184,6 +221,7 @@ export default function DarllixLogin() {
               </div>
             </div>
 
+            {/* Submit */}
             <Button
               type="submit"
               className="w-full h-11 bg-slate-900 text-white hover:bg-black text-base"
@@ -192,12 +230,14 @@ export default function DarllixLogin() {
               {isSubmitting ? "Logging in..." : "Log in"}
             </Button>
 
+            {/* Or */}
             <div className="flex items-center gap-4">
               <Separator className="flex-1" />
               <span className="text-sm text-slate-400">or</span>
               <Separator className="flex-1" />
             </div>
 
+            {/* OAuth */}
             <div className="grid grid-cols-1 gap-4">
               <Button
                 type="button"
@@ -218,39 +258,44 @@ export default function DarllixLogin() {
             </div>
 
             <p className="text-sm text-slate-500">
-              Don’t have a Darllix account? <a href="/signup" className="underline">Sign up</a>
+              Don’t have a Darllix account?{" "}
+              <a href="/auth/signup" className="underline">
+                Sign up
+              </a>
             </p>
           </form>
         </div>
 
-        {/* Right panel – promo visual */}
+        {/* Right panel – promo */}
         <div className="relative hidden md:block overflow-hidden">
-       <AnimatePresence mode="wait">
-        <motion.div
-          key={index}
-          initial={{ opacity: 0, x: 50 }}
-          animate={{ opacity: 1, x: 0 }}
-          exit={{ opacity: 0, x: -50 }}
-          transition={{ duration: 0.8, ease: "easeInOut" }}
-          className="absolute inset-0 flex items-center justify-center"
-        >
-          <Image
-            src={images[index]}
-            alt={`Promo ${index}`}
-            width={1200}
-            height={1200}
-            className="h-full w-full object-contain "
-            unoptimized
-          />
-        </motion.div>
-      </AnimatePresence>
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={index}
+              initial={{ opacity: 0, x: 50 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -50 }}
+              transition={{ duration: 0.8, ease: "easeInOut" }}
+              className="absolute inset-0 flex items-center justify-center"
+            >
+              <Image
+                src={images[index]}
+                alt={`Promo ${index}`}
+                width={1200}
+                height={1200}
+                className="h-full w-full object-contain"
+                unoptimized
+              />
+            </motion.div>
+          </AnimatePresence>
           <div className="absolute inset-0 opacity-45 bg-gradient-to-br from-color3 via-color1 to-color4" />
           <div className="relative z-10 flex h-full flex-col justify-end p-10">
             <blockquote className="max-w-md text-white">
               <p className="text-base opacity-90">
                 "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt."
               </p>
-              <footer className="mt-3 text-sm opacity-70"> Daniel Oseni, Founder .....</footer>
+              <footer className="mt-3 text-sm opacity-70">
+                Daniel Oseni, Founder .....
+              </footer>
             </blockquote>
           </div>
         </div>

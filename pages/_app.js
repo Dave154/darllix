@@ -2,8 +2,13 @@
 import Head from "next/head";
 import "@/styles/globals.css";
 import Script from "next/script";
+import { SessionContextProvider } from "@supabase/auth-helpers-react";
+import { createPagesBrowserClient } from "@supabase/auth-helpers-nextjs";
+import { useState } from "react";
+
 
 export default function MyApp({ Component, pageProps }) {
+  const [supabase] = useState(() => createPagesBrowserClient());
   return (
     <>
       <Head>
@@ -13,8 +18,9 @@ export default function MyApp({ Component, pageProps }) {
         <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
         <meta name="theme-color" content="#ffffff" />
       </Head>
-
+      <SessionContextProvider supabaseClient={supabase} initialSession={pageProps.initialSession}>
       <Component {...pageProps} />
+    </SessionContextProvider>
     </>
   );
 }
