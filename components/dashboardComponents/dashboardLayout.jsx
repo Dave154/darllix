@@ -37,10 +37,7 @@ const menuItems = [
 ];
 
 const storeSubItems = [
-  { title: "Analytics", href: "/dashboard/store/analytics" },
-  { title: "Inventory", href: "/dashboard/store/inventory" },
-  { title: "Marketing", href: "/dashboard/store/marketing" },
-  { title: "Settings", href: "/dashboard/store/settings" },
+
 ];
 
 
@@ -189,7 +186,6 @@ export default function DashboardLayout({ children }) {
 /* Sidebar Content */
 function SidebarContent({ openStore, setOpenStore, setMobileOpen }) {
   const router = useRouter();
-console.log(router.pathname);
   return (
     <nav className="flex-1 flex flex-col px-2 py-4 space-y-1">
       <div className="flex-1">
@@ -212,20 +208,26 @@ console.log(router.pathname);
       ))}
 
       {/* My Store expandable */}
+     
+    
       <div>
         <button
-          onClick={() => setOpenStore(!openStore)}
-          className="flex w-full flex-1 items-center justify-between px-3 py-2 rounded-md hover:bg-gray-300"
+          onClick={() => {
+            setOpenStore(!openStore)
+            router.push('/dashboard/store')
+          }
+          }
+          className={`flex w-full flex-1 items-center justify-between px-3 py-2 rounded-md ${router.pathname === '/dashboard/store' && "bg-gray-200"} hover:bg-gray-300`}
           >
           <div className="flex items-center gap-3">
             <Store className="h-5 w-5 text-gray-500" />
             <span>My Store</span>
           </div>
-          <ChevronDown
+          {/* <ChevronDown
             className={`h-4 w-4 transition-transform ${
               openStore ? "rotate-180" : ""
             }`}
-            />
+            /> */}
         </button>
 
         <AnimatePresence>
@@ -262,7 +264,7 @@ console.log(router.pathname);
         className="flex items-center gap-3 px-3 py-2 rounded-md cursor-pointer bg-blue-300/50 backdrop-blur text-white shadow-md shadow-blue-200  rounded-xl hover:bg-gray-300"
       >
         <RxLightningBolt className="h-5 w-5 text-blue-300" />
-        <Link href="/dashboard/upgrade" onClick={() => setMobileOpen(false)}>
+        <Link href="/dashboard/pricing" onClick={() => setMobileOpen(false)}>
           Upgrade your plan
         </Link>
       </motion.div>

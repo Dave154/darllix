@@ -20,12 +20,12 @@ import { MdKeyboardArrowDown } from "react-icons/md";
 const data = [
   { time: "12:00 AM", sales: 0 },
   { time: "2:00 AM", sales: 0 },
-  { time: "6:00 AM", sales: 150 },
+  { time: "6:00 AM", sales: 0 },
   { time: "10:00 AM", sales: 0 },
   { time: "2:00 PM", sales: 0 },
-  { time: "6:00 PM", sales: 20 },
-  { time: "8:00 PM", sales: 500 },
-  { time: "10:00 PM", sales: 200 },
+  { time: "6:00 PM", sales: 0 },
+  { time: "8:00 PM", sales: 0 },
+  { time: "10:00 PM", sales: 0 },
 ];
 
 export default function SalesDashboard() {
