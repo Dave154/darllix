@@ -4,11 +4,16 @@ import "@/styles/globals.css";
 import Script from "next/script";
 import { SessionContextProvider } from "@supabase/auth-helpers-react";
 import { createPagesBrowserClient } from "@supabase/auth-helpers-nextjs";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import Loader from "../components/dashboardComponents/loader";
+import { useRouter } from "next/router";
 
 
 export default function MyApp({ Component, pageProps }) {
   const [supabase] = useState(() => createPagesBrowserClient());
+  
+
+
   return (
     <>
       <Head>

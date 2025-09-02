@@ -2,13 +2,15 @@
 import { createServerSupabaseClient } from "@/lib/supabaseClient";
 import DashboardLayout from "../../components/dashboardComponents/dashboardLayout";
 import { motion } from "framer-motion";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ChevronDown, ChevronUp, CheckCircle2 } from "lucide-react";
 import TrialBanner from "../../components/dashboardComponents/trialBanner";
 import SalesGraph from "../../components/salesGraph";
 import { withAuth } from "../../lib/withAuth";
+import { useRouter } from "next/router";
+import Loader from "../../components/dashboardComponents/loader";
 
 
 export default function DashboardPage(){
@@ -34,9 +36,26 @@ export default function DashboardPage(){
   };
 
   const progress = Math.round((completed.length / steps.length) * 100);
+  const router = useRouter();
+  const [loading, setLoading] = useState(false);
+  useEffect(() => {
+    const handleStart = () => setLoading(true);
+    const handleStop = () => setLoading(false);
+
+    router.events.on("routeChangeStart", handleStart);
+    router.events.on("routeChangeComplete", handleStop);
+    router.events.on("routeChangeError", handleStop);
+
+    return () => {
+      router.events.off("routeChangeStart", handleStart);
+      router.events.off("routeChangeComplete", handleStop);
+      router.events.off("routeChangeError", handleStop);
+    };
+  }, [router]);
 
   return (
     <DashboardLayout>
+      {  loading &&  <Loader /> }
       <div className="space-y-6">
         <TrialBanner />
         {

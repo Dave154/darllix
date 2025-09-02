@@ -34,6 +34,7 @@ import { useRouter } from "next/router";
 
 import { useSupabaseClient } from "@supabase/auth-helpers-react";
 import { supabaseBrowser, getSupabaseServer } from "@/lib/supabaseClient";
+import Loader from "../../components/dashboardComponents/loader";
 
 
 export async function getServerSideProps(ctx) {
@@ -76,6 +77,7 @@ export default function DarllixLogin() {
 
   const [country, setCountry] = useState("Nigeria");
   const [showPass, setShowPass] = useState(false);
+  const [loading,setLoading]  = useState(false)
 
   // Slideshow images
   const images = ["/vendor1.jpg", "/vendor6.jpg", "/vendor6.jpg"];
@@ -90,6 +92,7 @@ export default function DarllixLogin() {
   // Handle login
 
    async function onSubmit(values) {
+    setLoading(true)
     try {
     const { data, error } = await supabase.auth.signInWithPassword({
       email: values.email,
@@ -100,17 +103,15 @@ export default function DarllixLogin() {
 
     const { data: { session }, error: sessionError } =
       await supabase.auth.getSession();
-
     if (sessionError) throw sessionError;
-
-    console.log("Session after login:", session);
-
     router.push("/dashboard");
    } catch (err) {
      setError("email", {
        type: "manual",
        message: err?.message || "Failed to log in",
      });
+   }finally{
+    setLoading(false)
    }
  }
 
@@ -127,8 +128,10 @@ export default function DarllixLogin() {
     });
   };
 
+
   return (
     <div className="min-h-screen w-full bg-[radial-gradient(1200px_700px_at_80%_-10%,#6fd8ac_0%,transparent_60%),radial-gradient(1200px_700px_at_20%_110%,#4a21ef_0%,#0d0b33_60%)] text-white flex items-center justify-center md:p-4 pt-4">
+      {loading &&  <Loader />}
       <motion.div
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}

@@ -20,6 +20,7 @@ import { BsCreditCard2FrontFill} from "react-icons/bs";
 import { PiPiggyBankThin } from "react-icons/pi";
 import { RxLightningBolt } from "react-icons/rx";
 import { useRouter } from "next/router";
+import { useState } from "react";
 
 const menuItems = [
   { title: "Dashboard", icon: Home, href: "/dashboard" },
@@ -41,6 +42,7 @@ const storeSubItems = [
 ];
 
 
+
 export default function DashboardLayout({ children }) {
   const [openStore, setOpenStore] = React.useState(false);
   const [mobileOpen, setMobileOpen] = React.useState(false);
@@ -48,6 +50,7 @@ export default function DashboardLayout({ children }) {
 
   return (
     <div className="flex flex-col h-screen bg-color4 text-color3">
+    
       {/* Top Navbar spanning full width */}
       <header className="h-14 bg-black text-white flex items-center justify-between px-4 md:px-6 sticky top-0 z-50">
         {/* Left: Logo + Mobile Menu */}
