@@ -128,10 +128,22 @@ export default function DarllixLogin() {
     });
   };
 
+  useEffect(() => {
+    const handleStart = () => setLoading(true);
+    const handleStop = () => setLoading(false);
 
+    router.events.on("routeChangeStart", handleStart);
+    router.events.on("routeChangeComplete", handleStop);
+    router.events.on("routeChangeError", handleStop);
+
+    return () => {
+      router.events.off("routeChangeStart", handleStart);
+      router.events.off("routeChangeComplete", handleStop);
+      router.events.off("routeChangeError", handleStop);
+    };
+  }, [router]);
   return (
     <div className="min-h-screen w-full bg-[radial-gradient(1200px_700px_at_80%_-10%,#6fd8ac_0%,transparent_60%),radial-gradient(1200px_700px_at_20%_110%,#4a21ef_0%,#0d0b33_60%)] text-white flex items-center justify-center md:p-4 pt-4">
-      {loading &&  <Loader />}
       <motion.div
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
@@ -303,6 +315,7 @@ export default function DarllixLogin() {
           </div>
         </div>
       </motion.div>
+                {loading &&  <Loader />}
     </div>
   );
 }

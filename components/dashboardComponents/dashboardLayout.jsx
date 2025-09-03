@@ -21,6 +21,10 @@ import { PiPiggyBankThin } from "react-icons/pi";
 import { RxLightningBolt } from "react-icons/rx";
 import { useRouter } from "next/router";
 import { useState } from "react";
+import { useEffect } from "react";
+import Loader from "./loader";
+import TrialBanner from "./trialBanner";
+import Image from "next/image";
 
 const menuItems = [
   { title: "Dashboard", icon: Home, href: "/dashboard" },
@@ -48,11 +52,29 @@ export default function DashboardLayout({ children }) {
   const [mobileOpen, setMobileOpen] = React.useState(false);
   const [storeDropdown, setStoreDropdown] = React.useState(false);
 
+    const router = useRouter();
+  const [loading, setLoading] = useState(false);
+  useEffect(() => {
+    const handleStart = () => setLoading(true);
+    const handleStop = () => setLoading(false);
+
+    router.events.on("routeChangeStart", handleStart);
+    router.events.on("routeChangeComplete", handleStop);
+    router.events.on("routeChangeError", handleStop);
+
+    return () => {
+      router.events.off("routeChangeStart", handleStart);
+      router.events.off("routeChangeComplete", handleStop);
+      router.events.off("routeChangeError", handleStop);
+    };
+  }, [router]);
+
   return (
     <div className="flex flex-col h-screen bg-color4 text-color3">
+      {  loading &&  <Loader /> }
     
       {/* Top Navbar spanning full width */}
-      <header className="h-14 bg-black text-white flex items-center justify-between px-4 md:px-6 sticky top-0 z-50">
+      <header className="h-14 bg-black text-white flex items-center justify-between px-4 md:px-6 sticky top-0 z-40">
         {/* Left: Logo + Mobile Menu */}
         <div className="flex items-center gap-3">
           {/* Hamburger only on mobile */}
@@ -62,7 +84,17 @@ export default function DashboardLayout({ children }) {
           >
             <Menu className="h-6 w-6" />
           </button>
-          <span className="text-lg font-bold">Darllix</span>
+          <div className="text-lg flex gap-2 items-center font-bold"
+          >
+            <Image
+              src={'/darllix_logo.png'}
+              alt='logo'
+              width={1000}
+              height={1000}
+              className='w-8 h-8'
+            /> 
+            <span className="">Darllix</span>
+          </div>
         </div>
 
         {/* Center: Search */}
@@ -155,7 +187,17 @@ export default function DashboardLayout({ children }) {
               className="fixed inset-y-0 left-0 z-50 w-60 border-r border-gray-300 bg-color4 flex flex-col md:hidden"
             >
               <div className="flex justify-between items-center px-4 py-4 border-b border-gray-300">
-                <span className="text-xl font-bold">Darllix</span>
+               <div className="text-lg flex gap-2 items-center font-bold"
+          >
+            <Image
+              src={'/darllix_logo.png'}
+              alt='logo'
+              width={1000}
+              height={1000}
+              className='w-8 h-8'
+            /> 
+            <span className="">Darllix</span>
+          </div>
                 <button onClick={() => setMobileOpen(false)}>
                   <X className="h-6 w-6" />
                 </button>
@@ -179,6 +221,7 @@ export default function DashboardLayout({ children }) {
 
         {/* Page content */}
         <main className="flex-1 p-1 md:p-6 space-y-6 overflow-y-auto">
+          <TrialBanner />
           {children}
         </main>
       </div>

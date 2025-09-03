@@ -27,7 +27,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import TrialBanner from "../../../components/dashboardComponents/trialBanner";
 
 
 
@@ -131,7 +130,6 @@ export default function ProductsPage() {
         animate={{ opacity: 1, y: 0 }}
         className=" space-y-6"
       >
-        <TrialBanner />
         {/* Header row + actions */}
         <div className="flex items-center justify-between">
           <h1 className="text-xl md:text-2xl font-semibold">Products</h1>

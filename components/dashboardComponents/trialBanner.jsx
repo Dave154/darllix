@@ -10,7 +10,7 @@ const TrialBanner = () => {
               animate={{ opacity: 1, y: 0 }}
               className="bg-black text-white p-4 rounded-md flex justify-between items-center"
             >
-              <span>
+              <span className='text-xs md:text-sm'>
                 Extend your trial for ₦3000/month for 3 months on select plans.
               </span>
               <Button className="bg-white text-black hover:bg-gray-200" onClick={()=>
