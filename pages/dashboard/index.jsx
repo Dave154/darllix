@@ -8,11 +8,18 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ChevronDown, ChevronUp, CheckCircle2 } from "lucide-react";
 import SalesGraph from "../../components/salesGraph";
 import { withAuth } from "../../lib/withAuth";
+import { useStore } from "@/store";
 
 
 
-export default function DashboardPage(){
-  const [hasStore, setHasStore] = useState(true); 
+export default function DashboardPage({user,store,hasStore}){
+    const setStore = useStore((s) => s.setStore);
+
+  useEffect(() => {
+    if (store) setStore(store);
+    console.log(store,hasStore)
+  }, [store, setStore]);
+
   const steps = [
     { key: "bank", title: "Add bank details", description: "Add your bank details to receive payments." },
     { key: "products", title: "Add products", description: "Write a description, add photos, and set pricing." },

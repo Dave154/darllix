@@ -2,12 +2,11 @@
 
 import React, { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
   ShoppingBag,
-  Package,
   Loader2,
   Plus,
   Trash2,
@@ -15,13 +14,13 @@ import {
   Tag,
 } from "lucide-react";
 import DashboardLayout from "../../../components/dashboardComponents/dashboardLayout";
+import SubdomainChecker from "../../../components/dashboardComponents/subdomainChecker";
+import Loader from "../../../components/dashboardComponents/loader";
+import { withAuth } from "../../../lib/withAuth";
 
-/**
- * StoreCreator — Responsive premium multi-step store editor (single-file)
- * Focus: make it fully responsive across small -> large screens.
- * Keep as single file for quick iteration; split later.
- */
-
+/* ---------------------------
+   Schema & stable defaults
+   --------------------------- */
 const schema = z.object({
   name: z.string().min(2, "Name is required"),
   subdomain: z
@@ -30,12 +29,23 @@ const schema = z.object({
     .regex(/^[a-z0-9-]+$/, "Lowercase letters, numbers and hyphens only"),
   description: z.string().max(1000).optional().nullable(),
   banner_url: z.string().url().optional().nullable(),
-  theme: z.object({
-    primary: z.string().optional(),
-    accent: z.string().optional(),
-    background: z.string().optional(),
-  }).optional(),
+  theme: z
+    .object({
+      primary: z.string().optional(),
+      accent: z.string().optional(),
+      background: z.string().optional(),
+    })
+    .optional(),
 });
+
+const BASE_DEFAULTS = {
+  name: "",
+  subdomain: "",
+  description: "",
+  banner_url: "",
+  theme: { primary: "#0f172a", accent: "#2563eb", background: "#ffffff" },
+};
+
 
 function CTA({ children, className = "", ...props }) {
   return (
@@ -56,7 +66,7 @@ function Ghost({ children, className = "", ...props }) {
     <button
       {...props}
       className={
-        "inline-flex items-center gap-2 px-3 py-2 rounded-md text-sm bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 " +
+        "w-full sm:w-auto inline-flex justify-center items-center gap-2 px-3 py-2 rounded-md text-sm bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 " +
         className
       }
     >
@@ -77,36 +87,7 @@ function MiniStat({ icon, label, value }) {
   );
 }
 
-function PublishLoader({ show }) {
-  if (!show) return null;
-  return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      className="fixed inset-0 z-50 flex items-center justify-center"
-    >
-      <div className="absolute inset-0 backdrop-blur-md bg-gradient-to-br from-sky-300/8 via-indigo-200/6 to-transparent" />
 
-      <motion.div
-        initial={{ scale: 0.96, opacity: 0 }}
-        animate={{ scale: 1, opacity: 1 }}
-        transition={{ type: "spring", stiffness: 120, damping: 14 }}
-        className="relative flex flex-col items-center gap-4 px-4"
-      >
-        <motion.div
-          animate={{ scale: [1, 1.06, 1], boxShadow: ["0 10px 30px rgba(14,165,233,0.12)", "0 20px 40px rgba(99,102,241,0.16)", "0 10px 30px rgba(14,165,233,0.12)"] }}
-          transition={{ duration: 1.6, repeat: Infinity }}
-          className="w-24 h-24 rounded-full bg-white flex items-center justify-center shadow-2xl"
-        >
-          <div className="text-2xl font-extrabold text-sky-600">DLX</div>
-        </motion.div>
-
-        <div className="text-sm text-white/90 text-center">Publishing your store — hold tight</div>
-      </motion.div>
-    </motion.div>
-  );
-}
 
 function BannerUploader({ currentUrl, onUploaded }) {
   const [preview, setPreview] = useState(currentUrl || "");
@@ -167,7 +148,7 @@ function ProductModal({ open, onClose, onSave, initial }) {
       <div className="absolute inset-0 bg-black/30" onClick={onClose} />
       <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} className="relative z-50 bg-white rounded-2xl p-6 shadow-lg w-full max-w-md max-h-[90vh] overflow-auto">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-semibold">{initial ? 'Edit product' : 'Add product'}</h3>
+          <h3 className="text-lg font-semibold">{initial ? "Edit product" : "Add product"}</h3>
           <button onClick={onClose} className="text-gray-500">Esc</button>
         </div>
 
@@ -178,15 +159,16 @@ function ProductModal({ open, onClose, onSave, initial }) {
 
         <div className="mt-6 flex flex-col sm:flex-row sm:justify-end gap-3">
           <Ghost onClick={onClose}>Cancel</Ghost>
-          <CTA onClick={() => onSave({ name, price })}><Plus className="w-4 h-4"/> Save product</CTA>
+          <CTA onClick={() => onSave({ name, price })}><Plus className="w-4 h-4" /> Save product</CTA>
         </div>
       </motion.div>
     </div>
   );
 }
 
+/* ---------- Live preview (pure presentational). Keep memoized. ---------- */
 function LivePreview({ store }) {
-  const theme = store?.theme || { primary: "#0f172a", accent: "#2563eb", background: "#ffffff" };
+  const theme = store?.theme || BASE_DEFAULTS.theme;
   const products = store?.products || [];
 
   return (
@@ -236,7 +218,7 @@ function LivePreview({ store }) {
                   <div className="font-medium">{p.name}</div>
                   <div className="text-xs text-gray-500">₦{p.price}</div>
                 </div>
-                <button className="text-gray-400"><ShoppingBag className="w-4 h-4"/></button>
+                <button className="text-gray-400"><ShoppingBag className="w-4 h-4" /></button>
               </div>
             ))}
           </div>
@@ -245,71 +227,93 @@ function LivePreview({ store }) {
     </div>
   );
 }
+const MemoLivePreview = React.memo(LivePreview);
+
+
+
+
+/* Watches preview fields and renders memoized preview only */
+function PreviewPanel({ control, products }) {
+  const name = useWatch({ control, name: "name" });
+  const subdomain = useWatch({ control, name: "subdomain" });
+  const description = useWatch({ control, name: "description" });
+  const banner_url = useWatch({ control, name: "banner_url" });
+  const theme = useWatch({ control, name: "theme" });
+
+  const store = React.useMemo(() => ({ name, subdomain, description, banner_url, theme, products }), [name, subdomain, description, banner_url, theme, products]);
+
+  return <MemoLivePreview store={store} />;
+}
+
+/* Header preview link that watches subdomain only (keeps header reactive without re-rendering parent) */
+function HeaderPreview({ control }) {
+  const subdomain = useWatch({ control, name: "subdomain" });
+  const href = `https://${(subdomain || "your-subdomain")}.darllix.shop`;
+  return <Ghost onClick={() => window.open(href, "_blank")}>Preview</Ghost>;
+}
 
 export default function StoreCreator({ initialData = null, onDone }) {
   const [step, setStep] = useState(0);
   const [publishing, setPublishing] = useState(false);
   const [subdomainAvailable, setSubdomainAvailable] = useState(null);
-  const [products, setProducts] = useState(initialData?.products || []);
+
+  // products initialized from initialData once; updated by effect
+  const [products, setProducts] = useState(() => initialData?.products || []);
   const [productModalOpen, setProductModalOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState(null);
-  const [showPreview, setShowPreview] = useState(true); // toggle preview on small screens
+  const [showPreview, setShowPreview] = useState(true);
 
-  const { register, handleSubmit, watch, setValue, formState: { errors } } = useForm({
+  const {
+    register,
+    handleSubmit,
+    control,
+    getValues,
+    setValue,
+    reset,
+    formState: { errors },
+  } = useForm({
     resolver: zodResolver(schema),
-    defaultValues: initialData || {
-      name: "",
-      subdomain: "",
-      description: "",
-      banner_url: "",
-      theme: { primary: "#0f172a", accent: "#2563eb", background: "#ffffff" },
-    },
+    defaultValues: BASE_DEFAULTS,
   });
 
-  const watchAll = watch();
-
+  /* If initialData arrives, reset the form (only once per change) and update products */
   useEffect(() => {
-    const s = watchAll.subdomain;
-    if (!s || s.length < 3) {
-      setSubdomainAvailable(null);
-      return;
+    if (initialData) {
+      reset({ ...BASE_DEFAULTS, ...initialData });
+      if (Array.isArray(initialData.products)) setProducts(initialData.products);
     }
-    setSubdomainAvailable("checking");
-    const id = setTimeout(async () => {
-      try {
-        const res = await fetch(`/api/stores/check?subdomain=${encodeURIComponent(s)}`);
-        const json = await res.json();
-        setSubdomainAvailable(json.available === true);
-      } catch (err) {
-        console.error(err);
-        setSubdomainAvailable(null);
-      }
-    }, 600);
-    return () => clearTimeout(id);
-  }, [watchAll.subdomain]);
+  }, [initialData, reset]);
 
+  /* products handlers */
   function handleAddProduct(p) {
     setProducts((prev) => [{ id: Date.now(), ...p }, ...prev]);
     setProductModalOpen(false);
   }
-
   function handleEditProduct(id, payload) {
     setProducts((prev) => prev.map((x) => (x.id === id ? { ...x, ...payload } : x)));
     setProductModalOpen(false);
     setEditingProduct(null);
   }
-
   function handleRemoveProduct(id) {
     setProducts((prev) => prev.filter((x) => x.id !== id));
   }
 
-  function next() { setStep((s) => Math.min(3, s + 1)); }
-  function prev() { setStep((s) => Math.max(0, s - 1)); }
+  function next() {
+    setStep((s) => Math.min(3, s + 1));
+  }
+  function prev() {
+    setStep((s) => Math.max(0, s - 1));
+  }
 
   async function saveDraft() {
-    const payload = { ...watchAll, products };
+    const values = getValues();
+    const payload = { ...values, products };
     try {
-      const res = await fetch(`/api/stores/save`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ store: payload, publish: false }) });
+      const res = await fetch(`/api/stores/save`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ store: payload, publish: false }),
+      });
       const json = await res.json();
       if (!res.ok) throw new Error(json?.message || "Save failed");
       console.log("Draft saved");
@@ -320,19 +324,22 @@ export default function StoreCreator({ initialData = null, onDone }) {
   }
 
   async function publish() {
-    const payload = { ...watchAll, products };
+    const values = getValues();
+    const payload = { ...values, products };
     if (subdomainAvailable !== true) {
       alert("Please choose an available subdomain before publishing.");
       setStep(0);
       return;
     }
-
     setPublishing(true);
     try {
-      const res = await fetch(`/api/stores/save`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ store: payload, publish: true }) });
+      const res = await fetch(`/api/stores/save`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ store: payload, publish: true }),
+      });
       const json = await res.json();
       if (!res.ok) throw new Error(json?.message || "Publish failed");
-
       const url = `${payload.subdomain}.darllix.shop`;
       alert("Store published: " + url);
       onDone && onDone(json);
@@ -344,6 +351,7 @@ export default function StoreCreator({ initialData = null, onDone }) {
     }
   }
 
+  /* Step content (unchanged behaviour) */
   function StepContent() {
     switch (step) {
       case 0:
@@ -379,8 +387,10 @@ export default function StoreCreator({ initialData = null, onDone }) {
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
               <Ghost onClick={saveDraft} className="w-full sm:w-auto">Save draft</Ghost>
               <div className="flex w-full sm:w-auto gap-2">
-                <Ghost onClick={() => window.open(`/api/preview?payload=${encodeURIComponent(JSON.stringify({ ...watchAll, products }))}`, "_blank")}>Preview</Ghost>
-                <CTA type="submit" className="flex-1 sm:flex-none">Continue</CTA>
+                <Ghost onClick={() => window.open(`/api/preview?payload=${encodeURIComponent(JSON.stringify({ ...getValues(), products }))}`, "_blank")}>Preview</Ghost>
+                {/* <CTA type="submit" className="flex-1 sm:flex-none">Continue</CTA> */}
+                  <CTA onClick={next} className="flex-1 sm:flex-none">Continue</CTA>
+
               </div>
             </div>
           </form>
@@ -392,8 +402,8 @@ export default function StoreCreator({ initialData = null, onDone }) {
             <div className="flex items-center justify-between">
               <h3 className="font-semibold">Products</h3>
               <div className="flex gap-2">
-                <Ghost onClick={() => setProductModalOpen(true)}><Plus className="w-4 h-4"/> Add product</Ghost>
-                <Ghost onClick={() => window.open('/products', '_blank')}>Manage products</Ghost>
+                <Ghost onClick={() => setProductModalOpen(true)}><Plus className="w-4 h-4" /> Add product</Ghost>
+                <Ghost onClick={() => window.open("/products", "_blank")}>Manage products</Ghost>
               </div>
             </div>
 
@@ -408,8 +418,8 @@ export default function StoreCreator({ initialData = null, onDone }) {
                       <div className="text-xs text-gray-500">₦{p.price}</div>
                     </div>
                     <div className="flex gap-2">
-                      <Ghost onClick={() => { setEditingProduct(p); setProductModalOpen(true); }}><Edit3 className="w-4 h-4"/></Ghost>
-                      <Ghost onClick={() => handleRemoveProduct(p.id)}><Trash2 className="w-4 h-4 text-red-500"/></Ghost>
+                      <Ghost onClick={() => { setEditingProduct(p); setProductModalOpen(true); }}><Edit3 className="w-4 h-4" /></Ghost>
+                      <Ghost onClick={() => handleRemoveProduct(p.id)}><Trash2 className="w-4 h-4 text-red-500" /></Ghost>
                     </div>
                   </div>
                 ))}
@@ -432,13 +442,13 @@ export default function StoreCreator({ initialData = null, onDone }) {
             <h3 className="font-semibold">Customization</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <BannerUploader currentUrl={watchAll.banner_url} onUploaded={(url) => setValue('banner_url', url)} />
+                <BannerUploader currentUrl={getValues().banner_url} onUploaded={(url) => setValue("banner_url", url)} />
               </div>
 
               <div className="space-y-4">
-                <ColorInput label="Primary color" value={watchAll.theme?.primary || '#0f172a'} onChange={(v) => setValue('theme.primary', v)} />
-                <ColorInput label="Accent color" value={watchAll.theme?.accent || '#2563eb'} onChange={(v) => setValue('theme.accent', v)} />
-                <ColorInput label="Background color" value={watchAll.theme?.background || '#ffffff'} onChange={(v) => setValue('theme.background', v)} />
+                <ColorInput label="Primary color" value={getValues().theme?.primary || "#0f172a"} onChange={(v) => setValue("theme.primary", v)} />
+                <ColorInput label="Accent color" value={getValues().theme?.accent || "#2563eb"} onChange={(v) => setValue("theme.accent", v)} />
+                <ColorInput label="Background color" value={getValues().theme?.background || "#ffffff"} onChange={(v) => setValue("theme.background", v)} />
               </div>
             </div>
 
@@ -461,8 +471,8 @@ export default function StoreCreator({ initialData = null, onDone }) {
               <div className="bg-white rounded-lg p-4 shadow-sm">
                 <div className="text-sm text-gray-500">Store details</div>
                 <div className="mt-3 space-y-2">
-                  <div className="p-3 border rounded">Name: <strong>{watchAll.name}</strong></div>
-                  <div className="p-3 border rounded">Subdomain: <strong>{watchAll.subdomain}.darllix.shop</strong></div>
+                  <div className="p-3 border rounded">Name: <strong>{getValues().name}</strong></div>
+                  <div className="p-3 border rounded">Subdomain: <strong>{getValues().subdomain}.darllix.shop</strong></div>
                   <div className="p-3 border rounded">Products: <strong>{products.length}</strong></div>
                 </div>
               </div>
@@ -470,9 +480,9 @@ export default function StoreCreator({ initialData = null, onDone }) {
               <div className="bg-white rounded-lg p-4 shadow-sm">
                 <div className="text-sm text-gray-500">Theme</div>
                 <div className="mt-3 space-y-2">
-                  <div className="p-3 border rounded">Primary: <span className="ml-2 font-mono">{watchAll.theme?.primary}</span></div>
-                  <div className="p-3 border rounded">Accent: <span className="ml-2 font-mono">{watchAll.theme?.accent}</span></div>
-                  <div className="p-3 border rounded">Background: <span className="ml-2 font-mono">{watchAll.theme?.background}</span></div>
+                  <div className="p-3 border rounded">Primary: <span className="ml-2 font-mono">{getValues().theme?.primary}</span></div>
+                  <div className="p-3 border rounded">Accent: <span className="ml-2 font-mono">{getValues().theme?.accent}</span></div>
+                  <div className="p-3 border rounded">Background: <span className="ml-2 font-mono">{getValues().theme?.background}</span></div>
                 </div>
               </div>
             </div>
@@ -481,7 +491,7 @@ export default function StoreCreator({ initialData = null, onDone }) {
               <Ghost onClick={prev} className="w-full sm:w-auto">Back</Ghost>
               <div className="flex w-full sm:w-auto gap-2">
                 <Ghost onClick={saveDraft} className="w-full sm:w-auto">Save draft</Ghost>
-                <CTA onClick={publish} className="flex-1 sm:flex-none"><Loader2 className="w-4 h-4"/> Launch store</CTA>
+                <CTA onClick={publish} className="flex-1 sm:flex-none"><Loader2 className="w-4 h-4" /> Launch store</CTA>
               </div>
             </div>
           </div>
@@ -492,109 +502,113 @@ export default function StoreCreator({ initialData = null, onDone }) {
     }
   }
 
+  /* ---------------------------
+     Render
+     --------------------------- */
   return (
     <DashboardLayout>
+      <div className="max-w-7xl mx-auto p-4 sm:p-6 grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {
+          publishing &&
+        <Loader/>
 
-    <div className="max-w-7xl mx-auto p-4 sm:p-6 grid grid-cols-1 lg:grid-cols-2 gap-6">
-      <PublishLoader show={publishing} />
+        }
 
-      {/* Left: editor */}
-      <motion.div initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }} className="space-y-6">
-        <header className="rounded-2xl bg-gradient-to-r from-white via-indigo-50 to-white p-4 sm:p-5 shadow-sm">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-            <div className="flex-1 min-w-0">
-              <h1 className="text-2xl sm:text-3xl font-extrabold truncate">Create your store</h1>
-              <p className="text-sm text-gray-500 mt-1">A premium guided flow to get your store live fast.</p>
-            </div>
-
-            <div className="flex items-center gap-3">
-              <span className="text-xs px-3 py-1 rounded-full bg-gray-100 text-gray-600">Premium</span>
-              <div className="flex items-center gap-2">
-                <Ghost onClick={() => window.open(`https://${watchAll.subdomain || 'your-subdomain'}.darllix.shop`, '_blank')}>Preview</Ghost>
-                <CTA onClick={publish}><Loader2 className="w-4 h-4"/> Publish</CTA>
+        {/* Left: editor */}
+        <motion.div initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }} className="space-y-6">
+          <header className="rounded-2xl bg-gradient-to-r from-white via-indigo-50 to-white p-4 sm:p-5 shadow-sm">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+              <div className="flex-1 min-w-0">
+                <h1 className="text-2xl sm:text-3xl font-extrabold truncate">Create your store</h1>
+                <p className="text-sm text-gray-500 mt-1">A premium guided flow to get your store live fast.</p>
               </div>
-            </div>
-          </div>
 
-          <div className="mt-4">
-            <div className="flex gap-4 overflow-x-auto pb-2 scrollbar-thin">
-              {["Details", "Products", "Customize", "Launch"].map((label, i) => (
-                <div key={label} className={`flex-shrink-0 flex items-center gap-3 py-1 ${i === step ? 'opacity-100' : 'opacity-60'}`}>
-                  <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold ${i === step ? 'bg-sky-600 text-white' : 'bg-gray-100 text-gray-600'}`}>{i + 1}</div>
-                  <div className={`text-xs ${i === step ? 'text-gray-800 font-semibold' : 'text-gray-400'}`}>{label}</div>
+              <div className="flex items-center gap-3">
+                <span className="text-xs px-3 py-1 rounded-full bg-gray-100 text-gray-600">Premium</span>
+                <div className="flex items-center gap-2">
+                  {/* isolated header preview watch */}
+                  <HeaderPreview control={control} />
+                  <CTA onClick={publish}><Loader2 className="w-4 h-4" /> Publish</CTA>
                 </div>
-              ))}
-            </div>
-          </div>
-        </header>
-
-        <div className="bg-white rounded-2xl p-4 sm:p-6 shadow-md">
-          <div className="flex items-center justify-between mb-4">
-            <div>
-              <div className="text-sm text-gray-500">Step {step + 1} of 4</div>
-              <h2 className="text-lg sm:text-xl font-bold">{["Details", "Products", "Customize", "Launch"][step]}</h2>
-            </div>
-{/* 
-            <div className="flex items-center gap-2">
-              <Ghost onClick={() => setStep(0)}>Details</Ghost>
-              <Ghost onClick={() => setStep(1)}>Products</Ghost>
-              <Ghost onClick={() => setStep(2)}>Customize</Ghost>
-              <Ghost onClick={() => setStep(3)}>Launch</Ghost>
-            </div> */}
-          </div>
-
-          <StepContent />
-        </div>
-      </motion.div>
-
-      {/* Right: live preview + quick stats */}
-      <motion.div initial={{ opacity: 0, x: 8 }} animate={{ opacity: 1, x: 0 }}>
-        <div className="space-y-5">
-          <div className="flex items-center justify-between">
-            <div>
-              <h3 className="text-lg font-semibold">Live preview</h3>
-              <div className="text-sm text-gray-500">Auto-updates as you type</div>
-            </div>
-
-            <div className="flex items-center gap-3">
-              <Ghost onClick={saveDraft}>Save</Ghost>
-              <CTA onClick={() => setProductModalOpen(true)}><Plus className="w-4 h-4"/> Add product</CTA>
-            </div>
-          </div>
-
-          {/* preview toggle on small screens */}
-          <div className="block lg:hidden">
-            <button className="mb-3 text-sm text-sky-600" onClick={() => setShowPreview((s) => !s)}>{showPreview ? 'Hide preview' : 'Show preview'}</button>
-          </div>
-
-          {showPreview && <LivePreview store={{ ...watchAll, products }} />}
-
-          <div className="grid grid-cols-1 gap-3">
-            <MiniStat icon={<Tag />} label="Products" value={products.length || 0} />
-            <MiniStat icon={<Edit3 />} label="Theme" value={watchAll.theme?.primary || '#0f172a'} />
-            <div className="p-3 bg-white rounded-xl shadow-sm flex items-center justify-between">
-              <div>
-                <div className="text-xs text-gray-500">Live store</div>
-                <div className="font-semibold">{watchAll.subdomain ? `${watchAll.subdomain}.darllix.shop` : 'Not live'}</div>
-              </div>
-              <div>
-                <Ghost onClick={() => window.open(`https://${watchAll.subdomain || 'your-subdomain'}.darllix.shop`, '_blank')}>Open</Ghost>
               </div>
             </div>
-          </div>
-        </div>
-      </motion.div>
 
-      <ProductModal
-        open={productModalOpen}
-        onClose={() => { setProductModalOpen(false); setEditingProduct(null); }}
-        onSave={(p) => {
-          if (editingProduct) handleEditProduct(editingProduct.id, p);
-          else handleAddProduct(p);
-        }}
-        initial={editingProduct}
-      />
-    </div>
+            <div className="mt-4">
+              <div className="flex gap-4 overflow-x-auto pb-2 scrollbar-thin">
+                {["Details", "Products", "Customize", "Launch"].map((label, i) => (
+                  <div key={label} className={`flex-shrink-0 flex items-center gap-3 py-1 ${i === step ? "opacity-100" : "opacity-60"}`}>
+                    <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold ${i === step ? "bg-sky-600 text-white" : "bg-gray-100 text-gray-600"}`}>{i + 1}</div>
+                    <div className={`text-xs ${i === step ? "text-gray-800 font-semibold" : "text-gray-400"}`}>{label}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </header>
+
+          <div className="bg-white rounded-2xl p-4 sm:p-6 shadow-md">
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <div className="text-sm text-gray-500">Step {step + 1} of 4</div>
+                <h2 className="text-lg sm:text-xl font-bold">{["Details", "Products", "Customize", "Launch"][step]}</h2>
+              </div>
+            </div>
+
+            <StepContent />
+          </div>
+        </motion.div>
+
+        {/* Right: live preview + quick stats */}
+        <motion.div initial={{ opacity: 0, x: 8 }} animate={{ opacity: 1, x: 0 }}>
+          <div className="space-y-5">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-lg font-semibold">Live preview</h3>
+                <div className="text-sm text-gray-500">Auto-updates as you type</div>
+              </div>
+
+              <div className="flex items-center gap-3">
+                <Ghost onClick={saveDraft}>Save</Ghost>
+                <CTA onClick={() => setProductModalOpen(true)}><Plus className="w-4 h-4" /> Add product</CTA>
+              </div>
+            </div>
+
+            {/* SubdomainChecker runs the availability check without re-rendering parent */}
+            <SubdomainChecker control={control} onAvailableChange={setSubdomainAvailable} />
+
+            {/* preview toggle on small screens */}
+            <div className="block lg:hidden">
+              <button className="mb-3 text-sm text-sky-600" onClick={() => setShowPreview((s) => !s)}>{showPreview ? "Hide preview" : "Show preview"}</button>
+            </div>
+
+            {showPreview && <PreviewPanel control={control} products={products} />}
+
+            <div className="grid grid-cols-1 gap-3">
+              <MiniStat icon={<Tag />} label="Products" value={products.length || 0} />
+              <MiniStat icon={<Edit3 />} label="Theme" value={getValues().theme?.primary || "#0f172a"} />
+              <div className="p-3 bg-white rounded-xl shadow-sm flex items-center justify-between">
+                <div>
+                  <div className="text-xs text-gray-500">Live store</div>
+                  <div className="font-semibold">{getValues().subdomain ? `${getValues().subdomain}.darllix.shop` : "Not live"}</div>
+                </div>
+                <div>
+                  <Ghost onClick={() => window.open(`https://${getValues().subdomain || "your-subdomain"}.darllix.shop`, "_blank")}>Open</Ghost>
+                </div>
+              </div>
+            </div>
+          </div>
+        </motion.div>
+
+        <ProductModal
+          open={productModalOpen}
+          onClose={() => { setProductModalOpen(false); setEditingProduct(null); }}
+          onSave={(p) => {
+            if (editingProduct) handleEditProduct(editingProduct.id, p);
+            else handleAddProduct(p);
+          }}
+          initial={editingProduct}
+        />
+      </div>
     </DashboardLayout>
   );
 }
+export const getServerSideProps = withAuth();

@@ -1,8 +1,6 @@
-"use client";
-
 import DashboardLayout from "../../../components/dashboardComponents/dashboardLayout";
 import { motion } from "framer-motion";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -27,15 +25,23 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { useRouter } from "next/router";
+import { useStore } from "@/store";
+import { withAuth } from "../../../lib/withAuth";
 
 
 
-export default function ProductsPage() {
-  // ----------- Demo state & switches -----------
-  const [hasStore, setHasStore] = useState(false);
+export default function ProductsPage({store,hasStore}) {
+  const setStore = useStore((s) => s.setStore);
+
+  useEffect(() => {
+    if (store) setStore(store);
+    console.log(store,hasStore)
+  }, [store, setStore]);
+  
   const [query, setQuery] = useState("");
   const [tab, setTab] = useState("All");
-
+  const router = useRouter()
   const [products, setProducts] = useState([
     {
       id: "p1",
@@ -106,7 +112,7 @@ export default function ProductsPage() {
       <p className="text-sm text-muted-foreground mt-1 mb-5">
         Create your store to start adding products and managing inventory.
       </p>
-      <Button onClick={()=> setHasStore(true) } className="">Create Store</Button>
+      <Button onClick={()=> router.push('/dashboard/store') } className="">Create Store</Button>
       
     </div>
   );
@@ -290,3 +296,6 @@ export default function ProductsPage() {
     </DashboardLayout>
   );
 }
+
+
+export const getServerSideProps = withAuth();
