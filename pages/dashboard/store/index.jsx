@@ -12,11 +12,25 @@ import {
   Trash2,
   Edit3,
   Tag,
+  ImportIcon,
+  ChevronDown,
+  ListVideo,
 } from "lucide-react";
 import DashboardLayout from "../../../components/dashboardComponents/dashboardLayout";
 import SubdomainChecker from "../../../components/dashboardComponents/subdomainChecker";
 import Loader from "../../../components/dashboardComponents/loader";
 import { withAuth } from "../../../lib/withAuth";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+
+import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { BsRecord2Fill } from "react-icons/bs";
+import CustomerGraph from "../../../components/customerGraph";
+import PreviewPanel from "../../../components/dashboardComponents/livePreview";
+import AddProductButton from "../../../components/dashboardComponents/addProductButton";
 
 /* ---------------------------
    Schema & stable defaults
@@ -166,84 +180,6 @@ function ProductModal({ open, onClose, onSave, initial }) {
   );
 }
 
-/* ---------- Live preview (pure presentational). Keep memoized. ---------- */
-function LivePreview({ store }) {
-  const theme = store?.theme || BASE_DEFAULTS.theme;
-  const products = store?.products || [];
-
-  return (
-    <div className="w-full rounded-2xl overflow-hidden shadow-md border" style={{ backgroundColor: theme.background }}>
-      <div className="h-36 w-full bg-gradient-to-r from-gray-100 to-white overflow-hidden">
-        {store?.banner_url ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={store.banner_url} alt="banner" className="object-cover w-full h-full" />
-        ) : (
-          <div className="h-36 w-full flex items-center justify-center text-gray-400">Banner preview</div>
-        )}
-      </div>
-
-      <div className="p-4">
-        <div className="flex items-start justify-between gap-4 flex-col sm:flex-row">
-          <div>
-            <h3 className="text-xl font-bold" style={{ color: theme.primary }}>{store?.name || "Your store"}</h3>
-            <p className="text-sm text-gray-500">{store?.description || "Short store description"}</p>
-          </div>
-          <div className="text-right">
-            <div className="text-xs text-gray-400">URL</div>
-            <div className="text-sm font-mono">{(store?.subdomain && `${store.subdomain}.darllix.shop`) || "your-subdomain.darllix.shop"}</div>
-          </div>
-        </div>
-
-        <div className="mt-4 grid grid-cols-2 gap-3">
-          <div className="p-3 bg-white rounded-lg shadow-sm">
-            <div className="text-xs text-gray-500">Orders</div>
-            <div className="font-semibold">—</div>
-          </div>
-          <div className="p-3 bg-white rounded-lg shadow-sm">
-            <div className="text-xs text-gray-500">Revenue</div>
-            <div className="font-semibold">—</div>
-          </div>
-        </div>
-
-        <div className="mt-5">
-          <div className="text-sm text-gray-600 mb-2">Featured products</div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            {products.length === 0 && (
-              <div className="p-4 text-sm text-gray-400 bg-white/60 rounded-lg">No products yet — add one to showcase here.</div>
-            )}
-            {products.slice(0, 4).map((p) => (
-              <div key={p.id} className="p-3 bg-white rounded-lg shadow-sm flex items-center gap-3">
-                <div className="w-12 h-12 bg-gray-100 rounded flex items-center justify-center text-gray-500">🖼</div>
-                <div className="flex-1">
-                  <div className="font-medium">{p.name}</div>
-                  <div className="text-xs text-gray-500">₦{p.price}</div>
-                </div>
-                <button className="text-gray-400"><ShoppingBag className="w-4 h-4" /></button>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
-const MemoLivePreview = React.memo(LivePreview);
-
-
-
-
-/* Watches preview fields and renders memoized preview only */
-function PreviewPanel({ control, products }) {
-  const name = useWatch({ control, name: "name" });
-  const subdomain = useWatch({ control, name: "subdomain" });
-  const description = useWatch({ control, name: "description" });
-  const banner_url = useWatch({ control, name: "banner_url" });
-  const theme = useWatch({ control, name: "theme" });
-
-  const store = React.useMemo(() => ({ name, subdomain, description, banner_url, theme, products }), [name, subdomain, description, banner_url, theme, products]);
-
-  return <MemoLivePreview store={store} />;
-}
 
 /* Header preview link that watches subdomain only (keeps header reactive without re-rendering parent) */
 function HeaderPreview({ control }) {
@@ -252,14 +188,13 @@ function HeaderPreview({ control }) {
   return <Ghost onClick={() => window.open(href, "_blank")}>Preview</Ghost>;
 }
 
-export default function StoreCreator({ initialData = null, onDone }) {
+export default function StoreCreator({ hasStore,  initialData = null, onDone }) {
   const [step, setStep] = useState(0);
   const [publishing, setPublishing] = useState(false);
   const [subdomainAvailable, setSubdomainAvailable] = useState(null);
 
   // products initialized from initialData once; updated by effect
   const [products, setProducts] = useState(() => initialData?.products || []);
-  const [productModalOpen, setProductModalOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState(null);
   const [showPreview, setShowPreview] = useState(true);
 
@@ -284,19 +219,6 @@ export default function StoreCreator({ initialData = null, onDone }) {
     }
   }, [initialData, reset]);
 
-  /* products handlers */
-  function handleAddProduct(p) {
-    setProducts((prev) => [{ id: Date.now(), ...p }, ...prev]);
-    setProductModalOpen(false);
-  }
-  function handleEditProduct(id, payload) {
-    setProducts((prev) => prev.map((x) => (x.id === id ? { ...x, ...payload } : x)));
-    setProductModalOpen(false);
-    setEditingProduct(null);
-  }
-  function handleRemoveProduct(id) {
-    setProducts((prev) => prev.filter((x) => x.id !== id));
-  }
 
   function next() {
     setStep((s) => Math.min(3, s + 1));
@@ -402,29 +324,13 @@ export default function StoreCreator({ initialData = null, onDone }) {
             <div className="flex items-center justify-between">
               <h3 className="font-semibold">Products</h3>
               <div className="flex gap-2">
-                <Ghost onClick={() => setProductModalOpen(true)}><Plus className="w-4 h-4" /> Add product</Ghost>
-                <Ghost onClick={() => window.open("/products", "_blank")}>Manage products</Ghost>
+
+                <AddProductButton />
+                <Ghost onClick={() =>router.push('/dashboard/products')}>Manage products</Ghost>
               </div>
             </div>
 
-            <div className="space-y-3">
-              {products.length === 0 && <div className="p-4 text-sm text-gray-500 bg-gray-50 rounded-lg">No products yet. Create a product to start selling.</div>}
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                {products.map((p) => (
-                  <div key={p.id} className="p-3 bg-white rounded-lg shadow-sm flex items-center justify-between">
-                    <div>
-                      <div className="font-medium">{p.name}</div>
-                      <div className="text-xs text-gray-500">₦{p.price}</div>
-                    </div>
-                    <div className="flex gap-2">
-                      <Ghost onClick={() => { setEditingProduct(p); setProductModalOpen(true); }}><Edit3 className="w-4 h-4" /></Ghost>
-                      <Ghost onClick={() => handleRemoveProduct(p.id)}><Trash2 className="w-4 h-4 text-red-500" /></Ghost>
-                    </div>
-                  </div>
-                ))}
-              </div>
-
+            <div className="space-y-3">         
               <div className="flex flex-col sm:flex-row justify-between mt-4 gap-3">
                 <Ghost onClick={prev} className="w-full sm:w-auto">Back</Ghost>
                 <div className="flex w-full sm:w-auto gap-2">
@@ -507,7 +413,71 @@ export default function StoreCreator({ initialData = null, onDone }) {
      --------------------------- */
   return (
     <DashboardLayout>
-      <div className="max-w-7xl mx-auto p-4 sm:p-6 grid grid-cols-1 lg:grid-cols-2 gap-6">
+
+  {
+    hasStore ? (
+      <>
+        <motion.div
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          className=" space-y-6"
+        >
+          {/* Header row + actions */}
+          <div className="flex items-center justify-between">
+            <h1 className="text-xl md:text-2xl font-semibold">My Store</h1>
+            {hasStore && (
+              <div className="flex items-center gap-2">
+                <Button variant="outline" className="hidden sm:inline-flex gap-2">
+                  <BsRecord2Fill className="h-4 w-4" /> Live Preview
+                </Button>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="outline" className="gap-2">
+                      More actions <ChevronDown className="h-4 w-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                
+                </DropdownMenu>
+                {/* <Button className="gap-2">
+                  <Plus className="h-4 w-4" /> Add product
+                </Button> */}
+              </div>
+            )}
+          </div>
+
+          {hasStore && (
+            <>
+            <div className="grid grid-cols-1 gap-3">
+              <Card className="border-dashed">
+                <CardContent className="py-3">
+                  <p className="text-xs text-muted-foreground">Products by sell‑through rate</p>
+                  <p className="text-[11px] text-muted-foreground mt-1">0% —</p>
+                </CardContent>
+              </Card>
+              
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <div className="">
+              <p className="text-gray-500 text-sm md:text-lg ml-3 mb-3 ">Sales</p>
+              <CustomerGraph/>
+              </div>
+              <div className="">
+             <p className="text-gray-500 text-sm md:text-lg ml-3 mb-3 ">Finance</p>
+
+              <CustomerGraph/>
+              </div>
+
+            </div>
+            </>
+          )}
+        </motion.div>
+        <Button className='text-color4' >Edit Store</Button>
+        <PreviewPanel control={control} products={products} />
+      </>
+    ) : (
+      <>
+         <div className="max-w-7xl mx-auto p-4 sm:p-6 grid grid-cols-1 lg:grid-cols-2 gap-6">
         {
           publishing &&
         <Loader/>
@@ -524,7 +494,6 @@ export default function StoreCreator({ initialData = null, onDone }) {
               </div>
 
               <div className="flex items-center gap-3">
-                <span className="text-xs px-3 py-1 rounded-full bg-gray-100 text-gray-600">Premium</span>
                 <div className="flex items-center gap-2">
                   {/* isolated header preview watch */}
                   <HeaderPreview control={control} />
@@ -568,7 +537,7 @@ export default function StoreCreator({ initialData = null, onDone }) {
 
               <div className="flex items-center gap-3">
                 <Ghost onClick={saveDraft}>Save</Ghost>
-                <CTA onClick={() => setProductModalOpen(true)}><Plus className="w-4 h-4" /> Add product</CTA>
+                <AddProductButton />
               </div>
             </div>
 
@@ -598,17 +567,13 @@ export default function StoreCreator({ initialData = null, onDone }) {
           </div>
         </motion.div>
 
-        <ProductModal
-          open={productModalOpen}
-          onClose={() => { setProductModalOpen(false); setEditingProduct(null); }}
-          onSave={(p) => {
-            if (editingProduct) handleEditProduct(editingProduct.id, p);
-            else handleAddProduct(p);
-          }}
-          initial={editingProduct}
-        />
+       
       </div>
-    </DashboardLayout>
+
+      </>
+    )
+  }
+         </DashboardLayout>
   );
 }
 export const getServerSideProps = withAuth();

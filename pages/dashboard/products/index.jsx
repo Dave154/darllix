@@ -1,21 +1,35 @@
+// pages/dashboard/products/index.jsx
+"use client";
+
 import DashboardLayout from "../../../components/dashboardComponents/dashboardLayout";
 import { motion } from "framer-motion";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useCallback } from "react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Plus,
-  Download as ExportIcon,
-  Upload as ImportIcon,
-  MoreHorizontal,
   Search,
   SlidersHorizontal,
   ChevronDown,
+  ChevronLeft,
+  ChevronRight,
+  PlusIcon,
+  Edit,
+  Trash,
+  RefreshCcw,
+  MoreVertical,
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -28,73 +42,153 @@ import {
 import { useRouter } from "next/router";
 import { useStore } from "@/store";
 import { withAuth } from "../../../lib/withAuth";
+import { openProductModal } from "../../../components/dashboardComponents/productModal";
 
 
-
-export default function ProductsPage({store,hasStore}) {
+export default function ProductsPage({ store, hasStore }) {
   const setStore = useStore((s) => s.setStore);
+  const router = useRouter();
+
+  // UI state
+  const [query, setQuery] = useState("");
+  const [tab, setTab] = useState("All");
+
+  // Data state
+  const [products, setProducts] = useState([]);
+  const [total, setTotal] = useState(0);
+
+  // loading / error
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+
+  // pagination & sorting
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(10);
+  const [sortBy, setSortBy] = useState("created_at");
+  const [sortDir, setSortDir] = useState("desc");
+  const [categories, setCategories] = useState([]);
+const [selectedCategory, setSelectedCategory] = useState("all");
+
+  // search debounce
+  const [debouncedQuery, setDebouncedQuery] = useState(query);
 
   useEffect(() => {
     if (store) setStore(store);
-    console.log(store,hasStore)
   }, [store, setStore]);
-  
-  const [query, setQuery] = useState("");
-  const [tab, setTab] = useState("All");
-  const router = useRouter()
-  const [products, setProducts] = useState([
-    {
-      id: "p1",
-      name: "(Sample) Coconut Bar Soap",
-      status: "Active",
-      inventory: "0 in stock",
-      salesChannels: 1,
-      markets: 2,
-      category: "—",
-      vendor: "MyStore",
-    },
-    {
-      id: "p2",
-      name: "Copy of Custom Notebook",
-      status: "Draft",
-      inventory: "0 in stock for 24 variants",
-      salesChannels: 3,
-      markets: 2,
-      category: "Notebooks & Notepads",
-      vendor: "My Store",
-    },
-    {
-      id: "p3",
-      name: "Custom Handmade Mug",
-      status: "Active",
-      inventory: "Inventory not tracked",
-      salesChannels: 3,
-      markets: 2,
-      category: "Mug",
-      vendor: "JS Mob",
-    },
-    {
-      id: "p4",
-      name: "Custom Notebook",
-      status: "Active",
-      inventory: "5 in stock for 24 variants",
-      salesChannels: 3,
-      markets: 2,
-      category: "Notebooks & Notepads",
-      vendor: "My Store",
-    },
-  ]);
 
-  // ----------- Derived list -----------
-  const filtered = useMemo(() => {
-    let list = products;
-    if (tab !== "All") list = list.filter((p) => p.status === tab);
-    if (query.trim())
-      list = list.filter((p) => p.name.toLowerCase().includes(query.toLowerCase()));
-    return list;
-  }, [products, query, tab]);
+  // debounce query (300ms)
+  useEffect(() => {
+    const t = setTimeout(() => setDebouncedQuery(query.trim()), 300);
+    return () => clearTimeout(t);
+  }, [query]);
 
-  // ----------- Render helpers -----------
+  const totalPages = Math.max(1, Math.ceil((total || 0) / limit));
+
+// --- update fetchProducts ---
+const fetchProducts = useCallback(
+  async (opts = {}) => {
+    if (!hasStore) {
+      setProducts([]);
+      setCategories([]);
+      setTotal(0);
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
+    try {
+      const params = new URLSearchParams();
+      params.set("page", String(opts.page ?? page));
+      params.set("limit", String(opts.limit ?? limit));
+      if ((opts.q ?? debouncedQuery).trim()) params.set("q", opts.q ?? debouncedQuery);
+      if ((opts.status ?? tab) && (opts.status ?? tab) !== "All") params.set("status", opts.status ?? tab);
+      if (store?.id) params.set("storeId", store.id); // 🔑 ensure storeId not store_id
+      if (opts.sortBy ?? sortBy) params.set("sort_by", opts.sortBy ?? sortBy);
+      if (opts.sortDir ?? sortDir) params.set("sort_dir", opts.sortDir ?? sortDir);
+
+      const res = await fetch(`/api/products?${params.toString()}`, {
+        credentials: "same-origin",
+      });
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        throw new Error(body?.error || `Fetch failed: ${res.status}`);
+      }
+
+      const json = await res.json();
+      setProducts(json.products || []);
+      setCategories(json.categories || []); 
+      setTotal(json.total || 0);
+    } catch (err) {
+      console.error("fetchProducts", err);
+      setError(err.message || "Failed to load products");
+    } finally {
+      setLoading(false);
+    }
+  },
+  [hasStore, page, limit, debouncedQuery, tab, store?.id, sortBy, sortDir]
+);
+
+// --- category actions ---
+async function handleAddCategory() {
+  const name = prompt("Enter new category name:");
+  if (!name) return;
+  const res = await fetch("/api/categories", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ name, storeId: store.id }),
+  });
+  if (res.ok) fetchProducts();
+}
+
+async function handleEditCategory(cat) {
+  const name = prompt("Edit category name:", cat.name);
+  if (!name || name === cat.name) return;
+  const res = await fetch(`/api/categories?id=${cat.id}`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ name }),
+  });
+  if (res.ok) fetchProducts();
+}
+
+async function handleDeleteCategory(cat) {
+  if (!confirm(`Delete category "${cat.name}"?`)) return;
+  const res = await fetch(`/api/categories?id=${cat.id}`, { method: "DELETE" });
+  if (res.ok) fetchProducts();
+}
+
+  // refetch when page/limit/debouncedQuery/tab/sort change
+  useEffect(() => {
+    // reset to page 1 when searching or changing filters
+    setPage(1);
+  }, [debouncedQuery, tab, sortBy, sortDir, limit]);
+
+  useEffect(() => {
+    fetchProducts({ page, limit, q: debouncedQuery, status: tab, sortBy, sortDir });
+  }, [fetchProducts, page, limit, debouncedQuery, tab, sortBy, sortDir]);
+
+  // Add product flow
+  async function handleAddProduct() {
+    try {
+      const created = await openProductModal();
+      // If created is falsy -> cancelled
+      if (!created) return;
+      // If API returned DB row with id, optimistically refresh or prepend
+      if (created?.id) {
+        // refresh current page to show latest list (safer)
+        fetchProducts({ page: 1, limit, q: debouncedQuery, status: tab, sortBy, sortDir });
+        setPage(1);
+      } else {
+        // fallback refresh
+        fetchProducts();
+      }
+    } catch (err) {
+      console.error("Add product error:", err);
+      alert("Failed to add product: " + (err?.message || err));
+    }
+  }
+
+  // Status badge helper
   const StatusBadge = ({ status }) => {
     const color =
       status === "Active"
@@ -105,15 +199,13 @@ export default function ProductsPage({store,hasStore}) {
     return <Badge className={`border ${color}`}>{status}</Badge>;
   };
 
-  // ---------- Empty States ----------
   const NoStore = () => (
     <div className="py-16 text-center border rounded-xl bg-white">
       <h3 className="text-xl font-medium">You don’t have a store yet</h3>
       <p className="text-sm text-muted-foreground mt-1 mb-5">
         Create your store to start adding products and managing inventory.
       </p>
-      <Button onClick={()=> router.push('/dashboard/store') } className="">Create Store</Button>
-      
+      <Button onClick={() => router.push("/dashboard/store")}>Create Store</Button>
     </div>
   );
 
@@ -123,30 +215,28 @@ export default function ProductsPage({store,hasStore}) {
       <p className="text-sm text-muted-foreground mt-1 mb-5">
         Add your first product to start selling.
       </p>
-      <Button className="inline-flex items-center gap-2">
+      <Button onClick={handleAddProduct} className="inline-flex items-center gap-2">
         <Plus className="h-4 w-4" /> Add first product
       </Button>
     </div>
   );
 
+  // sort options for UI (must match allowedSortBy in API)
+  const sortOptions = [
+    { value: "created_at", label: "Newest" },
+    { value: "updated_at", label: "Recently updated" },
+    { value: "price", label: "Price" },
+    { value: "name", label: "Name" },
+  ];
+
   return (
     <DashboardLayout>
-      <motion.div
-        initial={{ opacity: 0, y: 8 }}
-        animate={{ opacity: 1, y: 0 }}
-        className=" space-y-6"
-      >
+      <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
         {/* Header row + actions */}
         <div className="flex items-center justify-between">
           <h1 className="text-xl md:text-2xl font-semibold">Products</h1>
           {hasStore && (
             <div className="flex items-center gap-2">
-              <Button variant="outline" className="hidden sm:inline-flex gap-2">
-                <ExportIcon className="h-4 w-4" /> Export
-              </Button>
-              <Button variant="outline" className="hidden sm:inline-flex gap-2">
-                <ImportIcon className="h-4 w-4" /> Import
-              </Button>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="outline" className="gap-2">
@@ -161,19 +251,19 @@ export default function ProductsPage({store,hasStore}) {
                   <DropdownMenuItem>Delete selected</DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
-              <Button className="gap-2">
+
+              <Button onClick={handleAddProduct} className="inline-flex items-center gap-2">
                 <Plus className="h-4 w-4" /> Add product
               </Button>
             </div>
           )}
         </div>
 
-        {/* KPI mini-cards (mirroring Shopify’s row) */}
         {hasStore && (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
             <Card className="border-dashed">
               <CardContent className="py-3">
-                <p className="text-xs text-muted-foreground">Products by sell‑through rate</p>
+                <p className="text-xs text-muted-foreground">Products by sell-through rate</p>
                 <p className="text-[11px] text-muted-foreground mt-1">0% —</p>
               </CardContent>
             </Card>
@@ -204,31 +294,82 @@ export default function ProductsPage({store,hasStore}) {
                   <TabsTrigger value="Archived">Archived</TabsTrigger>
                 </TabsList>
               </Tabs>
-
               {hasStore && (
                 <div className="flex items-center gap-2">
+                   <Button variant="ghost" onClick={() => fetchProducts({ page: 1, limit, q: debouncedQuery, status: tab, sortBy, sortDir })}>
+                    <RefreshCcw className={`${loading && 'animate-rotate'}`}/>
+                  </Button>
                   <div className="relative hidden md:block">
                     <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <Input
-                      value={query}
-                      onChange={(e) => setQuery(e.target.value)}
-                      placeholder="Search products"
-                      className="pl-8 w-64"
-                    />
+                    <Input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search products" className="pl-8 w-64" />
                   </div>
-                  <Button variant="outline" size="icon" className="shrink-0">
-                    <SlidersHorizontal className="h-4 w-4" />
-                  </Button>
+
+                  {/* sort dropdown */}
+                  <div className="flex items-center gap-2">
+                    <select
+                      value={sortBy}
+                      onChange={(e) => setSortBy(e.target.value)}
+                      className="border rounded px-2 py-1 text-sm"
+                    >
+                      {sortOptions.map((s) => (
+                        <option key={s.value} value={s.value}>
+                          {s.label}
+                        </option>
+                      ))}
+                    </select>
+
+                    <Button variant="outline" size="icon" onClick={() => setSortDir((d) => (d === "asc" ? "desc" : "asc"))}>
+                      {sortDir === "asc" ? "▲" : "▼"}
+                    </Button>
+
+                    <Button variant="outline" size="icon" className="shrink-0">
+                      <SlidersHorizontal className="h-4 w-4" />
+                    </Button>
+                  </div>
+                            {/* Category Filter + Management */}
+              
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="outline" className="gap-1">
+                         Categories <ChevronDown className="h-4 w-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className='w-80'>
+                      <DropdownMenuItem onClick={handleAddCategory} className="bg-white shadow-sm"> <PlusIcon/> Add Category</DropdownMenuItem>
+                      <div className="grid gap-3 mt-4">                      
+                      {categories.map((cat) => (
+                        <div key={cat.id} className="flex justify-between items-center px-2 py-1 border-b bg-blue-100/20">
+                          <span>{cat.name}</span>
+                          <div className="flex gap-2">
+                            <Button size="sm" variant="ghost" onClick={() => handleEditCategory(cat)}><Edit/> </Button>
+                            <Button size="sm" variant="destructive" onClick={() => handleDeleteCategory(cat)}><Trash/> </Button>
+                          </div>
+                        </div>
+                      ))}
+                      </div>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 </div>
+              
               )}
             </div>
+
           </CardHeader>
+
           <CardContent>
             {!hasStore && <NoStore />}
 
-            {hasStore && products.length === 0 && <EmptyProducts />}
+            {loading && (
+              <div className="text-center py-12 text-gray-500">Loading products...</div>
+            )}
 
-            {hasStore && products.length > 0 && (
+            {error && (
+              <div className="text-center py-12 text-red-500">{error}</div>
+            )}
+
+            {hasStore && !loading && products.length === 0 && <EmptyProducts />}
+
+            {hasStore && !loading && products.length > 0 && (
               <div className="rounded-md border overflow-hidden">
                 <Table>
                   <TableHeader>
@@ -238,64 +379,81 @@ export default function ProductsPage({store,hasStore}) {
                       </TableHead>
                       <TableHead>Product</TableHead>
                       <TableHead>Status</TableHead>
-                      <TableHead>Inventory</TableHead>
-                      <TableHead>Sales channels</TableHead>
-                      <TableHead>Markets</TableHead>
+                      <TableHead>Price</TableHead>
                       <TableHead>Category</TableHead>
                       <TableHead>Vendor</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {filtered.map((p) => (
+                    {products.map((p) => (
                       <TableRow key={p.id} className="hover:bg-muted/40">
                         <TableCell>
                           <Checkbox aria-label={`Select ${p.name}`} />
                         </TableCell>
                         <TableCell>
                           <div className="flex items-center gap-3">
-                            <div className="h-8 w-8 rounded-md bg-muted shrink-0" />
+                            <div className="h-8 w-8 rounded-md bg-muted shrink-0 overflow-hidden">
+                              {
+                                p.images[0] &&
+                              <img src={p.images[0]?.url } alt={p.name} className="w-full h-full object-cover" />
+                              }
+                            </div>
                             <span className="font-medium truncate max-w-[320px]">{p.name}</span>
                           </div>
                         </TableCell>
                         <TableCell>
-                          <StatusBadge status={p.status} />
+                          <StatusBadge status={p.status || "Active"} />
                         </TableCell>
-                        <TableCell className="text-sm text-muted-foreground">{p.inventory}</TableCell>
-                        <TableCell className="text-sm">{p.salesChannels}</TableCell>
-                        <TableCell className="text-sm">{p.markets}</TableCell>
-                        <TableCell className="text-sm text-muted-foreground">{p.category}</TableCell>
-                        <TableCell className="text-sm text-muted-foreground">{p.vendor}</TableCell>
+                        <TableCell className="text-sm text-muted-foreground">₦{Number(p.price).toFixed(2)}</TableCell>
+                       <TableCell className="text-sm text-muted-foreground">
+
+                          {Array.isArray(p.categories) && p.categories.length > 0
+                            ? p.categories.join(", ")
+                            : "—"}
+                        </TableCell>
+                        <TableCell className="text-sm text-muted-foreground">{p.vendor || "My Store"}</TableCell>
+                        <TableCell>
+                          <MoreVertical className="text-sm text-gray-700 h-5 self-center"/>
+                        </TableCell>
                       </TableRow>
                     ))}
                   </TableBody>
                 </Table>
               </div>
             )}
+
+            {/* Pagination controls */}
+            {hasStore && total > 0 && (
+              <div className="flex items-center justify-between mt-4">
+                <p className="text-sm text-gray-500">
+                  Showing {(page - 1) * limit + 1}–{Math.min(page * limit, total)} of {total}
+                </p>
+
+                <div className="flex items-center gap-2">
+                  <Button variant="outline" size="icon" disabled={page === 1} onClick={() => setPage((p) => Math.max(1, p - 1))}>
+                    <ChevronLeft className="h-4 w-4" />
+                  </Button>
+
+                  <div className="text-sm px-2">{page} / {totalPages}</div>
+
+                  <Button variant="outline" size="icon" disabled={page === totalPages} onClick={() => setPage((p) => Math.min(totalPages, p + 1))}>
+                    <ChevronRight className="h-4 w-4" />
+                  </Button>
+
+                  </div>
+              </div>
+            )}
           </CardContent>
         </Card>
-
-        {/* Dev toggles for quick preview (remove in prod) */}
-        {/* <Card className="bg-muted/30">
-          <CardHeader>
-            <CardTitle className="text-sm">Preview toggles</CardTitle>
-          </CardHeader>
-          <CardContent className="flex flex-wrap gap-2 text-sm">
-            <Button variant="outline" onClick={() => setHasStore((s) => !s)}>
-              Toggle hasStore: <span className="ml-1 font-mono">{String(hasStore)}</span>
-            </Button>
-            <Button
-              variant="outline"
-              onClick={() => setProducts((p) => (p.length ? [] : products))}
-            >
-              Toggle empty products
-            </Button>
-            <Button variant="outline" onClick={() => setTab("All")}>Reset filters</Button>
-          </CardContent>
-        </Card> */}
       </motion.div>
     </DashboardLayout>
   );
 }
 
-
 export const getServerSideProps = withAuth();
+
+
+
+
+
+
