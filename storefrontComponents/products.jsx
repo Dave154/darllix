@@ -1,24 +1,9 @@
+import { useCallback, useEffect, useState } from 'react';
 import ProductCard from './productCard'
 import { motion } from 'framer-motion'
+import { Skeleton } from '@/components/ui/skeleton';
 
-const Products = () => {
-  const demoProducts = [
-    {
-      id: 1,
-      name: "Product 1",
-      image_url: "/placeholder.jpg",
-      price: 2000,
-      description: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua."
-    },
-    {
-      id: 2,
-      name: "Product 2",
-      image_url: "/placeholder.jpg",
-      price: 2500,
-      description: "Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat."
-    },
-  ];
-
+const Products = ({store, products,loading}) => {
   const containerVariants = {
     hidden: { opacity: 0 },
     show: {
@@ -36,9 +21,22 @@ const Products = () => {
     }
   };
 
-  if (false) {
+  if(loading){
+    return(
+      <div className="grid grid-cols-2 gap-4 md:grid-cols-3 mt-4">
+{ 
+    Array(5).fill('').map((_,i)=>{
+        return <div className="">
+        <Skeleton  className='w-full h-72'  />
+      </div>
+      })
+}
+      </div>
+    )
+  }
+  if (!loading && products.length=== 0) {
     return (
-      <div className="h-48 flex justify-center items-center">
+      <div className="h-4</motion.div>8 flex justify-center items-center">
         No Product Found
       </div>
     );
@@ -46,12 +44,12 @@ const Products = () => {
     return (
       <div>
         <motion.h2
-          className="text-2xl font-extrabold"
+          className="text-2xl font-semibold"
           initial={{ opacity: 0, x: -10 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.4 }}
         >
-          Products
+          {/* Products */}
         </motion.h2>
 
         <motion.div
@@ -60,8 +58,8 @@ const Products = () => {
           initial="hidden"
           animate="show"
         >
-          {demoProducts.map((product, i) => (
-            <motion.div key={product.id + i} variants={itemVariants}>
+          {products.map((product, i) => (
+            <motion.div key={product.id + i} variants={itemVariants} >
               <ProductCard productData={product} />
             </motion.div>
           ))}

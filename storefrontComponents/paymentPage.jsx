@@ -23,7 +23,7 @@ import dynamic from "next/dynamic";
 import { useEffect, useState } from "react";
 import Loader from "./loader";
 
-export default function PaymentPage() {
+export default function PaymentPage({store}) {
   const { cart, checkoutData, setCheckoutData, cartTotal, clearCart } = useStore();
   const subtotal = cart.reduce((sum, i) => sum + i.price * i.quantity, 0);
   const shipping = checkoutData.shipping;
@@ -96,7 +96,7 @@ const handlePaystackClose = () => {
       }
       {/* Header */}
       <div className="p-8 pb-0 flex items-center justify-center md:justify-start">
-        <a href="/" className="font-extrabold text-xl md:text-2xl text-color3">DENIM</a>
+        <a href="/" className="font-extrabold text-xl md:text-2xl text-color3">{store.name}</a>
       </div>
 
       <div className="max-w-7xl mx-auto p-4 md:p-8 grid md:grid-cols-3 gap-8 min-h-screen">

@@ -72,14 +72,7 @@ import StoreFront404 from "../../components/errors/storefront404";
 export default function StorefrontDynamic({ store, slug }) {
  
    const [pathname, setPath] = useState("");
- 
-  // useEffect(() => {
 
-  //   setPath(window.location.pathname);
-  //   console.log("Current Pathname:", window.location.pathname);
-  //   console.log("Slug:", slug);
-  //   console.log(pathname)
-  // }, [pathname]);
   const router = useRouter();
  useEffect(() => {
     // Set immediately on mount
@@ -96,14 +89,14 @@ export default function StorefrontDynamic({ store, slug }) {
     };
   }, [router.events]);
 
+  console.log(slug, store)
   if (!store) return <Global404 />;
-    console.log(slug, store)
       if (slug[0]===`storefront` && pathname.startsWith("/payment-success")) {
  return <PaymentSuccess />; 
 }
   
   if (slug[0]===`storefront` && pathname === "/") {
-    return <Storefront store={store} />; // Home
+    return <Storefront store={store} />; 
   }
 
   if (slug[0]===`storefront` && pathname === "/cart") {
@@ -113,10 +106,10 @@ export default function StorefrontDynamic({ store, slug }) {
     return <Checkout store={store} />;
   }
    if (slug[0]===`storefront` && pathname === "/checkout/payment") {
-    return <PaymentPage  />; 
+    return <PaymentPage store={store}  />; 
   }
    if (slug[0]===`storefront` && pathname === "/checkout/shipping") {
-    return <ShippingPage  />; 
+    return <ShippingPage store={store} />; 
   }
 
   if (slug[0] === "storefront" && pathname.startsWith("/product/")) {
@@ -129,7 +122,9 @@ export default function StorefrontDynamic({ store, slug }) {
   return <StoreFront404 store={store} />;
 }
 
-export async function getServerSideProps({ params, req }) {
+import { getSupabaseServer } from "../../lib/supabaseClient";
+
+export async function getServerSideProps({ params, req, res }) {
   const host = req.headers.host || "";
   let subdomain = null;
 
@@ -143,14 +138,18 @@ export async function getServerSideProps({ params, req }) {
     return { notFound: true };
   }
 
-  const { createServerSupabaseClient } = await import("../../lib/supabaseClient");
-  const supabase = createServerSupabaseClient();
+  const supabase = getSupabaseServer({ req, res });
 
-  const { data: store } = await supabase
+  const { data: store, error } = await supabase
     .from("stores")
-    .select("id, name, subdomain, banner_url")
+    .select("id, name, subdomain ,description ,banner_url ,theme ,is_published")
     .eq("subdomain", subdomain)
     .maybeSingle();
+
+  if (error) {
+    console.error("Supabase error fetching store:", error);
+    return { notFound: true };
+  }
 
   return {
     props: {
@@ -159,3 +158,4 @@ export async function getServerSideProps({ params, req }) {
     },
   };
 }
+

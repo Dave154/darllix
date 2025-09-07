@@ -29,6 +29,7 @@ export default async function handler(req, res) {
       description: product.description ?? null,
       images: product.images ?? [],
       updated_at: new Date().toISOString(),
+       available: Number.isFinite(Number(product.available)) ? Number(product.available) : 0,
     };
 
     const { data, error } = await supabase

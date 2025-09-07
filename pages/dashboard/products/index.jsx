@@ -3,7 +3,7 @@
 
 import DashboardLayout from "../../../components/dashboardComponents/dashboardLayout";
 import { motion } from "framer-motion";
-import { useEffect, useMemo, useState, useCallback } from "react";
+import { useEffect, useMemo, useState, useCallback, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import {
@@ -18,6 +18,8 @@ import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {Skeleton } from "@/components/ui/skeleton";
+
 import {
   Plus,
   Search,
@@ -30,6 +32,8 @@ import {
   Trash,
   RefreshCcw,
   MoreVertical,
+  Trash2,
+  Pencil,
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -43,6 +47,7 @@ import { useRouter } from "next/router";
 import { useStore } from "@/store";
 import { withAuth } from "../../../lib/withAuth";
 import { openProductModal } from "../../../components/dashboardComponents/productModal";
+import AreYouSureModal from "../../../components/dashboardComponents/areYouSure";
 
 
 export default function ProductsPage({ store, hasStore }) {
@@ -71,6 +76,14 @@ const [selectedCategory, setSelectedCategory] = useState("all");
 
   // search debounce
   const [debouncedQuery, setDebouncedQuery] = useState(query);
+// are you sure modal
+  const [confirmOpen, setConfirmOpen] = useState(false);
+const [pendingDelete, setPendingDelete] = useState(null);
+const [deleting,setDeleting] = useState(false)
+
+// selection
+ const [selectedIds, setSelectedIds] = useState([]); 
+  const headerCheckboxRef = useRef(null);
 
   useEffect(() => {
     if (store) setStore(store);
@@ -102,7 +115,7 @@ const fetchProducts = useCallback(
       params.set("limit", String(opts.limit ?? limit));
       if ((opts.q ?? debouncedQuery).trim()) params.set("q", opts.q ?? debouncedQuery);
       if ((opts.status ?? tab) && (opts.status ?? tab) !== "All") params.set("status", opts.status ?? tab);
-      if (store?.id) params.set("storeId", store.id); // 🔑 ensure storeId not store_id
+      if (store?.id) params.set("storeId", store.id); 
       if (opts.sortBy ?? sortBy) params.set("sort_by", opts.sortBy ?? sortBy);
       if (opts.sortDir ?? sortDir) params.set("sort_dir", opts.sortDir ?? sortDir);
 
@@ -173,7 +186,6 @@ async function handleDeleteCategory(cat) {
       const created = await openProductModal();
       // If created is falsy -> cancelled
       if (!created) return;
-      // If API returned DB row with id, optimistically refresh or prepend
       if (created?.id) {
         // refresh current page to show latest list (safer)
         fetchProducts({ page: 1, limit, q: debouncedQuery, status: tab, sortBy, sortDir });
@@ -188,6 +200,64 @@ async function handleDeleteCategory(cat) {
     }
   }
 
+   async function handleDeleteSelected() {
+    console.log('hmmmm')
+    if (selectedIds.length === 0) return;
+    setDeleting(true)
+    try {
+      for (const id of selectedIds) {
+        console.log(id)
+        const res = await fetch(`/api/products?id=${encodeURIComponent(id)}`, {
+          method: "DELETE",
+          credentials: "same-origin",
+        });
+        if (!res.ok) {
+          const body = await res.json().catch(() => ({}));
+          throw new Error(body?.error || `Delete failed for ${id}`);
+        }
+      }
+      // refresh once after deleting
+      await fetchProducts({ page: 1, limit, q: debouncedQuery, status: tab, sortBy, sortDir });
+      setPage(1);
+      setSelectedIds([]);
+    } catch (err) {
+      console.error("Bulk delete error", err);
+      alert("Failed to delete selected: " + (err?.message || err));
+    }finally{
+      setDeleting(false)
+    }
+  }
+
+  // Selection helpers
+  const selectedCount = selectedIds.length;
+  const isAllSelected = products.length > 0 && selectedCount === products.length;
+
+  // Keep header checkbox indeterminate state synced via ref
+  useEffect(() => {
+    const ref = headerCheckboxRef.current;
+    if (!ref) return;
+    try {
+      ref.indeterminate = selectedCount > 0 && selectedCount < products.length;
+    } catch (err) {
+      // some Checkbox implementations don't expose DOM checkbox directly; ignore gracefully
+    }
+  }, [selectedCount, products.length]);
+
+  function toggleSelectAll() {
+    if (isAllSelected) {
+      setSelectedIds([]);
+    } else {
+      setSelectedIds(products.map((p) => p.id));
+    }
+  }
+
+  function toggleSelectOne(id) {
+    setSelectedIds((prev) => {
+      if (prev.includes(id)) return prev.filter((x) => x !== id);
+      return [...prev, id];
+    });
+  }
+
   // Status badge helper
   const StatusBadge = ({ status }) => {
     const color =
@@ -196,7 +266,7 @@ async function handleDeleteCategory(cat) {
         : status === "Draft"
         ? "bg-blue-100 text-blue-700 border-blue-200"
         : "bg-gray-100 text-gray-700 border-gray-200";
-    return <Badge className={`border ${color}`}>{status}</Badge>;
+    return <Badge className={`border ${color} hover:bg-transparent`}>{status}</Badge>;
   };
 
   const NoStore = () => (
@@ -221,7 +291,7 @@ async function handleDeleteCategory(cat) {
     </div>
   );
 
-  // sort options for UI (must match allowedSortBy in API)
+
   const sortOptions = [
     { value: "created_at", label: "Newest" },
     { value: "updated_at", label: "Recently updated" },
@@ -229,8 +299,69 @@ async function handleDeleteCategory(cat) {
     { value: "name", label: "Name" },
   ];
 
+  const handleEditProduct =async(p)=>{
+       try {
+      const edited = await openProductModal({initialProduct: p});
+      // If created is falsy -> cancelled
+      if (!edited) return;
+      if (edited?.id) {
+        fetchProducts({ page: 1, limit, q: debouncedQuery, status: tab, sortBy, sortDir });
+        setPage(1);
+      } else {
+        fetchProducts();
+      }
+    } catch (err) {
+      console.error("Error editing product:", err);
+    }
+      
+  }
+const handleDeleteProduct = async (id) => {
+  setDeleting(true)
+try{
+  const res = await fetch(`/api/products?id=${id}`, {
+    method: "DELETE",
+    headers: { "Content-Type": "application/json" }, 
+  });
+  fetchProducts({ page: 1, limit, q: debouncedQuery, status: tab, sortBy, sortDir });
+
+} catch(error){
+    console.log(error)
+  }
+  finally{
+  setDeleting(false)
+
+  }
+}
+
+function handleDeleteClick(id) {
+  if(id){
+    setPendingDelete(id);
+  }
+  setConfirmOpen(true);
+}
+async function confirmDelete() {
+  if (!pendingDelete){
+    await handleDeleteSelected()
+  }else{
+    await handleDeleteProduct(pendingDelete); 
+  }
+  setConfirmOpen(false);
+  setPendingDelete(null);
+}
+
+
   return (
     <DashboardLayout>
+      <AreYouSureModal
+  open={confirmOpen}
+  onClose={() => setConfirmOpen(false)}
+  onConfirm={confirmDelete}
+  title="Delete this product?"
+  description="This action cannot be undone and the product will be permanently removed."
+  confirmLabel="Delete"
+  cancelLabel="Cancel"
+  loading= {deleting}
+/>
       <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
         {/* Header row + actions */}
         <div className="flex items-center justify-between">
@@ -246,9 +377,8 @@ async function handleDeleteCategory(cat) {
                 <DropdownMenuContent align="end">
                   <DropdownMenuLabel>Bulk actions</DropdownMenuLabel>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem>Edit products</DropdownMenuItem>
                   <DropdownMenuItem>Archive selected</DropdownMenuItem>
-                  <DropdownMenuItem>Delete selected</DropdownMenuItem>
+                  <DropdownMenuItem onClick={()=>handleDeleteClick()} >Delete selected</DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
 
@@ -326,7 +456,7 @@ async function handleDeleteCategory(cat) {
                       <SlidersHorizontal className="h-4 w-4" />
                     </Button>
                   </div>
-                            {/* Category Filter + Management */}
+                            
               
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
@@ -360,13 +490,23 @@ async function handleDeleteCategory(cat) {
             {!hasStore && <NoStore />}
 
             {loading && (
-              <div className="text-center py-12 text-gray-500">Loading products...</div>
-            )}
+                <div className="rounded-md border overflow-hidden">
+                  <div className="w-full">
 
-            {error && (
-              <div className="text-center py-12 text-red-500">{error}</div>
+                    { Array(6).fill('').map((i) => (
+                      <div key={i} className="flex px-2 w-full items-center justify-between border-b py-2 gap-5">
+                       <Skeleton className='h-5 w-1/4'  />
+                       <Skeleton className='h-6  w-full'  />
+                       <Skeleton className='h-6  w-full'  />
+                       <Skeleton className='h-6  w-full'  />
+                       <Skeleton className='h-6  w-full'  />
+                       <Skeleton className='h-6  w-full'  />
+                      </div>
+                   ))}
+                   </div>
+              </div>
+             
             )}
-
             {hasStore && !loading && products.length === 0 && <EmptyProducts />}
 
             {hasStore && !loading && products.length > 0 && (
@@ -375,20 +515,29 @@ async function handleDeleteCategory(cat) {
                   <TableHeader>
                     <TableRow>
                       <TableHead className="w-10">
-                        <Checkbox aria-label="Select all" />
+                        <Checkbox 
+                           ref={headerCheckboxRef}
+                          checked={isAllSelected}
+                          onCheckedChange={toggleSelectAll}
+                          aria-label="Select all"
+                        />
                       </TableHead>
                       <TableHead>Product</TableHead>
                       <TableHead>Status</TableHead>
                       <TableHead>Price</TableHead>
                       <TableHead>Category</TableHead>
-                      <TableHead>Vendor</TableHead>
+                      <TableHead>Inventory</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {products.map((p) => (
                       <TableRow key={p.id} className="hover:bg-muted/40">
                         <TableCell>
-                          <Checkbox aria-label={`Select ${p.name}`} />
+                          <Checkbox
+                            checked={selectedIds.includes(p.id)}
+                            onCheckedChange={() => toggleSelectOne(p.id)}
+                            aria-label={`Select ${p.name}`}
+                          />
                         </TableCell>
                         <TableCell>
                           <div className="flex items-center gap-3">
@@ -402,18 +551,44 @@ async function handleDeleteCategory(cat) {
                           </div>
                         </TableCell>
                         <TableCell>
-                          <StatusBadge status={p.status || "Active"} />
+                          <StatusBadge status={p.status || "Draft"} />
                         </TableCell>
                         <TableCell className="text-sm text-muted-foreground">₦{Number(p.price).toFixed(2)}</TableCell>
                        <TableCell className="text-sm text-muted-foreground">
 
                           {Array.isArray(p.categories) && p.categories.length > 0
-                            ? p.categories.join(", ")
-                            : "—"}
+                            ? p.categories.map(id => {
+                          const found = categories.find(c => String(c.id) === String(id));
+                          return found ? found.name : String(id).slice(0,8);
+                        }).join(", ") : "—"}
                         </TableCell>
-                        <TableCell className="text-sm text-muted-foreground">{p.vendor || "My Store"}</TableCell>
+                       <TableCell className="text-sm text-muted-foreground">{p.available ?? 0}</TableCell>
+
                         <TableCell>
-                          <MoreVertical className="text-sm text-gray-700 h-5 self-center"/>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <button className="p-2 rounded-md hover:bg-gray-100">
+                                <MoreVertical className="h-5 w-5 text-gray-700" />
+                              </button>
+                            </DropdownMenuTrigger>
+
+                            <DropdownMenuContent align="end" className="w-32">
+                              <DropdownMenuItem
+                                onClick={() => handleEditProduct(p)}
+                                className="flex items-center gap-2 cursor-pointer"
+                              >
+                                <Pencil className="h-4 w-4 text-sky-600" />
+                                <span>Edit</span>
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                onClick={() => handleDeleteClick(p.id)}
+                                className="flex items-center gap-2 cursor-pointer text-red-600"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                                <span>Delete</span>
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
                         </TableCell>
                       </TableRow>
                     ))}

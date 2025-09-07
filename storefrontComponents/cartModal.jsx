@@ -80,7 +80,7 @@ export function CartDrawer({children}) {
                             {
                             cart.map((product,index)=>{
                                 return (
-                                     <div className="pb-4 border rounded-md" key ={product.id + index} > 
+                                     <div className="pb-4  rounded-md" key ={product.id + index} > 
                                 <div className="mb-3 h-[120px] bg-color2 rounded-md relative">
                            <div className="absolute inset-0 bg-black/30 rounded-md p-2 flex justify-between items-start">
                                 {/* Price Tag */}
@@ -97,7 +97,7 @@ export function CartDrawer({children}) {
                                 </button>
                                 </div>
                             <Image 
-                                src={"/test_store_banner.png"}
+                                src={product.images[0].url}
                                 alt="product image"
                                 width={1000}
                                 height={1000}
@@ -195,7 +195,7 @@ export function CartDrawer({children}) {
                         <Button className="bg-color3"
                          onClick={() => cart.length === 0 ? null : router.push("/checkout")}
                         >
-                            Proceed to Checkout"
+                            Proceed to Checkout
                         </Button>
                     )}
                        

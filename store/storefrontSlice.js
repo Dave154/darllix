@@ -1,10 +1,17 @@
 // store/storefrontSlice.js
 export const createStorefrontSlice = (set, get) => ({
+  owner_id : '',
+
+  setId:(id) => {
+    set((state) => ({
+      owner_id: id
+    }));
+  },
   cart: [],
 
   addToCart: (product) => {
     set((state) => {
-      const maxQty = product.maxQuantity ?? 3;
+      const maxQty = product.available;
       const existing = state.cart.find((item) => item.id === product.id);
 
       if (existing) {
@@ -27,7 +34,8 @@ export const createStorefrontSlice = (set, get) => ({
       const product = state.cart.find((item) => item.id === productId);
       if (!product) return state;
 
-      const maxQty = product.maxQuantity ?? 3;
+      const maxQty = product.available;
+      console.log(product)
       if (product.quantity >= maxQty) return state;
 
       return {

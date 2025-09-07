@@ -229,6 +229,7 @@ export default async function handler(req, res) {
         images: product.images ?? [],
         status: product.status ?? "Active",
         categories: product.categories ?? [], 
+       available: Number.isFinite(Number(product.available)) ? Number(product.available) : 0,
       };
 
       const { data: created, error: insertErr } = await supabaseAdmin
@@ -267,6 +268,7 @@ export default async function handler(req, res) {
         status: product.status ?? "Active",
         categories: product.categories ?? [],
         updated_at: new Date().toISOString(),
+        available: Number.isFinite(Number(product.available)) ? Number(product.available) : 0,
       };
 
       const { data: updated, error: updateErr } = await supabaseAdmin
@@ -312,95 +314,180 @@ export default async function handler(req, res) {
     }
 
     // ---------------------- GET (public) ----------------------
-    if (req.method === "GET") {
-      // expected query params:
-      // store_id (required for storefront or dashboard)
-      // page, limit, q, status, sort_by, sort_dir
-      const {
-        page = "1",
-        limit = "10",
-        q = "",
-        status,
-        storeId,
-        sort_by = "created_at",
-        sort_dir = "desc",
-      } = req.query;
+if (req.method === "GET") {
+  const {
+    page = "1",
+    limit = "10",
+    q = "",
+    status,
+    storeId,
+    id,
+    sort_by = "created_at",
+    sort_dir = "desc",
+    category,
+  } = req.query;
 
-      if (!storeId) {
-        return res.status(400).json({ error: "storeId query param required" });
-      }
+  if (!storeId) {
+    return res.status(400).json({ error: "storeId query param required" });
+  }
 
-      const p = Math.max(1, parseInt(page, 10) || 1);
-      const l = Math.max(1, Math.min(100, parseInt(limit, 10) || 10));
-      const from = (p - 1) * l;
-      const to = p * l - 1;
+  try {
+    // Fetch store categories up-front so we can:
+    //  - map product category ids -> names for the response
+    //  - resolve a category filter supplied as a name -> id
+    const { data: categories = [], error: catFetchErr } = await supabaseAdmin
+      .from("categories")
+      .select("*")
+      .eq("store_id", storeId)
+      .order("created_at", { ascending: true });
 
-      // Build base query
-      let queryBuilder = supabaseAdmin
-        .from("products")
-        .select("*, created_at", { count: "exact" }) // count exact for total
-        .eq("store_id", storeId);
-
-      // status filter
-      if (status && status !== "All") {
-        queryBuilder = queryBuilder.eq("status", status);
-      }
-
-      // full-text-ish search (name OR description)
-      if (q && String(q).trim()) {
-        const clean = String(q).trim().replace(/%/g, "\\%");
-        // Supabase/Postgres ilike pattern match; use .or for name/description
-        queryBuilder = queryBuilder.or(`name.ilike.%${clean}%,description.ilike.%${clean}%`);
-      }
-
-      // sorting safety: allow only a small set of columns
-      const allowedSort = new Set(["created_at", "updated_at", "price", "name"]);
-      const sortBy = allowedSort.has(sort_by) ? sort_by : "created_at";
-      const sortDir = sort_dir === "asc" ? "asc" : "desc";
-
-      // apply range and order
-      queryBuilder = queryBuilder.order(sortBy, { ascending: sortDir === "asc" }).range(from, to);
-
-      const { data: products, error: prodErr, count } = await queryBuilder;
-      if (prodErr) {
-        console.error("Fetch products error:", prodErr);
-        return res.status(500).json({ error: prodErr.message || "Fetch failed" });
-      }
-
-      // fetch store categories once to map ids -> names
-      const { data: categories = [], error: catErr } = await supabaseAdmin
-        .from("categories")
-        .select("*")
-        .eq("store_id", storeId)
-        .order("created_at", { ascending: true });
-
-      if (catErr) {
-        console.warn("Failed to fetch categories (non-fatal):", catErr);
-      }
-
-      // Build a lookup map of category id -> name
-      const catMap = new Map();
-      (categories || []).forEach((c) => catMap.set(String(c.id), c.name));
-
-      // map products' categories (which is stored as array of uuids) -> a readable string
-      const mapped = (products || []).map((p) => {
-        let categoryDisplay = "—";
-        if (Array.isArray(p.categories) && p.categories.length) {
-          // map IDs to names, fallback to id substring if name missing
-          const names = p.categories
-            .map((cid) => (catMap.get(String(cid)) ? catMap.get(String(cid)) : String(cid).slice(0, 8)))
-            .filter(Boolean);
-          categoryDisplay = names.join(", ");
-        }
-        return {
-          ...p,
-          category: categoryDisplay,
-        };
-      });
-
-      const total = typeof count === "number" ? count : mapped.length;
-      return res.status(200).json({ products: mapped, categories: categories || [], total });
+    if (catFetchErr) {
+      // non-fatal: keep going but warn
+      console.warn("Failed to fetch categories (non-fatal):", catFetchErr);
     }
+
+    // Build lookup map id => name
+    const catMap = new Map();
+    (categories || []).forEach((c) => catMap.set(String(c.id), c.name));
+
+    // If `id` provided, return single product (with mapped categories)
+    if (id) {
+      const { data: singleProd, error: singleErr } = await supabaseAdmin
+        .from("products")
+        .select("*")
+        .eq("id", id)
+        .maybeSingle();
+
+      if (singleErr) {
+        console.error("Fetch single product error:", singleErr);
+        return res.status(500).json({ error: singleErr.message || "Fetch failed" });
+      }
+      if (!singleProd) return res.status(404).json({ error: "Product not found" });
+
+      // ensure store matches (optional safety)
+      if (String(singleProd.store_id) !== String(storeId)) {
+        return res.status(404).json({ error: "Product not found for this store" });
+      }
+
+      // normalize categories into [{id, name}, ...]
+      let productCategoriesReadable = [];
+      if (Array.isArray(singleProd.categories) && singleProd.categories.length) {
+        productCategoriesReadable = singleProd.categories.map((cid) => {
+          const cidStr = String(cid);
+          return { id: cidStr, name: catMap.get(cidStr) || cidStr };
+        });
+      } else if (singleProd.categories && typeof singleProd.categories === "string") {
+        // legacy text stored
+        productCategoriesReadable = [{ id: singleProd.categories, name: singleProd.categories }];
+      }
+
+      // available normalization
+      const available = typeof singleProd.available === "number"
+        ? singleProd.available
+        : (singleProd.available ? Number(singleProd.available) : 0);
+
+      return res.status(200).json({
+        product: {
+          ...singleProd,
+          categories: productCategoriesReadable,
+          available,
+        },
+        categories: categories || [],
+      });
+    }
+
+    // Pagination values
+    const p = Math.max(1, parseInt(page, 10) || 1);
+    const l = Math.max(1, Math.min(100, parseInt(limit, 10) || 10));
+    const from = (p - 1) * l;
+    const to = p * l - 1;
+
+    // Determine if a category filter was supplied and resolve it to an id (if name was provided)
+    let categoryIdToFilter = null;
+    if (category && String(category).trim()) {
+      const catCandidate = String(category).trim();
+
+      // Try to match by id first
+      const foundById = (categories || []).find((c) => String(c.id) === catCandidate);
+      if (foundById) categoryIdToFilter = String(foundById.id);
+      else {
+        // Try to match by name (case-insensitive)
+        const foundByName = (categories || []).find((c) => String(c.name).toLowerCase() === catCandidate.toLowerCase());
+        if (foundByName) categoryIdToFilter = String(foundByName.id);
+      }
+
+      // If not found, we will return empty result set (no products match unknown category)
+      if (!categoryIdToFilter) {
+        return res.status(200).json({ products: [], categories: categories || [], total: 0 });
+      }
+    }
+
+    // Build base query
+    let queryBuilder = supabaseAdmin
+      .from("products")
+      .select("*, created_at", { count: "exact" })
+      .eq("store_id", storeId);
+
+    // status filter
+    if (status && status !== "All") {
+      queryBuilder = queryBuilder.eq("status", status);
+    }
+
+    // category server-side filter: expect categories column to be a JSON array of ids (text/uuid)
+    if (categoryIdToFilter) {
+      // .contains expects a JSON array value to check inclusion
+      queryBuilder = queryBuilder.contains("categories", [categoryIdToFilter]);
+    }
+
+    // full-text-ish search (name OR description)
+    if (q && String(q).trim()) {
+      const clean = String(q).trim().replace(/%/g, "\\%");
+      queryBuilder = queryBuilder.or(`name.ilike.%${clean}%,description.ilike.%${clean}%`);
+    }
+
+    // sorting safety
+    const allowedSort = new Set(["created_at", "updated_at", "price", "name"]);
+    const sortBy = allowedSort.has(sort_by) ? sort_by : "created_at";
+    const sortDir = sort_dir === "asc" ? "asc" : "desc";
+
+    // apply order + pagination
+    queryBuilder = queryBuilder.order(sortBy, { ascending: sortDir === "asc" }).range(from, to);
+
+    const { data: products, error: prodErr, count } = await queryBuilder;
+    if (prodErr) {
+      console.error("Fetch products error:", prodErr);
+      return res.status(500).json({ error: prodErr.message || "Fetch failed" });
+    }
+
+    // Map each product's categories (array of ids) to readable array of {id,name}
+    const mapped = (products || []).map((p) => {
+      let productCats = [];
+      if (Array.isArray(p.categories) && p.categories.length) {
+        productCats = p.categories.map((cid) => {
+          const cidStr = String(cid);
+          return { id: cidStr, name: catMap.get(cidStr) || cidStr };
+        });
+      } else if (p.categories && typeof p.categories === "string") {
+        // legacy text category - return as single-item object
+        productCats = [{ id: p.categories, name: p.categories }];
+      }
+
+      return {
+        ...p,
+        categories: productCats,
+        // also keep a convenient string fallback for older UI if needed
+        category: Array.isArray(productCats) && productCats.length ? productCats.map((c) => c.name).join(", ") : "—",
+        available: typeof p.available === "number" ? p.available : (p.available ? Number(p.available) : 0),
+      };
+    });
+
+    const total = typeof count === "number" ? count : mapped.length;
+    return res.status(200).json({ products: mapped, categories: categories || [], total });
+  } catch (err) {
+    console.error("Products GET unexpected error:", err);
+    return res.status(500).json({ error: err?.message || "Server error" });
+  }
+}
 
     // method not allowed
     res.setHeader("Allow", ["GET", "POST", "PUT", "DELETE"]);

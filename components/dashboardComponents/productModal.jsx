@@ -20,6 +20,8 @@ const productSchema = z.object({
     .preprocess((v) => (v === "" ? undefined : Number(v)), z.number().nonnegative("Discount must be >= 0").optional()),
   description: z.string().max(2000).optional(),
   categories: z.array(z.string()).max(3).optional(),
+  available: z
+    .preprocess((v) => (v === "" ? undefined : Number(v)), z.number().int().min(0).optional()),
 });
 
 // helper: build public url for Supabase public bucket
@@ -27,7 +29,7 @@ function buildPublicUrl(supabaseUrl, bucketName, path) {
   return `${supabaseUrl.replace(/\/$/, "")}/storage/v1/object/public/${encodeURIComponent(bucketName)}/${encodeURIComponent(path)}`;
 }
 
-// default API create function (can be overridden via options.onCreateProduct)
+
 async function handleCreateProduct(product) {
   const res = await fetch("/api/products", {
     method: "POST",
@@ -43,7 +45,7 @@ async function handleCreateProduct(product) {
   return saved;
 }
 
-// default API update function (for editing)
+
 async function handleUpdateProduct(product) {
   const res = await fetch("/api/products", {
     method: "PUT",
@@ -90,7 +92,7 @@ function ModalImpl({ resolvePromise, options = {} }) {
     formState: { errors, isSubmitting },
   } = useForm({
     resolver: zodResolver(productSchema),
-    defaultValues: { name: "", price: "", discountPrice: "", description: "", categories: [] },
+    defaultValues: { name: "", price: "", discountPrice: "", description: "", categories: [],  available: 0 },
   });
 
   const [images, setImages] = useState([]); // { file|null, preview, id, path? }
@@ -106,7 +108,6 @@ function ModalImpl({ resolvePromise, options = {} }) {
     const { name, price, discountPrice, description, images: imgs = [], categories: cats = [] } = initialProduct;
     reset({ name, price: price ?? "", discountPrice: discountPrice ?? "", description: description ?? "", categories: cats ?? [] });
     setSelectedCats(Array.isArray(cats) ? cats.slice(0, 3) : []);
-    // map images: existing url-only items will be stored with no file and preview = url
     const imgsNormalized = imgs.map((it, idx) => {
       if (!it) return null;
       if (typeof it === "string") return { file: null, preview: it, id: `existing-${idx}`, path: null };
@@ -209,15 +210,15 @@ function ModalImpl({ resolvePromise, options = {} }) {
   }
 
   // category toggle
-  function toggleCategory(catName) {
+  function toggleCategory(id) {
     setSelectedCats((prev) => {
-      const has = prev.includes(catName);
-      if (has) return prev.filter((c) => c !== catName);
+      const has = prev.includes(id);
+      if (has) return prev.filter((c) => c !== id);
       if (prev.length >= 3) {
         // subtle UX: small non-blocking warning
         return prev;
       }
-      return [...prev, catName];
+      return [...prev, id];
     });
   }
 
@@ -233,7 +234,6 @@ function ModalImpl({ resolvePromise, options = {} }) {
       const finalImages = [...existingPreviews, ...uploaded];
       
       const productPayload = {
-        // if editing, include id so API uses update path
         ...(initialProduct?.id ? { id: initialProduct.id } : {}),
         name: values.name,
         price: typeof values.price === "string" ? Number(values.price) : values.price,
@@ -243,6 +243,7 @@ function ModalImpl({ resolvePromise, options = {} }) {
         previewUrls: images.map((i) => i.preview),
         status: initialProduct?.status || "Active",
         categories: selectedCats || [],
+         available: values.available != null ? Number(values.available) : 0,
       };
 
       let createdOrUpdated = null;
@@ -306,6 +307,11 @@ function ModalImpl({ resolvePromise, options = {} }) {
               <input {...register("discountPrice")} type="number" step="0.01" className="mt-2 w-full border rounded-lg p-3 focus:ring-2 focus:ring-sky-200" disabled={uploading} />
               {errors.discountPrice && <p className="text-xs text-red-600 mt-1">{errors.discountPrice.message}</p>}
             </div>
+             <div>
+              <label className="block text-sm font-medium">Available</label>
+              <input {...register("available")} type="number" step="1" min="0" className="mt-2 w-full border rounded-lg p-3 focus:ring-2 focus:ring-sky-200" disabled={uploading} />
+              {errors.available && <p className="text-xs text-red-600 mt-1">{errors.available.message}</p>}
+            </div>
           </div>
 
           <div>
@@ -314,7 +320,7 @@ function ModalImpl({ resolvePromise, options = {} }) {
             {errors.description && <p className="text-xs text-red-600 mt-1">{errors.description.message}</p>}
           </div>
 
-          {/* Categories - sleek pills, fetched on mount */}
+         
           <div>
             <label className="block text-sm font-medium mb-2">Categories (up to 3)</label>
             <div className="flex flex-wrap gap-2">
@@ -327,7 +333,7 @@ function ModalImpl({ resolvePromise, options = {} }) {
                     <button
                       key={c.id}
                       type="button"
-                      onClick={() => toggleCategory(c.name)}
+                      onClick={() => toggleCategory(c.id)}
                       className={`select-none transition inline-flex items-center gap-2 px-3 py-1 rounded-full text-sm border ${
                         active
                           ? "bg-gradient-to-r from-sky-600 to-indigo-600 text-white shadow"
@@ -342,7 +348,10 @@ function ModalImpl({ resolvePromise, options = {} }) {
                 })
               )}
             </div>
-            <div className="text-xs text-muted-foreground mt-2">Selected: {selectedCats.length ? selectedCats.join(", ") : "—"}</div>
+            <div className="text-xs text-muted-foreground mt-2">Selected: {selectedCats.length ? selectedCats.map(id => {
+              const found = categories.find(c => String(c.id) === String(id));
+              return found ? found.name : String(id).slice(0,8);
+            }).join(", ") : "—"}</div>
           </div>
 
           {/* Images */}

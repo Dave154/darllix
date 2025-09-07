@@ -17,7 +17,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 
-export default function InformationPage() {
+export default function InformationPage({store}) {
   const { cart, checkoutData, setCheckoutData } = useStore();
   const subtotal = cart.reduce((sum, i) => sum + i.price * i.quantity, 0);
   const shipping = subtotal > 0 ? checkoutData.shipping : 0;
@@ -41,7 +41,7 @@ export default function InformationPage() {
   return (
     <Background>
          <div className="p-8 pb-0 flex items-center  justify-center md:justify-start">
-              <a href="/" className="font-extrabold text-xl md:text-2xl text-color3">DENIM</a>
+              <a href="/" className="font-extrabold text-xl md:text-2xl text-color3">{store.name}</a>
           </div>
       <div className="max-w-7xl mx-auto p-4 md:p-8 grid md:grid-cols-3 gap-8 min-h-screen">
        
