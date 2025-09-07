@@ -10,6 +10,7 @@ import { ArrowBigUpDash, ShoppingCart } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { BsFire } from 'react-icons/bs';
 import { CartDrawer } from './cartModal';
+import { PaginationComponent } from './pagination';
 
 export default function Storefront({ store }) {
   const count = useStore((state) => state.cartCount());
@@ -28,7 +29,7 @@ export default function Storefront({ store }) {
 
   // paging + sort kept for later (not shown in UI now)
   const [page, setPage] = useState(1);
-  const [limit] = useState(12);
+  const [limit] = useState(24);
   const [sortBy] = useState('created_at');
   const [sortDir] = useState('desc');
 
@@ -236,6 +237,18 @@ export default function Storefront({ store }) {
                 className="mt-4"
               >
                 <Products store={store} products={products} loading={loading} />
+              </motion.div>
+
+               <motion.div
+                initial="hidden"
+                animate="show"
+                variants={{
+                  hidden: { opacity: 0 },
+                  show: { opacity: 1, transition: { staggerChildren: 0.06 } },
+                }}
+                className="mt-4"
+              >
+                <PaginationComponent totalPages={totalPages} page={page} setPage={setPage} />
               </motion.div>
             </div>
           </section>
