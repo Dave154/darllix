@@ -1,3 +1,5 @@
+import { toast } from "sonner";
+
 // store/storefrontSlice.js
 export const createStorefrontSlice = (set, get) => ({
   owner_id : '',
@@ -13,6 +15,7 @@ export const createStorefrontSlice = (set, get) => ({
     set((state) => {
       const maxQty = product.available;
       const existing = state.cart.find((item) => item.id === product.id);
+    toast.success("Item added to cart.")
 
       if (existing) {
         if (existing.quantity >= maxQty) return state;
@@ -55,6 +58,8 @@ export const createStorefrontSlice = (set, get) => ({
       if (!item) return state;
 
       if (item.quantity <= 1) {
+    toast.info("Item removed from cart.")
+
         return { cart: state.cart.filter((p) => p.id !== productId) };
       }
 

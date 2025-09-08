@@ -51,7 +51,6 @@ export default function Storefront({ store }) {
     setLoading(true);
     setError(null);
     try {
-         toast("Event has been created.")
       const params = new URLSearchParams();
       params.set('page', String(opts.page ?? page));
       params.set('limit', String(opts.limit ?? limit));
@@ -80,6 +79,8 @@ export default function Storefront({ store }) {
     } catch (err) {
       console.error('fetchProducts', err);
       setError(err.message || 'Failed to load products');
+      toast.error(err.message || 'Failed to load products')
+
     } finally {
       setLoading(false);
     }

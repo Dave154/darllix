@@ -61,6 +61,7 @@ export default function PaymentPage({ store }) {
   async function handlePaystackSuccess(response) {
     setLoading(true);
     console.log("Payment successful (client):", response);
+    
     try {
       // call server verify endpoint
       const verifyRes = await fetch("/api/orders?action=verify", {
@@ -83,8 +84,9 @@ export default function PaymentPage({ store }) {
         console.error("Verify failed:", verifyJson);
         throw new Error(verifyJson?.error || "Payment verification failed");
       }
-
+      
       const orderId = verifyJson.order?.id || response.metadata?.orderId || response.reference;
+      toast.success("Payment successful")
       router.push(`/payment-success?order_id=${orderId}&ref=${response.reference}`);
     } catch (err) {
       console.error("Error verifying payment:", err);

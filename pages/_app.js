@@ -7,7 +7,7 @@ import { createPagesBrowserClient } from "@supabase/auth-helpers-nextjs";
 import { useEffect, useState } from "react";
 import Loader from "../components/dashboardComponents/loader";
 import { useRouter } from "next/router";
-import { Toaster } from "@/components/ui/sonner"
+
 
 
 
@@ -26,7 +26,6 @@ export default function MyApp({ Component, pageProps }) {
         <meta name="theme-color" content="#ffffff" />
       </Head>
       <SessionContextProvider supabaseClient={supabase} initialSession={pageProps.initialSession}>
-         {/* <Toaster />  */}
       <Component {...pageProps} />
     </SessionContextProvider>
     </>

@@ -6,6 +6,7 @@ import { useStore } from '@/store'
 import { Minus, Plus } from 'lucide-react'
 import { useRouter } from 'next/navigation';
 import ProductImageModal from './productImageModal'
+import { toast } from 'sonner';
 const ProductCard = ({ productData }) => {
   const router = useRouter()
   const [favorited, setFavorited] = useState(false)
@@ -19,7 +20,11 @@ const ProductCard = ({ productData }) => {
 
   const inCart = cart.find((item) => item.id === productData.id)
 
-  const handleAdd = () => addToCart(productData)
+  const handleAdd = () => {
+    addToCart(productData)
+  }
+  
+  
 
   const addToFavorites = () => {
     setFavorited(true)
