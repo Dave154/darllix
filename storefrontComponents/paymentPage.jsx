@@ -22,7 +22,7 @@ import Image from "next/image";
 import dynamic from "next/dynamic";
 import { useEffect, useRef, useState } from "react";
 import Loader from "./loader";
-
+import { toast } from "sonner"
 export default function PaymentPage({ store }) {
   const { cart, checkoutData, setCheckoutData, cartTotal, clearCart } = useStore();
   const subtotal = cart.reduce((sum, i) => sum + i.price * i.quantity, 0);
@@ -84,10 +84,6 @@ export default function PaymentPage({ store }) {
         throw new Error(verifyJson?.error || "Payment verification failed");
       }
 
-      // // success: clear cart & checkout state and redirect to success page
-      // resetCheckout?.();
-      // clearCart?.();
-
       const orderId = verifyJson.order?.id || response.metadata?.orderId || response.reference;
       router.push(`/payment-success?order_id=${orderId}&ref=${response.reference}`);
     } catch (err) {
@@ -99,7 +95,7 @@ export default function PaymentPage({ store }) {
   }
 
   function handlePaystackClose() {
-    console.log("Paystack modal closed by user");
+ 
     setLoading(false);
   }
 

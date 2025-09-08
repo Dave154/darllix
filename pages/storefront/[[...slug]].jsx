@@ -1,62 +1,3 @@
-// import Global404 from "../../components/global404";
-// import StoreFront404 from "../../storefrontComponents/storeFront404";
-// import CartPage from "./cart";
-// import Storefront from "./store";
-
-// export default function StorefrontDynamic({ store, slug }) {
-//   console.log("slug", slug);
-
-//   if (!store) {
-//     return <Global404 />; // No store found
-//   }
-
-//   // Handle cart route
-//   if (slug.length > 0 && slug[0] === "cart") {
-//     return <CartPage store={store} />;
-//   }
-
-//   // Home page (no slug)
-//   if (slug.length === 1) {
-//     return <Storefront/>
-//   }
-
-//   // Unknown route
-//   return <StoreFront404 store={store} />;
-// }
-
-// export async function getServerSideProps({ params, req }) {
-//   const host = req.headers.host || "";
-//   let subdomain = null;
-
-//   if (host.endsWith(".darllix.shop") || host.endsWith(".darllix.vercel.app")) {
-//     subdomain = host.split(".")[0];
-//   }
-
-//   if (host.endsWith(".localhost:3000")) {
-//     subdomain = host.split(".")[0];
-//   }
-
-//   if (!subdomain || subdomain === "www" || subdomain === "darllix") {
-//     return { notFound: true };
-//   }
-
-//   const { createServerSupabaseClient } = await import("../../lib/supabaseClient");
-//   const supabase = createServerSupabaseClient();
-
-//   const { data: store } = await supabase
-//     .from("stores")
-//     .select("id, name, subdomain, banner_url")
-//     .eq("subdomain", subdomain)
-//     .maybeSingle();
-
-//   return {
-//     props: {
-//       store,
-//       slug: params.slug || [],
-//     },
-//   };
-// }
-
 import CartPage from "../../storefrontComponents/cart";
 import Storefront from "../../storefrontComponents/store";
 import { useRouter } from "next/router";
@@ -68,6 +9,7 @@ import ProductPage from "../../storefrontComponents/productPage";
 import PaymentSuccess from "../../storefrontComponents/success";
 import Global404 from "../../components/errors/global404";
 import StoreFront404 from "../../components/errors/storefront404";
+import { Toaster } from "@/components/ui/sonner"
 
 export default function StorefrontDynamic({ store, slug }) {
  
@@ -89,37 +31,74 @@ export default function StorefrontDynamic({ store, slug }) {
     };
   }, [router.events]);
 
-  console.log(slug, store)
   if (!store) return <Global404 />;
-      if (slug[0]===`storefront` && pathname.startsWith("/payment-success")) {
- return <PaymentSuccess />; 
-}
-  
-  if (slug[0]===`storefront` && pathname === "/") {
-    return <Storefront store={store} />; 
+  if (slug[0] === `storefront` && pathname.startsWith("/payment-success")) {
+    return (
+      <>
+        <Toaster />
+        <PaymentSuccess />
+      </>
+    );
   }
 
-  if (slug[0]===`storefront` && pathname === "/cart") {
-    return <CartPage store={store} />;
+  if (slug[0] === `storefront` && pathname === "/") {
+    return (
+      <>
+        <Toaster />
+        <Storefront store={store} />
+      </>
+    );
   }
-    if (slug[0]===`storefront` && pathname === "/checkout") {
-    return <Checkout store={store} />;
+
+  if (slug[0] === `storefront` && pathname === "/cart") {
+    return (
+      <>
+        <Toaster />
+        <CartPage store={store} />
+      </>
+    );
   }
-   if (slug[0]===`storefront` && pathname === "/checkout/payment") {
-    return <PaymentPage store={store}  />; 
+  if (slug[0] === `storefront` && pathname === "/checkout") {
+    return (
+      <>
+        <Toaster />
+        <Checkout store={store} />
+      </>
+    );
   }
-   if (slug[0]===`storefront` && pathname === "/checkout/shipping") {
-    return <ShippingPage store={store} />; 
+  if (slug[0] === `storefront` && pathname === "/checkout/payment") {
+    return (
+      <>
+        <Toaster />
+        <PaymentPage store={store} />
+      </>
+    );
+  }
+  if (slug[0] === `storefront` && pathname === "/checkout/shipping") {
+    return (
+      <>
+        <Toaster />
+        <ShippingPage store={store} />
+      </>
+    );
   }
 
   if (slug[0] === "storefront" && pathname.startsWith("/product/")) {
     const productId = pathname.split("/")[2];
-    return <ProductPage store={store} productId={productId} />;
+    return (
+      <>
+        <Toaster />
+        <ProductPage store={store} productId={productId} />
+      </>
+    );
   }
 
-
-
-  return <StoreFront404 store={store} />;
+  return (
+    <>
+      <Toaster />
+      <StoreFront404 store={store} />
+    </>
+  );
 }
 
 import { getSupabaseServer } from "../../lib/supabaseClient";
