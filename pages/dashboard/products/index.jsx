@@ -554,13 +554,9 @@ async function confirmDelete() {
                           <StatusBadge status={p.status || "Draft"} />
                         </TableCell>
                         <TableCell className="text-sm text-muted-foreground">₦{Number(p.price).toFixed(2)}</TableCell>
-                       <TableCell className="text-sm text-muted-foreground">
+                       <TableCell className="text-sm text-muted-foreground line-clamp-1  overflow-hidden">
 
-                          {Array.isArray(p.categories) && p.categories.length > 0
-                            ? p.categories.map(id => {
-                          const found = categories.find(c => String(c.id) === String(id));
-                          return found ? found.name : String(id).slice(0,8);
-                        }).join(", ") : "—"}
+                         {p.category}
                         </TableCell>
                        <TableCell className="text-sm text-muted-foreground">{p.available ?? 0}</TableCell>
 

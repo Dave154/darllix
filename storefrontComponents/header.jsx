@@ -2,7 +2,7 @@ import React, { useState } from 'react'
 import { ShoppingBag, ShoppingCart } from 'lucide-react';
 import { CartDrawer } from './cartModal';
 import { useStore } from '@/store';
-import { Input } from "@/components/ui/input";
+
 
 const Header = ({store, query, setQuery}) => {
       const count = useStore((state) => state.cartCount())
@@ -20,7 +20,7 @@ const Header = ({store, query, setQuery}) => {
       <header className="border-b border-gray-400">
        <nav className="py-4 max-w-7xl mx-auto px-3 sm:px-6 lg:px-8  flex justify-between gap-4 items-center">
           <div className="">
-              <a href="" className="font-extrabold sm:text-xl md:text-2xl text-color3 capitalize">{store.name}</a>
+              <a href="" className="font-extrabold sm:text-xl md:text-2xl text-color3 capitalize">{store?.name}</a>
           </div>
 
           <form onSubmit={(e)=>{

@@ -3,18 +3,15 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { motion } from "framer-motion";
-import { CheckCircle2 } from "lucide-react";
+import { CheckCircle2, Copy } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useStore } from "@/store";
-// import { useSupabaseClient } from "@supabase/auth-helpers-react";
+
 
 export default function PaymentSuccess() {
   const { clearCart, resetCheckout } = useStore();
-  // const supabase = useSupabaseClient();
-  // Get the order ID from the URL query parameters
   const searchParams = useSearchParams();
   const orderId = searchParams.get("order_id");
-  const [order, setOrder] = useState(null);
   const router = useRouter();
 
   useEffect(() => {
@@ -22,30 +19,9 @@ export default function PaymentSuccess() {
   resetCheckout();
     if (!orderId) return;
 
-    // const fetchOrder = async () => {
-    //   const { data, error } = await supabase
-    //     .from("orders")
-    //     .select("*")
-    //     .eq("id", orderId)
-    //     .single();
-
-    //   if (error) {
-    //     console.error("Error fetching order:", error.message);
-    //   } else {
-    //     setOrder(data);
-    //   }
-    // };
-
-    // fetchOrder();
   }, [orderId]);
 
-  // if (!order) {
-  //   return (
-  //     <div className="min-h-screen flex items-center justify-center">
-  //       <p>Loading your order...</p>
-  //     </div>
-  //   );
-  // }
+
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-color4 p-6">
@@ -63,26 +39,19 @@ export default function PaymentSuccess() {
         <h1 className="text-3xl font-extrabold text-gray-800 mb-2">
           Payment Successful 🎉
         </h1>
-        <p className="text-gray-600 mb-6">
+        <p className="text-gray-600 mb-6 text-center">
           Thank you for your purchase! Your order has been confirmed.
         </p>
+        <div className="text-gray-400 text-sm flex items-center gap-2 mb-3">
+           <p className="">
+           Order Id: {orderId} 
 
-        {/* Order Summary */}
-        <Card className="bg-gray-50 rounded-xl w-full max-w-md p-4 space-y-2 mb-6 text-left">
-          <div className="flex justify-between text-sm text-gray-700">
-            <span className="font-medium">Order Number:</span>
-            <span>{orderId}</span>
-          </div>
-          <div className="flex justify-between text-sm text-gray-700">
-            <span className="font-medium">Amount Paid:</span>
-            <span>₦{order?.total?.toLocaleString() || "______"}</span>
-          </div>
-          <div className="flex justify-between text-sm text-gray-700">
-            <span className="font-medium">Payment Method:</span>
-            <span>{order?.paymentMethod || "Darllix Pay"}</span>
-          </div>
-        </Card>
+           </p>
+           
+            <Copy className="cursor-pointer hover:text-black " onClick={()=>navigator.clipboard.writeText(orderId) }/>
+            </div>
 
+       
         {/* Action Buttons */}
         <div className="flex flex-col items-center justify-center sm:flex-row gap-4 w-full max-w-md">
           <Button

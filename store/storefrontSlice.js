@@ -32,10 +32,11 @@ export const createStorefrontSlice = (set, get) => ({
   incrementQuantity: (productId) => {
     set((state) => {
       const product = state.cart.find((item) => item.id === productId);
+     
       if (!product) return state;
 
       const maxQty = product.available;
-      console.log(product)
+      
       if (product.quantity >= maxQty) return state;
 
       return {

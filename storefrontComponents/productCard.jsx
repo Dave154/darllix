@@ -85,7 +85,9 @@ const ProductCard = ({ productData }) => {
             <Button
               size="icon"
               variant="outline"
-              onClick={() => increment(productData.id)}
+              onClick={() =>{
+               inCart ? increment(productData.id) : handleAdd()
+              } }
             >
               <Plus className="h-4 w-4" />
             </Button>

@@ -20,10 +20,10 @@ import { useRouter } from "next/navigation";
 import { CreditCard, Truck } from "lucide-react";
 import Image from "next/image";
 import dynamic from "next/dynamic";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Loader from "./loader";
 
-export default function PaymentPage({store}) {
+export default function PaymentPage({ store }) {
   const { cart, checkoutData, setCheckoutData, cartTotal, clearCart } = useStore();
   const subtotal = cart.reduce((sum, i) => sum + i.price * i.quantity, 0);
   const shipping = checkoutData.shipping;
@@ -32,18 +32,16 @@ export default function PaymentPage({store}) {
   const [loading, setLoading] = useState(false);
   const resetCheckout = useStore((state) => state.resetCheckout);
 
-const PaystackButton = dynamic(
-  () => import("react-paystack").then((mod) => mod.PaystackButton),
-  { ssr: false }
-);
-  const publicKey = process.env.NEXT_PUBLIC_PAYSTACK_KEY;
+  // dynamic import of react-paystack button (ssr: false)
+  const PaystackButton = dynamic(
+    () => import("react-paystack").then((mod) => mod.PaystackButton),
+    { ssr: false }
+  );
 
-const paystackConfig = {
-  reference: new Date().getTime().toString(),
-  email: checkoutData.email,
-  amount: total * 100, // kobo
-  publicKey,
-};
+  // ref to hidden wrapper so we can find the actual button element to click
+  const paystackRef = useRef(null);
+  // config to pass to PaystackButton (set when order created)
+  const [paystackConfig, setPaystackConfig] = useState(null);
 
   useEffect(() => {
     if (cart.length === 0) {
@@ -51,7 +49,6 @@ const paystackConfig = {
     }
   }, [cart.length, router]);
 
-   
   const handleNext = (e) => {
     e.preventDefault();
     if (!checkoutData.paymentMethod) {
@@ -60,40 +57,190 @@ const paystackConfig = {
     }
   };
 
+  // Payment success handler called by react-paystack hidden button
+  async function handlePaystackSuccess(response) {
+    setLoading(true);
+    console.log("Payment successful (client):", response);
+    try {
+      // call server verify endpoint
+      const verifyRes = await fetch("/api/orders?action=verify", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Accept: "application/json" },
+        body: JSON.stringify({ reference: response.reference, orderId: response.metadata?.orderId || null }),
+        credentials: "same-origin",
+      });
 
-const handlePaystackSuccess = async (response) => {
-  setLoading(true);
-  console.log("Payment successful:", response);
-try{
-  await fetch("/api/orders", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      buyerEmail: checkoutData.email,
-      storefrontId: checkoutData.storefrontId,
-      orderDetails: { cart, total: total, shipping},
-      paymentRef: response.reference,
-    }),
-  });
+      const verifyText = await verifyRes.text();
+      let verifyJson;
+      try {
+        verifyJson = JSON.parse(verifyText);
+      } catch (parseErr) {
+        console.error("Non-JSON verify response from server:", verifyText);
+        throw new Error("Payment verification returned non-JSON. Check server logs.");
+      }
 
-  router.push(`/payment-success?order_id=${response.reference}`);
-  
+      if (!verifyRes.ok) {
+        console.error("Verify failed:", verifyJson);
+        throw new Error(verifyJson?.error || "Payment verification failed");
+      }
 
-} catch (error) {
-  console.error("Error processing payment:", error);
-  alert("An error occurred while processing your payment. Please try again.");
-}
-};
-const handlePaystackClose = () => {
-  console.log("Payment cancelled");
-};
+      // // success: clear cart & checkout state and redirect to success page
+      // resetCheckout?.();
+      // clearCart?.();
+
+      const orderId = verifyJson.order?.id || response.metadata?.orderId || response.reference;
+      router.push(`/payment-success?order_id=${orderId}&ref=${response.reference}`);
+    } catch (err) {
+      console.error("Error verifying payment:", err);
+      alert("Payment succeeded but verification failed. Please contact support.");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  function handlePaystackClose() {
+    console.log("Paystack modal closed by user");
+    setLoading(false);
+  }
+
+  // Create order on server then initialize Paystack (by clicking the hidden PaystackButton)
+  async function createOrderAndInitPaystack() {
+    try {
+      setLoading(true);
+      const reference = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+
+      // Build order payload expected by /api/orders
+      const orderPayload = {
+        store_id: checkoutData.storefrontId || checkoutData.storeId || store?.id,
+        buyer_id: null,
+        currency: "NGN",
+        payment_method: "paystack",
+        payment_provider: "paystack",
+        payment_reference: reference,
+        status: "pending",
+        shipping_address: checkoutData.address || null,
+        billing_address: checkoutData.address || null,
+        meta: { createdFromClient: true },
+        items: cart.map((it) => ({
+          product_id: it.id || null,
+          name: it.name,
+          unit_price: Number(it.price),
+          quantity: Number(it.quantity),
+          meta: {},
+        })),
+      };
+
+      const createRes = await fetch("/api/orders", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Accept: "application/json" },
+        body: JSON.stringify({ order: orderPayload }),
+        credentials: "same-origin",
+      });
+
+      // read text so HTML error pages don't crash parse step; helpful for debugging
+      const createText = await createRes.text();
+      let createJson;
+      try {
+        createJson = JSON.parse(createText);
+      } catch (parseErr) {
+        console.error("Non-JSON response creating order:", createText);
+        throw new Error("Server returned non-JSON when creating order — check server logs/terminal.");
+      }
+
+      if (!createRes.ok) {
+        console.error("Create order failed:", createJson);
+        throw new Error(createJson?.error || `Create order failed: ${createRes.status}`);
+      }
+
+      const createdOrder = createJson.order;
+      if (!createdOrder || !createdOrder.id) {
+        console.warn("Order created but no id returned", createJson);
+        throw new Error("Order created but server didn't return an id.");
+      }
+
+      // Build paystack config
+      const amountKobo = Math.round((subtotal + shipping) * 100);
+
+      const cfg = {
+        reference,
+        email: checkoutData.email,
+        amount: amountKobo,
+        publicKey: process.env.NEXT_PUBLIC_PAYSTACK_KEY,
+        metadata: { orderId: createdOrder.id, storeId: createdOrder.store_id },
+      };
+
+      setPaystackConfig(cfg);
+
+      // wait a tick to allow hidden PaystackButton to render with the new config
+      await new Promise((r) => setTimeout(r, 70));
+
+      const wrapper = paystackRef.current;
+      const btn = wrapper?.querySelector("button");
+      if (!btn) {
+        console.error("Hidden Paystack button not found - ensure PaystackButton rendered.");
+        throw new Error("PaystackButton not available. Ensure react-paystack is loaded.");
+      }
+
+      // programmatically click the hidden button to open Paystack modal
+      btn.click();
+
+      // do not setLoading(false) here — wait until onSuccess/onClose
+    } catch (err) {
+      console.error("createOrderAndInitPaystack error:", err);
+      alert("Failed to start payment: " + (err?.message || "Unknown error"));
+      setLoading(false);
+    }
+  }
+
+  // createOrder (non-paystack fallback) - kept minimal (UI unchanged)
+  const createOrder = async (method) => {
+    try {
+      setLoading(true);
+      // you can implement a non-paystack order creation & redirect flow here if needed
+      // For now, we simply create order with payment_method = method and show success
+      const orderPayload = {
+        store_id: checkoutData.storefrontId || checkoutData.storeId || store?.id,
+        buyer_id: null,
+        currency: "NGN",
+        payment_method: method || "other",
+        payment_provider: method === "darllix" ? "paystack" : null,
+        status: "pending",
+        shipping_address: checkoutData.address || null,
+        billing_address: checkoutData.address || null,
+        meta: { createdFromClient: true },
+        items: cart.map((it) => ({
+          product_id: it.id || null,
+          name: it.name,
+          unit_price: Number(it.price),
+          quantity: Number(it.quantity),
+          meta: {},
+        })),
+      };
+
+      const createRes = await fetch("/api/orders", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ order: orderPayload }),
+        credentials: "same-origin",
+      });
+      const createJson = await createRes.json().catch(() => ({}));
+      if (!createRes.ok) {
+        throw new Error(createJson?.error || "Failed to create order");
+      }
+      // order created: redirect to success page (we don't have payment ref)
+      router.push(`/payment-success?order_id=${createJson.order?.id || ""}`);
+    } catch (err) {
+      console.error("createOrder error:", err);
+      alert("Failed to create order: " + (err?.message || "Unknown"));
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <Background>
-      {
-        loading && 
-        <Loader/>
-      }
+      {loading && <Loader />}
+
       {/* Header */}
       <div className="p-8 pb-0 flex items-center justify-center md:justify-start">
         <a href="/" className="font-extrabold text-xl md:text-2xl text-color3">{store.name}</a>
@@ -143,11 +290,9 @@ const handlePaystackClose = () => {
             <CardContent>
               <form onSubmit={handleNext} className="space-y-6">
                 <RadioGroup
-                  
                   value={checkoutData.paymentMethod}
                   onValueChange={(v) => setCheckoutData({ paymentMethod: v })}
                   className="space-y-3"
-                  
                 >
                   {/* Card Option */}
                   <label
@@ -159,7 +304,7 @@ const handlePaystackClose = () => {
                     <span className="text-gray-400">Credit / Debit Card </span>
                   </label>
 
-                  {/* Darllix pay */}
+                  {/* Darllix pay (Paystack) */}
                   <label
                     htmlFor="darllix"
                     className={`flex items-center p-4 border rounded-lg cursor-pointer hover:border-primary transition-colors ${checkoutData.paymentMethod === "darllix" ? "border-primary bg-accent" : ""}`}
@@ -181,7 +326,7 @@ const handlePaystackClose = () => {
                     htmlFor="cod"
                     className={`flex items-center p-4 border rounded-lg cursor-pointer hover:border-primary transition-colors ${checkoutData.paymentMethod === "cod" ? "border-primary bg-accent" : ""}`}
                   >
-                    <RadioGroupItem value="cod" id="cod" className="mr-3" disabled/>
+                    <RadioGroupItem value="cod" id="cod" className="mr-3" disabled />
                     <Truck className="w-5 h-5 mr-2" />
                     <span className="text-gray-400">Cash on Delivery</span>
                   </label>
@@ -218,21 +363,23 @@ const handlePaystackClose = () => {
                   >
                     Back
                   </Button>
+
+                  {/* DARLLIX / PAYSTACK flow: visible button preserved but hooked to createOrderAndInitPaystack */}
                   {checkoutData.paymentMethod === "darllix" ? (
-                    <PaystackButton
-                    
-                      {...paystackConfig}
-                      text="Complete Order"
-                      onSuccess={handlePaystackSuccess}
-                      onClose={handlePaystackClose}
+                    <button
+                      type="button"
+                      onClick={() => createOrderAndInitPaystack()}
                       disabled={checkoutData.agreedTerms !== true || loading}
-                      className="w-full disabled:bg-gray-400 bg-color1  text-white text-sm px-3 rounded-lg font-semibold hover:bg-primary/90 transition"
-                    />
+                      className="w-full disabled:bg-gray-400 bg-color1 text-white text-sm px-3 rounded-lg font-semibold hover:bg-primary/90 transition"
+                    >
+                      Complete Order
+                    </button>
                   ) : (
-                    <Button type="submit" className="w-full"
-                    
+                    <Button
+                      type="button"
+                      className="w-full"
                       disabled={checkoutData.agreedTerms !== true || loading}
-                      onClick={() => setLoading(true)}
+                      onClick={() => createOrder()}
                     >
                       Complete Order
                     </Button>
@@ -273,6 +420,29 @@ const handlePaystackClose = () => {
             </div>
           </CardContent>
         </Card>
+      </div>
+
+      {/* Hidden PaystackButton wrapper: invisible but clickable */}
+      <div
+        ref={paystackRef}
+        style={{
+          position: "absolute",
+          width: 0,
+          height: 0,
+          overflow: "hidden",
+          pointerEvents: "none",
+          left: -9999,
+        }}
+        aria-hidden
+      >
+        {paystackConfig && (
+          <PaystackButton
+            text="PaystackHiddenButton"
+            onSuccess={handlePaystackSuccess}
+            onClose={handlePaystackClose}
+            {...paystackConfig}
+          />
+        )}
       </div>
     </Background>
   );
