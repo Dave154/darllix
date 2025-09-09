@@ -7,7 +7,7 @@ import { Minus, Plus } from 'lucide-react'
 import { useRouter } from 'next/navigation';
 import ProductImageModal from './productImageModal'
 import { toast } from 'sonner';
-const ProductCard = ({ productData }) => {
+const ProductCard = ({ productData, preview }) => {
   const router = useRouter()
   const [favorited, setFavorited] = useState(false)
   const [favorites, setFavorites] = useState([])
@@ -53,15 +53,7 @@ const ProductCard = ({ productData }) => {
               : <FaRegHeart className="mt-2 mr-4 text-[20px] text-color2" />}
           </i>
         </div>
-        {/* <Image
-          src={productData?.image_url || '/placeholder.jpg'}
-          alt={productData?.name || ''}
-          width={1000}
-          height={1000}
-          className="w-full h-full object-cover rounded"
-          unoptimized
-        /> */}
-         <ProductImageModal images={productData?.images} id={productData.id} alt={productData?.name} />
+      <ProductImageModal images={productData?.images} id={productData.id} alt={productData?.name} />
 
       </div>
 
@@ -82,7 +74,13 @@ const ProductCard = ({ productData }) => {
             <Button
               size="icon"
               variant="outline"
-              onClick={() => decrement(productData.id)}
+              onClick={() =>{
+                if(preview){
+                  return;
+                }
+                decrement(productData.id)
+              } 
+            }
             >
               <Minus className="h-4 w-4" />
             </Button>
@@ -91,6 +89,9 @@ const ProductCard = ({ productData }) => {
               size="icon"
               variant="outline"
               onClick={() =>{
+                if(preview){
+                  return;
+                }
                inCart ? increment(productData.id) : handleAdd()
               } }
             >

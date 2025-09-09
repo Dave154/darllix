@@ -15,7 +15,7 @@ export const createStorefrontSlice = (set, get) => ({
     set((state) => {
       const maxQty = product.available;
       const existing = state.cart.find((item) => item.id === product.id);
-    toast.success("Item added to cart.")
+    toast.success(` ${product.name} added to cart.`)
 
       if (existing) {
         if (existing.quantity >= maxQty) return state;
@@ -58,7 +58,8 @@ export const createStorefrontSlice = (set, get) => ({
       if (!item) return state;
 
       if (item.quantity <= 1) {
-    toast.info("Item removed from cart.")
+    toast.info(` ${item.name} removed from cart.`)
+
 
         return { cart: state.cart.filter((p) => p.id !== productId) };
       }

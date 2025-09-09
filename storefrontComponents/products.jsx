@@ -3,7 +3,7 @@ import ProductCard from './productCard'
 import { motion } from 'framer-motion'
 import { Skeleton } from '@/components/ui/skeleton';
 
-const Products = ({store, products,loading}) => {
+const Products = ({preview, products,loading}) => {
   const containerVariants = {
     hidden: { opacity: 0 },
     show: {
@@ -36,7 +36,7 @@ const Products = ({store, products,loading}) => {
   }
   if (!loading && products.length=== 0) {
     return (
-      <div className="h-4</motion.div>8 flex justify-center items-center">
+      <div className="h-4</motion.div>8 flex h-64 justify-center items-center">
         No Product Found
       </div>
     );
@@ -60,7 +60,7 @@ const Products = ({store, products,loading}) => {
         >
           {products.map((product, i) => (
             <motion.div key={product.id + i} variants={itemVariants} >
-              <ProductCard productData={product} />
+              <ProductCard productData={product} preview={preview} />
             </motion.div>
           ))}
         </motion.div>

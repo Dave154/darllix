@@ -40,7 +40,6 @@ export default function PaymentPage({ store }) {
 
   // ref to hidden wrapper so we can find the actual button element to click
   const paystackRef = useRef(null);
-  // config to pass to PaystackButton (set when order created)
   const [paystackConfig, setPaystackConfig] = useState(null);
 
   useEffect(() => {
@@ -59,9 +58,7 @@ export default function PaymentPage({ store }) {
 
   // Payment success handler called by react-paystack hidden button
   async function handlePaystackSuccess(response) {
-    setLoading(true);
-    console.log("Payment successful (client):", response);
-    
+    setLoading(true);   
     try {
       // call server verify endpoint
       const verifyRes = await fetch("/api/orders?action=verify", {
@@ -77,10 +74,14 @@ export default function PaymentPage({ store }) {
         verifyJson = JSON.parse(verifyText);
       } catch (parseErr) {
         console.error("Non-JSON verify response from server:", verifyText);
+         
+                toast.error("Something went wrong")
+
         throw new Error("Payment verification returned non-JSON. Check server logs.");
       }
 
       if (!verifyRes.ok) {
+        toast.error("Something went wrong")
         console.error("Verify failed:", verifyJson);
         throw new Error(verifyJson?.error || "Payment verification failed");
       }
@@ -90,7 +91,7 @@ export default function PaymentPage({ store }) {
       router.push(`/payment-success?order_id=${orderId}&ref=${response.reference}`);
     } catch (err) {
       console.error("Error verifying payment:", err);
-      alert("Payment succeeded but verification failed. Please contact support.");
+        toast.error("Error verifying payment:", err)   
     } finally {
       setLoading(false);
     }
@@ -135,18 +136,20 @@ export default function PaymentPage({ store }) {
         credentials: "same-origin",
       });
 
-      // read text so HTML error pages don't crash parse step; helpful for debugging
       const createText = await createRes.text();
       let createJson;
       try {
         createJson = JSON.parse(createText);
       } catch (parseErr) {
+        toast.error("Something went wrong")
         console.error("Non-JSON response creating order:", createText);
         throw new Error("Server returned non-JSON when creating order — check server logs/terminal.");
       }
 
       if (!createRes.ok) {
         console.error("Create order failed:", createJson);
+                toast.error("Failed create order")
+
         throw new Error(createJson?.error || `Create order failed: ${createRes.status}`);
       }
 
@@ -176,7 +179,8 @@ export default function PaymentPage({ store }) {
       const btn = wrapper?.querySelector("button");
       if (!btn) {
         console.error("Hidden Paystack button not found - ensure PaystackButton rendered.");
-        throw new Error("PaystackButton not available. Ensure react-paystack is loaded.");
+                toast.error("Something went wrong. Try again")
+
       }
 
       // programmatically click the hidden button to open Paystack modal
