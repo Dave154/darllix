@@ -62,14 +62,7 @@ async function handleUpdateProduct(product) {
 }
 
 function ModalImpl({ resolvePromise, options = {} }) {
-  // options:
-  //  - supabase (client instance) optional
-  //  - bucket (string)
-  //  - onCreateProduct (fn) optional
-  //  - onUpdateProduct (fn) optional
-  //  - storeId (string) optional
-  //  - initialProduct (object) optional (for edit)
-  const {
+   const {
     supabase: supabaseProp = null,
     bucket = "product-images",
     onCreateProduct = handleCreateProduct,

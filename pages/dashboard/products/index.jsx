@@ -390,25 +390,20 @@ async function confirmDelete() {
         </div>
 
         {hasStore && (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             <Card className="border-dashed">
               <CardContent className="py-3">
-                <p className="text-xs text-muted-foreground">Products by sell-through rate</p>
-                <p className="text-[11px] text-muted-foreground mt-1">0% —</p>
+                <p className="text-xs text-muted-foreground">Products available</p>
+                <p className="text-[11px] text-muted-foreground text-xl mt-1">{products.filter(p=> p.available > 0 ).length} </p>
               </CardContent>
             </Card>
             <Card className="border-dashed">
               <CardContent className="py-3">
-                <p className="text-xs text-muted-foreground">Products by days of inventory remaining</p>
-                <p className="text-[11px] text-muted-foreground mt-1">There was no data found for this date range</p>
+                <p className="text-xs text-muted-foreground"> Total Products </p>
+                <p className="text-[11px] text-xl text-muted-foreground mt-1">{total}</p>
               </CardContent>
             </Card>
-            <Card className="border-dashed">
-              <CardContent className="py-3">
-                <p className="text-xs text-muted-foreground">ABC product analysis</p>
-                <p className="text-[11px] text-muted-foreground mt-1">There was no data found for this date range</p>
-              </CardContent>
-            </Card>
+           
           </div>
         )}
 

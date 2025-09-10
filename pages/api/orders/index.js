@@ -48,7 +48,8 @@ export default async function handler(req, res) {
 
       const orderPayload = {
         store_id: order.store_id,
-        buyer_id: order.buyer_id || null,
+        buyer_id: order.buyer_id,
+        buyer_name:order.buyer_name,
         status: order.status || "pending",
         total: Math.round((Number(total) + Number.EPSILON) * 100) / 100,
         currency: order.currency || "NGN",
@@ -174,75 +175,97 @@ export default async function handler(req, res) {
       return res.status(200).json({ verified: success, order: null, paystack: payJson });
     }
 
-    // ------------------ GET (single or list) ------------------
-    if (req.method === "GET") {
-      const {
-        page = "1",
-        limit = "20",
-        store_id,
-        status,
-        id,
-        sort_by = "created_at",
-        sort_dir = "desc",
-      } = req.query;
+// ------------------ GET (single or list) ------------------
+if (req.method === "GET") {
+  const {
+    page = "1",
+    limit = "20",
+    store_id,
+    status,
+    id,
+    q,
+    sort_by = "created_at",
+    sort_dir = "desc",
+  } = req.query;
 
-      const p = Math.max(1, parseInt(page, 10) || 1);
-      const l = Math.max(1, Math.min(100, parseInt(limit, 10) || 20));
-      const from = (p - 1) * l;
-      const to = p * l - 1;
+  const p = Math.max(1, parseInt(page, 10) || 1);
+  const l = Math.max(1, Math.min(100, parseInt(limit, 10) || 20));
+  const from = (p - 1) * l;
+  const to = p * l - 1;
 
-      if (id) {
-        // single order fetch: require auth & authorization (owner or buyer)
-        const { data: orderRow, error: orderErr } = await admin
-          .from("orders")
-          .select("*, order_items(*)")
-          .eq("id", id)
-          .maybeSingle();
+  if (id) {
+    // single order fetch: require auth & authorization (owner or buyer)
+    const { data: orderRow, error: orderErr } = await admin
+      .from("orders")
+      .select("*, order_items(*)")
+      .eq("id", id)
+      .maybeSingle();
 
-        if (orderErr) return res.status(500).json({ error: orderErr.message });
-        if (!orderRow) return res.status(404).json({ error: "Order not found" });
-        if (!user) return res.status(401).json({ error: "Unauthorized" });
+    if (orderErr) return res.status(500).json({ error: orderErr.message });
+    if (!orderRow) return res.status(404).json({ error: "Order not found" });
+    if (!user) return res.status(401).json({ error: "Unauthorized" });
 
-        // check owner or buyer
-        const { data: storeRow } = await admin.from("stores").select("owner_id").eq("id", orderRow.store_id).maybeSingle();
-        const isOwner = storeRow?.owner_id === user.id;
-        const isBuyer = orderRow.buyer_id === user.id;
-        if (!isOwner && !isBuyer) return res.status(403).json({ error: "Forbidden" });
+    // check owner or buyer
+    const { data: storeRow } = await admin
+      .from("stores")
+      .select("owner_id")
+      .eq("id", orderRow.store_id)
+      .maybeSingle();
 
-        return res.status(200).json({ order: orderRow });
-      }
+    const isOwner = storeRow?.owner_id === user.id;
+    const isBuyer = orderRow.buyer_id === user.id;
+    if (!isOwner && !isBuyer) return res.status(403).json({ error: "Forbidden" });
 
-      // list orders — seller only (for their stores)
-      if (!user) return res.status(401).json({ error: "Unauthorized" });
+    return res.status(200).json({ order: orderRow });
+  }
 
-      const { data: stores, error: storesErr } = await admin
-        .from("stores")
-        .select("id")
-        .eq("owner_id", user.id);
+  // list orders — seller only (for their stores)
+  if (!user) return res.status(401).json({ error: "Unauthorized" });
 
-      if (storesErr) return res.status(500).json({ error: storesErr.message });
-      const storeIds = (stores || []).map((s) => s.id);
-      if (!storeIds.length) return res.status(200).json({ orders: [], total: 0 });
+  const { data: stores, error: storesErr } = await admin
+    .from("stores")
+    .select("id")
+    .eq("owner_id", user.id);
 
-      let qb = admin
-        .from("orders")
-        .select("*, order_items(*)", { count: "exact" })
-        .in("store_id", storeIds);
+  if (storesErr) return res.status(500).json({ error: storesErr.message });
+  const storeIds = (stores || []).map((s) => s.id);
+  if (!storeIds.length)
+    return res.status(200).json({ orders: [], total: 0 });
 
-      if (store_id) qb = qb.eq("store_id", store_id);
-      if (status) qb = qb.eq("status", status);
+  let qb = admin
+    .from("orders")
+    .select("*, order_items(*)", { count: "exact" })
+    .in("store_id", storeIds);
 
-      const allowedSort = new Set(["created_at", "updated_at", "total"]);
-      const sBy = allowedSort.has(sort_by) ? sort_by : "created_at";
-      const sDir = sort_dir === "asc" ? "asc" : "desc";
+  if (store_id) qb = qb.eq("store_id", store_id);
+  if (status) qb = qb.eq("status", status);
 
-      qb = qb.order(sBy, { ascending: sDir === "asc" }).range(from, to);
-
-      const { data: rows, error: dataErr, count } = await qb;
-      if (dataErr) return res.status(500).json({ error: dataErr.message });
-
-      return res.status(200).json({ orders: rows || [], total: typeof count === "number" ? count : (rows || []).length });
+  // --- ✅ universal search (q) ---
+  if (q) {
+    const isUuid = /^[0-9a-fA-F-]{36}$/.test(q);
+    if (isUuid) {
+      qb = qb.or(`id.eq.${q},buyer_id.eq.${q}`);
+    } else {
+      // Search by buyer_name (extendable to email/phone later)
+      qb = qb.ilike("buyer_name", `%${q}%`);
     }
+  }
+
+  // --- sorting + pagination ---
+  const allowedSort = new Set(["created_at", "updated_at", "total"]);
+  const sBy = allowedSort.has(sort_by) ? sort_by : "created_at";
+  const sDir = sort_dir === "asc" ? "asc" : "desc";
+
+  qb = qb.order(sBy, { ascending: sDir === "asc" }).range(from, to);
+
+  const { data: rows, error: dataErr, count } = await qb;
+  if (dataErr) return res.status(500).json({ error: dataErr.message });
+
+  return res.status(200).json({
+    orders: rows || [],
+    total: typeof count === "number" ? count : (rows || []).length,
+  });
+}
 
     // ------------------ UPDATE order (seller) ------------------
     if (req.method === "PUT") {

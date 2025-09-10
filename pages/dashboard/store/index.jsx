@@ -2,7 +2,7 @@
 
 import React, { useCallback, useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { useForm, useWatch } from "react-hook-form";
+import { Controller, useForm, useWatch } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
@@ -63,7 +63,7 @@ const BASE_DEFAULTS = {
   subdomain: "",
   description: "",
   banner_url: "",
-  theme: { primary: "#0f172a", accent: "#2563eb", background: "#ffffff" },
+  theme: { primary: "#0d0b33", accent: "#79efbd", background: "#f7f6ff" },
 };
 
 
@@ -72,7 +72,7 @@ function CTA({ children, className = "", ...props }) {
     <button
       {...props}
       className={
-        "inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold shadow-md bg-gradient-to-r from-sky-600 to-indigo-600 text-white hover:from-sky-700 hover:to-indigo-700 disabled:opacity-60 " +
+        " flex items-center justify-center whitespace-nowrap gap-2 px-4 py-2 rounded-xl text-sm font-semibold shadow-md bg-gradient-to-r from-sky-600 to-indigo-600 text-white text-center hover:from-sky-700 hover:to-indigo-700 disabled:opacity-60 " +
         className
       }
     >
@@ -217,12 +217,19 @@ export  function BannerUploader({ currentUrl, onUploaded, bucket = "store-assets
 
 
 function ColorInput({ label, value = "#ffffff", onChange }) {
+  
   return (
     <div>
       <label className="block text-sm text-gray-600 mb-2">{label}</label>
       <div className="flex items-center gap-3">
-        <input type="color" value={value} onChange={(e) => onChange?.(e.target.value)} className="w-12 h-10 p-0 border rounded-md" />
-        <input value={value} onChange={(e) => onChange?.(e.target.value)} className="border p-2 rounded-md w-full" />
+        <input type="color" value={value} onChange={(e) => {
+
+          onChange(e.target.value)
+          
+        }
+         
+         } className="w-12 h-10 p-0 border rounded-md" />
+        <input value={value} onChange={(e) => onChange(e.target.value)} className="border p-2 rounded-md w-full" />
       </div>
     </div>
   );
@@ -285,7 +292,7 @@ const fetchProducts = useCallback(
 
 
 const {
-  register,
+    register,
     handleSubmit,
     control,
     getValues,
@@ -297,21 +304,21 @@ const {
     defaultValues: BASE_DEFAULTS,
   });
   
+  // const theme = useWatch({ control, name: "theme" });
+
   useEffect(() => {
     fetchProducts();
   }, [fetchProducts]);
 useEffect(() => {
   if (editing && store) {
     reset({
-      name: store.name || store.mystore.name || "",
-      subdomain: store.subdomain || store.mystore.subdomain || "",
-      description: store.description ||store.mystore.description || "",
-      banner_url: store.banner_url || store.mystore.banner_url || "",
-      theme: store.theme|| store.mystore.theme || BASE_DEFAULTS.theme,
+      name:  store.mystore?.name || store.name ||  "",
+      subdomain:  store.mystore?.subdomain || store.subdomain || "",
+      description: store.mystore?.description || store.description || "",
+      banner_url: store.mystore?.banner_url || store.banner_url ||"",
+      theme:  store.mystore?.theme || store.theme|| BASE_DEFAULTS.theme,
     });
-    // console.log(store.products)
-    // setProducts(store.products);
-    // setCategories(store.categories);
+
   }
 }, [editing, store, reset]);
 
@@ -374,6 +381,7 @@ async function publish() {
     alert(editing ? "Store updated: " + url : "Store published: " + url);
     onDone && onDone(json);
     setEditing(false)
+    router.push('/dashboard/store')
   } catch (err) {
     console.error(err);
     alert("Publish failed: " + err.message);
@@ -420,7 +428,6 @@ async function publish() {
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
               <Ghost onClick={saveDraft} className="w-full sm:w-auto">Save draft</Ghost>
               <div className="flex w-full sm:w-auto gap-2">
-                <Ghost onClick={() => window.open(`/api/preview?payload=${encodeURIComponent(JSON.stringify({ ...getValues(), products }))}`, "_blank")}>Preview</Ghost>
                   <CTA onClick={next} className="flex-1 sm:flex-none">Continue</CTA>
 
               </div>
@@ -432,7 +439,7 @@ async function publish() {
         return (
           <div className="space-y-4">
             <div className="flex items-center justify-between">
-              <h3 className="font-semibold">Products</h3>
+              {/* <h3 className="font-semibold">Products</h3> */}
               <div className="flex gap-2">
 
                 <AddProductButton onCreated={()=>fetchProducts()}/>
@@ -474,10 +481,42 @@ async function publish() {
               </div>
 
               <div className="space-y-4">
-                <ColorInput label="Primary color" value={getValues().theme?.primary || "#0f172a"} onChange={(v) => setValue("theme.primary", v)} />
-                <ColorInput label="Accent color" value={getValues().theme?.accent || "#2563eb"} onChange={(v) => setValue("theme.accent", v)} />
-                <ColorInput label="Background color" value={getValues().theme?.background || "#ffffff"} onChange={(v) => setValue("theme.background", v)} />
-              </div>
+                <Controller
+  name="theme.primary"
+  control={control}
+  render={({ field }) => (
+    <ColorInput
+      label="Primary color"
+      value={field.value}
+      onChange={field.onChange}
+    />
+  )}
+/>
+
+<Controller
+  name="theme.accent"
+  control={control}
+  render={({ field }) => (
+    <ColorInput
+      label="Accent color"
+      value={field.value}
+      onChange={field.onChange}
+    />
+  )}
+/>
+
+<Controller
+  name="theme.background"
+  control={control}
+  render={({ field }) => (
+    <ColorInput
+      label="Background color"
+      value={field.value}
+      onChange={field.onChange}
+    />
+  )}
+/>
+            </div>
             </div>
 
             <div className="flex flex-col sm:flex-row justify-between mt-4 gap-3">
@@ -534,7 +573,7 @@ async function publish() {
     <DashboardLayout>
 
   {
-    !editing ? (
+    (!editing && hasStore ) ? (
       <>
         <motion.div
           initial={{ opacity: 0, y: 8 }}
@@ -567,8 +606,8 @@ async function publish() {
             <div className="grid grid-cols-1 gap-3">
               <Card className="border-dashed">
                 <CardContent className="py-3">
-                  <p className="text-xs text-muted-foreground">Products by sell‑through rate</p>
-                  <p className="text-[11px] text-muted-foreground mt-1">0% —</p>
+                  <p className="text-xs text-muted-foreground">Products available. </p>
+                  <p className="text-[11px] text-muted-foreground mt-1"> {products.map(p=> p.available > 0).length} </p>
                 </CardContent>
               </Card>
               
@@ -617,7 +656,7 @@ async function publish() {
               <div className="flex items-center gap-3">
                 <div className="flex items-center gap-2">
                   {/* isolated header preview watch */}
-                  <HeaderPreview control={control} />
+                  {/* <HeaderPreview control={control} /> */}
                   <CTA onClick={publish}><Loader2 className="w-4 h-4" /> Publish</CTA>
                 </div>
               </div>

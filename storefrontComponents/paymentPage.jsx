@@ -51,7 +51,7 @@ export default function PaymentPage({ store }) {
   const handleNext = (e) => {
     e.preventDefault();
     if (!checkoutData.paymentMethod) {
-      alert("Please select a payment method.");
+      toast.error('Please select a payment method.')
       return;
     }
   };
@@ -107,11 +107,27 @@ export default function PaymentPage({ store }) {
     try {
       setLoading(true);
       const reference = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
-
+        const customer = await fetch("/api/customers", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          storeId: checkoutData.storefrontId || checkoutData.storeId || store?.id,
+          name: checkoutData.firstName + ' ' + checkoutData.lastName,
+          email: checkoutData.email,
+          phone: checkoutData.phone,
+          address:  checkoutData.address ,
+          state:  checkoutData.state,
+          country:  checkoutData.country,
+          zip:  checkoutData.zip
+        }),
+      })
+      const customerData = await customer.json()
+     
       // Build order payload expected by /api/orders
       const orderPayload = {
         store_id: checkoutData.storefrontId || checkoutData.storeId || store?.id,
-        buyer_id: null,
+         buyer_id: customerData.customer.id,
+         buyer_name: customerData.customer.name,
         currency: "NGN",
         payment_method: "paystack",
         payment_provider: "paystack",
@@ -189,6 +205,7 @@ export default function PaymentPage({ store }) {
       // do not setLoading(false) here — wait until onSuccess/onClose
     } catch (err) {
       console.error("createOrderAndInitPaystack error:", err);
+      toast.error('Something went wrong. Try again')
       alert("Failed to start payment: " + (err?.message || "Unknown error"));
       setLoading(false);
     }
@@ -198,11 +215,23 @@ export default function PaymentPage({ store }) {
   const createOrder = async (method) => {
     try {
       setLoading(true);
-      // you can implement a non-paystack order creation & redirect flow here if needed
-      // For now, we simply create order with payment_method = method and show success
+      const customer = await fetch("/api/customers", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          store_id: checkoutData.storefrontId || checkoutData.storeId || store?.id,
+          name: checkoutData.firstName + ' ' + checkoutData.lastName,
+          email: checkoutData.email,
+          phone,
+          address,
+        }),
+      }).then(r => r.json());
+     
+
       const orderPayload = {
         store_id: checkoutData.storefrontId || checkoutData.storeId || store?.id,
-        buyer_id: null,
+        buyer_id: customer.customer.id,
+        buyer_name: customer.customer.name,
         currency: "NGN",
         payment_method: method || "other",
         payment_provider: method === "darllix" ? "paystack" : null,

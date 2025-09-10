@@ -44,11 +44,17 @@ function LivePreview({ store }) {
       setCategories(store.categories)
     },[store])
 
+      const themeVars = {
+     "--color2": store.theme?.accent ,
+    "--color3": store.theme?.primary,
+    "--color4": store.theme?.background,
+  };
+
   return (
-     <div className="min-h-screen flex flex-col border-4  rounded-lg border-black">
+     <div style={themeVars} className="min-h-screen flex flex-col border-4  bg-color4 rounded-lg border-black">
             <div className="p-2 bg-color2">
                 <div className="max-w-7xl mx-auto px-4">
-                  <p className="text-xs text-color3 text-center py-1">
+                  <p className="text-xs text-color4 text-center py-1">
                     Welcome to { store?.name || store.mystore?.name  || '[Store Name]'}! Enjoy your shopping experience.
                   </p>
                 </div>
@@ -56,7 +62,7 @@ function LivePreview({ store }) {
               <header className="border-b border-gray-400">
                <nav className="py-4 max-w-7xl mx-auto px-3 sm:px-6 lg:px-8  flex justify-between gap-4 items-center">
                   <div className="">
-                      <a href="" className="font-extrabold sm:text-xl md:text-2xl text-color3 capitalize">{store?.name || store.mystore?.name}</a>
+                      <span className="font-extrabold whitespace-nowrap text-sm md:text-2xl text-color3 capitalize">{store?.name || store.mystore?.name}</span>
                   </div>
         
                   <div  className="border border-gray-300 rounded-full px-4 py-2 flex items-center w-full max-w-md">
@@ -90,7 +96,7 @@ function LivePreview({ store }) {
             <div className="max-w-7xl mx-auto border rounded-md overflow-hidden">
               <div className="h-96 relative">
                 <Image
-                  src={store?.banner_url || store.mystore ||'/placeholder.jpg'}
+                  src={store?.banner_url || store.mystore?.banner_url ||'/placeholder.jpg'}
                   alt="Store Banner"
                   width={2000}
                   height={2000}
@@ -104,7 +110,7 @@ function LivePreview({ store }) {
                   transition={{ delay: 0.4, duration: 0.5 }}
                 >
                   <motion.h1
-                    className="text-4xl font-bold text-center"
+                    className="text-4xl text-color4 font-bold text-center"
                     initial={{ scale: 0.95, opacity: 0 }}
                     animate={{ scale: 1, opacity: 1 }}
                     transition={{ delay: 0.6, duration: 0.45 }}
@@ -112,7 +118,7 @@ function LivePreview({ store }) {
                     {store?.name || store.mystore?.name ||'[Store Name]'}
                   </motion.h1>
                   <motion.p
-                    className="text-center text-gray-100 mt-2 max-w-2xl"
+                    className="text-center text-gray-100 mt-2 px-2 max-w-2xl"
                     initial={{ y: 10, opacity: 0 }}
                     animate={{ y: 0, opacity: 1 }}
                     transition={{ delay: 0.8, duration: 0.45 }}
@@ -216,7 +222,6 @@ function LivePreview({ store }) {
 
                 <div
                   className="grid grid-cols-2 gap-4 xl:grid-cols-3 mt-4"
-                  
                   initial="hidden"
                   animate="show"
                 >

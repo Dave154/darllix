@@ -12,7 +12,7 @@ const Header = ({store, query, setQuery}) => {
     <>
     <div className="p-2 bg-color2">
         <div className="max-w-7xl mx-auto px-4">
-          <p className="text-xs text-color3 text-center py-1">
+          <p className="text-xs text-color4 text-center py-1">
             Welcome to {store?.name || 'Our Store'}! Enjoy your shopping experience.
           </p>
         </div>

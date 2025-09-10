@@ -9,6 +9,7 @@ import { ChevronDown, ChevronUp, CheckCircle2 } from "lucide-react";
 import SalesGraph from "../../components/salesGraph";
 import { withAuth } from "../../lib/withAuth";
 import { useStore } from "@/store";
+import { useRouter } from "next/router";
 
 
 
@@ -41,7 +42,7 @@ export default function DashboardPage({user,store,hasStore}){
   };
 
   const progress = Math.round((completed.length / steps.length) * 100);
-
+ const router = useRouter()
 
   return (
     <DashboardLayout>
@@ -56,7 +57,7 @@ export default function DashboardPage({user,store,hasStore}){
                   You don't have a store yet. Create your store to start selling products and managing your business.
                 </p>
               </div>
-              <Button onClick={() => setHasStore(true)}>Create Store</Button>
+              <Button onClick={() => router.push('/dashboard/store') }>Create Store</Button>
             </CardContent>
           </Card>
          )

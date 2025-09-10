@@ -135,7 +135,7 @@ export default function Storefront({ store }) {
                   transition={{ delay: 0.4, duration: 0.5 }}
                 >
                   <motion.h1
-                    className="text-4xl font-bold text-center"
+                    className="text-4xl font-bold text-color4 text-center"
                     initial={{ scale: 0.95, opacity: 0 }}
                     animate={{ scale: 1, opacity: 1 }}
                     transition={{ delay: 0.6, duration: 0.45 }}
