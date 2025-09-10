@@ -1,6 +1,5 @@
 // pages/api/orders/init.js
 import { getSupabaseServer, supabaseAdmin } from "@/lib/supabaseClient";
-import fetch from "node-fetch"; // Node 18+ has fetch; adjust if needed
 
 export default async function handler(req, res) {
   if (req.method !== "POST") return res.status(405).end("Method not allowed");
