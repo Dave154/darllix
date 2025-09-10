@@ -15,17 +15,64 @@ import { useRouter } from "next/router";
 
 export default function DashboardPage({user,store,hasStore}){
     const setStore = useStore((s) => s.setStore);
+    const [dashboardInfo, setDashboardInfo] = useState({
+     product: null,
+     order: null,
+     customer: null,
+    });
+    
+  useEffect(() => {
+    if (store) {
+      setStore(store);
+      if (!completed.includes('store')) {
+        setCompleted([...completed, 'store']);
+    }
+    } 
+  }, [store, setStore]);
+
+
+  const fetchDashboardInfo = async () => {
+    try {
+      const [prodRes, orderRes, custRes] = await Promise.all([
+        fetch(`api/products?page=1&limit=10&storeId=${store?.id}&sort_by=created_at&sort_dir=desc`),
+        
+        fetch(`api/orders?page=1&limit=10&storeId=${store?.id}`),
+        fetch(`/api/customers?page=1&limit=1&storeId=${store?.id} `),
+      ]);
+
+      const [prodJson, orderJson, custJson] = await Promise.all([
+        prodRes.json(),
+        orderRes.json(),
+        custRes.json(),
+      ]);
+
+      setDashboardInfo({
+        product: prodJson.products || null,
+        order: orderJson.orders || null,
+        customer: custJson.customers || null,
+      });
+
+    } catch (err) {
+      console.error("fetchDashboardInfo error:", err);
+    }
+  };
 
   useEffect(() => {
-    if (store) setStore(store);
-    console.log(store,hasStore)
-  }, [store, setStore]);
+    fetchDashboardInfo();
+  }, []);
+
+  useEffect(()=>{
+    if(dashboardInfo?.product?.length>0){
+      if (!completed.includes('products')) {
+        setCompleted([...completed, 'products']);
+    }
+  }
+  },[dashboardInfo])
 
   const steps = [
     { key: "bank", title: "Add bank details", description: "Add your bank details to receive payments." },
     { key: "products", title: "Add products", description: "Write a description, add photos, and set pricing." },
     { key: "store", title: "Set up your online store", description: "Customize your store theme and homepage." },
-    { key: "settings", title: "Store settings", description: "Configure payments, shipping, and taxes." },
   ];
 
   const [openSection, setOpenSection] = useState(null);
@@ -35,11 +82,7 @@ export default function DashboardPage({user,store,hasStore}){
     setOpenSection(openSection === key ? null : key);
   };
 
-  const markComplete = (key) => {
-    if (!completed.includes(key)) {
-      setCompleted([...completed, key]);
-    }
-  };
+
 
   const progress = Math.round((completed.length / steps.length) * 100);
  const router = useRouter()
@@ -68,11 +111,12 @@ export default function DashboardPage({user,store,hasStore}){
 
             {/* Charts Section */}
 
-            <SalesGraph />
+            <SalesGraph dashboardInfo={dashboardInfo} store={store} />
           </>
         )}
-
         {/* Onboarding Section */}
+        {
+          completed.length < 3  &&
         <Card>
           <CardHeader>
             <CardTitle className="text-xl">Get ready to sell</CardTitle>
@@ -111,13 +155,20 @@ export default function DashboardPage({user,store,hasStore}){
                     className="pl-4 pb-4 space-y-3"
                   >
                     <p className="text-sm text-gray-600">{step.description}</p>
-                    <Button onClick={() => markComplete(step.key)}>Mark as Done</Button>
+                    <Button onClick={() => router.push('/dashboard/products')}>
+                      {
+                        step.key ==='products' ?
+                        'Add Product'
+                        :' Continue'
+                      }
+                    </Button>
                   </motion.div>
                 )}
               </div>
             ))}
           </CardContent>
         </Card>
+        }
 
         {/* Feature Cards (always visible) */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">

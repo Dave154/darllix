@@ -25,6 +25,7 @@ import { useEffect } from "react";
 import Loader from "./loader";
 import TrialBanner from "./trialBanner";
 import Image from "next/image";
+import { Toaster } from "sonner";
 
 const menuItems = [
   { title: "Dashboard", icon: Home, href: "/dashboard" },
@@ -41,9 +42,6 @@ const menuItems = [
 
 ];
 
-const storeSubItems = [
-
-];
 
 
 
@@ -70,6 +68,10 @@ export default function DashboardLayout({ children }) {
   }, [router]);
 
   return (
+    <>
+    <Toaster
+      position="top-right"
+    />
     <div className="flex flex-col h-screen bg-color4 text-color3">
       {  loading &&  <Loader /> }
     
@@ -226,6 +228,7 @@ export default function DashboardLayout({ children }) {
         </main>
       </div>
     </div>
+        </>
   );
 }
 

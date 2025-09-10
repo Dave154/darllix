@@ -155,9 +155,9 @@ import { Toaster } from "@/components/ui/sonner";
 
 export default function StorefrontDynamic({ store, slug }) {
   const themeVars = {
-     "--color2": store.theme?.accent || "59 130 246",
-    "--color3": store.theme?.primary || "34 197 94",
-    "--color4": store.theme?.background || "59 130 246",
+    "--color2": store.theme?.accent,
+    "--color3": store.theme?.primary ,
+    "--color4": store.theme?.background ,
   };
   const [pathname, setPath] = useState("");
   const router = useRouter();

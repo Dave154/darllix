@@ -20,6 +20,7 @@ export default function AreYouSureModal({
   confirmLabel = "Yes, continue",
   cancelLabel = "Cancel",
   loading = false,
+  safe
 }) {
   return (
     <Dialog open={open} onOpenChange={onClose}>
@@ -33,7 +34,7 @@ export default function AreYouSureModal({
             {cancelLabel}
           </Button>
           <Button
-            variant="destructive"
+            variant= {safe ? '': 'destructive'}
             onClick={onConfirm}
             disabled={loading}
           >

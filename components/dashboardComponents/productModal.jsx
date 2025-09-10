@@ -10,6 +10,7 @@ import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { X, Plus, Trash2 } from "lucide-react";
 import { createClient as createSupabaseClient } from "@supabase/supabase-js";
+import { toast } from "sonner";
 
 // zod validation
 const productSchema = z.object({
@@ -41,6 +42,7 @@ async function handleCreateProduct(product) {
     const body = await res.json().catch(() => ({}));
     throw new Error(body?.error || "Failed to save product");
   }
+  toast.success('Product Created succesfully')
   const { product: saved } = await res.json();
   return saved;
 }
@@ -57,6 +59,8 @@ async function handleUpdateProduct(product) {
     const body = await res.json().catch(() => ({}));
     throw new Error(body?.error || "Failed to update product");
   }
+  toast.success('Product updated succesfully')
+
   const { product: updated } = await res.json();
   return updated;
 }
@@ -147,6 +151,7 @@ function ModalImpl({ resolvePromise, options = {} }) {
               console.warn("Failed to fetch categories for store", sId);
             }
           } catch (err) {
+            toast.error('Something went wrong')
             console.error("fetch categories error", err);
           }
         }
@@ -236,7 +241,7 @@ function ModalImpl({ resolvePromise, options = {} }) {
         previewUrls: images.map((i) => i.preview),
         status: initialProduct?.status || "Active",
         categories: selectedCats || [],
-         available: values.available != null ? Number(values.available) : 0,
+         available: values.available != null ? Number(values.available) : 1,
       };
 
       let createdOrUpdated = null;
@@ -254,8 +259,9 @@ function ModalImpl({ resolvePromise, options = {} }) {
 
       resolvePromise(createdOrUpdated || productPayload);
     } catch (err) {
+      toast.error('Something went wrong. Try again')
       console.error("Upload error:", err);
-      alert("Failed to upload images / save product: " + (err?.message || err));
+      toast.error('Failed to upload images / save product')
     } finally {
       setUploading(false);
     }

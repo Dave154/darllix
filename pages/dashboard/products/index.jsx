@@ -48,6 +48,7 @@ import { useStore } from "@/store";
 import { withAuth } from "../../../lib/withAuth";
 import { openProductModal } from "../../../components/dashboardComponents/productModal";
 import AreYouSureModal from "../../../components/dashboardComponents/areYouSure";
+import { toast } from "sonner";
 
 
 export default function ProductsPage({ store, hasStore }) {
@@ -132,6 +133,7 @@ const fetchProducts = useCallback(
       setCategories(json.categories || []); 
       setTotal(json.total || 0);
     } catch (err) {
+      toast.error('Something went wrong. Try again')
       console.error("fetchProducts", err);
       setError(err.message || "Failed to load products");
     } finally {
@@ -150,6 +152,7 @@ async function handleAddCategory() {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ name, storeId: store.id }),
   });
+  toast.success('Category added succesfully')
   if (res.ok) fetchProducts();
 }
 
@@ -161,13 +164,17 @@ async function handleEditCategory(cat) {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ name }),
   });
+  toast.success('Category edited succesfully')
+
   if (res.ok) fetchProducts();
 }
 
 async function handleDeleteCategory(cat) {
-  if (!confirm(`Delete category "${cat.name}"?`)) return;
+   setLoading(true)
   const res = await fetch(`/api/categories?id=${cat.id}`, { method: "DELETE" });
   if (res.ok) fetchProducts();
+  toast.success('Category deleted succesfully')
+
 }
 
   // refetch when page/limit/debouncedQuery/tab/sort change
@@ -195,22 +202,23 @@ async function handleDeleteCategory(cat) {
         fetchProducts();
       }
     } catch (err) {
+      
       console.error("Add product error:", err);
-      alert("Failed to add product: " + (err?.message || err));
+      toast.error('Failed to add product')
     }
   }
 
    async function handleDeleteSelected() {
-    console.log('hmmmm')
     if (selectedIds.length === 0) return;
     setDeleting(true)
     try {
       for (const id of selectedIds) {
-        console.log(id)
         const res = await fetch(`/api/products?id=${encodeURIComponent(id)}`, {
           method: "DELETE",
           credentials: "same-origin",
         });
+  toast.success('Selected deleted succesfully')
+
         if (!res.ok) {
           const body = await res.json().catch(() => ({}));
           throw new Error(body?.error || `Delete failed for ${id}`);
@@ -222,7 +230,7 @@ async function handleDeleteCategory(cat) {
       setSelectedIds([]);
     } catch (err) {
       console.error("Bulk delete error", err);
-      alert("Failed to delete selected: " + (err?.message || err));
+      toast.error('Failed to delete selected')
     }finally{
       setDeleting(false)
     }
@@ -311,6 +319,7 @@ async function handleDeleteCategory(cat) {
         fetchProducts();
       }
     } catch (err) {
+      toast.error('Error editing product')
       console.error("Error editing product:", err);
     }
       
@@ -322,9 +331,11 @@ try{
     method: "DELETE",
     headers: { "Content-Type": "application/json" }, 
   });
+  toast.success('Product deleted succesfully')
   fetchProducts({ page: 1, limit, q: debouncedQuery, status: tab, sortBy, sortDir });
 
 } catch(error){
+  toast.error('Failed to delete product')
     console.log(error)
   }
   finally{

@@ -43,6 +43,7 @@ import { useRouter } from "next/router";
 import { withAuth } from "@/lib/withAuth";
 import AreYouSureModal from "@/components/dashboardComponents/areYouSure";
 import { BsPeople } from "react-icons/bs";
+import OrderPage from "../../../components/dashboardComponents/orderPage";
 
 export default function OrdersPage({ store, hasStore }) {
   const router = useRouter();
@@ -63,6 +64,18 @@ export default function OrdersPage({ store, hasStore }) {
   const [pendingDelete, setPendingDelete] = useState(null);
   const [deleting, setDeleting] = useState(false);
   const headerCheckboxRef = useRef(null);
+  const [viewing,setViewing] = useState(false)
+ 
+    const { id } = router.query;
+
+    useEffect(()=>{
+      if(id){
+        setViewing(true)
+      }else{
+        setViewing(false)
+      }
+    },[id])
+
 
   // debounce search
   useEffect(() => {
@@ -178,6 +191,10 @@ export default function OrdersPage({ store, hasStore }) {
        
         </Badge>;
   };
+ 
+  if(viewing){
+    return <OrderPage />
+  }
 
   return (
     <DashboardLayout>
@@ -323,15 +340,16 @@ export default function OrdersPage({ store, hasStore }) {
                                 className="flex items-center gap-2 text-green-600"
                               >
                                 <Check className="h-4 w-4" /> Mark as completed
+
                               </DropdownMenuItem>
                               <DropdownMenuItem
-                                onClick={() =>  router.push(`/dashboard/customers?id=${o.id}`) }
+                                onClick={() =>  router.push(`/dashboard/customers?id=${o.buyer_id}`) }
                                 className="flex items-center gap-2"
                               >
                                 <BsPeople /> View Customer
                               </DropdownMenuItem>
                                <DropdownMenuItem
-                                onClick={() => handleDeleteClick(o.id)}
+                                onClick={() =>  router.push(`/dashboard/orders?id=${o.id}`) }
                                 className="flex items-center gap-2"
                               >
                                 <Box className="h-4 w-4" /> View Order
