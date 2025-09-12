@@ -108,7 +108,7 @@ const images = ["/vendor1.jpg", "/vendor6.jpg", "/vendor6.jpg"];
   };
 
   return (
-    <div className="min-h-screen w-full bg-[radial-gradient(1200px_700px_at_80%_-10%,#6fd8ac_0%,transparent_60%),radial-gradient(1200px_700px_at_20%_110%,#4a21ef_0%,#0d0b33_60%)] text-white flex items-center justify-center md:p-4 pt-4">
+    <div className="min-h-screen w-full bg-[radial-gradient(1200px_700px_at_80%_-10%,#6fd8ac_0%,transparent_60%),radial-gradient(1200px_700px_at_20%_110%,#4a21ef_0%,#fff_60%)] text-white flex items-center justify-center md:p-4 pt-4">
       <motion.div
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
@@ -133,7 +133,7 @@ const images = ["/vendor1.jpg", "/vendor6.jpg", "/vendor6.jpg"];
                 </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="max-h-60 w-56 overflow-y-auto">
-                {["Nigeria", "Ghana"].map(
+                {["Nigeria"].map(
                   (c) => (
                     <DropdownMenuItem key={c} onClick={() => setCountry(c)}>
                       {c}
@@ -215,7 +215,7 @@ const images = ["/vendor1.jpg", "/vendor6.jpg", "/vendor6.jpg"];
             </div>
 
             {/* Human checkbox */}
-            <div className="flex items-center gap-3 rounded-md border p-4">
+            {/* <div className="flex items-center gap-3 rounded-md border p-4">
               <Checkbox id="human" {...register("human")} />
               <Label htmlFor="human" className="flex items-center gap-2 text-sm text-slate-700">
                 <ShieldCheck className="h-5 w-5 text-emerald-600" /> I am human
@@ -223,19 +223,19 @@ const images = ["/vendor1.jpg", "/vendor6.jpg", "/vendor6.jpg"];
             </div>
             {errors.human && (
               <p className="-mt-3 text-sm text-red-600">{String(errors.human.message)}</p>
-            )}
+            )} */}
 
             <Button type="submit" className="w-full h-11 bg-slate-900 text-white hover:bg-black text-base" disabled={isSubmitting}>
               {isSubmitting ? "Creating..." : "Create Darllix account"}
             </Button>
 
-            <div className="flex items-center gap-4">
+            {/* <div className="flex items-center gap-4">
               <Separator className="flex-1" />
               <span className="text-sm text-slate-400">or</span>
               <Separator className="flex-1" />
-            </div>
+            </div> */}
 
-            <div className="grid grid-cols-1 gap-4">
+            {/* <div className="grid grid-cols-1 gap-4">
               <Button
                 type="button"
                 variant="outline"
@@ -252,7 +252,7 @@ const images = ["/vendor1.jpg", "/vendor6.jpg", "/vendor6.jpg"];
               >
                 <Apple className="mr-2 h-5 w-5" /> Continue with Apple
               </Button>
-            </div>
+            </div> */}
 
             <p className="text-sm text-slate-500">
               Already have a Darllix account? <a href="/auth/login" className="underline">Log in</a>

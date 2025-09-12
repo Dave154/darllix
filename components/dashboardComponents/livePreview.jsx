@@ -19,7 +19,7 @@ const BASE_DEFAULTS = {
   subdomain: "",
   description: "",
   banner_url: "",
-  theme: { primary: "#0f172a", accent: "#2563eb", background: "#ffffff" },
+  theme: { primary: "#0d0b33", accent: "#6fd8ac", background: "#f7f6ff" },
 };
 
 function LivePreview({ store }) {
@@ -45,13 +45,13 @@ function LivePreview({ store }) {
     },[store])
 
       const themeVars = {
-     "--color2": store.theme?.accent ,
-    "--color3": store.theme?.primary,
-    "--color4": store.theme?.background,
+     "--color2": store.mystore?.theme?.accent || store.theme?.accent ,
+    "--color3":  store.mystore?.theme?.primary || store.theme?.primary,
+    "--color4": store.mystore?.theme?.background || store.theme?.background,
   };
 
   return (
-     <div style={themeVars} className="min-h-screen flex flex-col border-4  bg-color4 rounded-lg border-black">
+     <div style={themeVars} className="relative min-h-screen flex flex-col border-4  bg-color4 rounded-lg border-black">
             <div className="p-2 bg-color2">
                 <div className="max-w-7xl mx-auto px-4">
                   <p className="text-xs text-color4 text-center py-1">
@@ -267,10 +267,10 @@ function LivePreview({ store }) {
         </motion.footer>
 
         <motion.button
-          className="fixed bottom-4 grid place-content-center w-10 h-10 right-4 bg-color3 text-white rounded-full shadow-lg hover:bg-color2 transition-colors duration-200"
+          className="absolute bottom-4 grid place-content-center w-10 h-10 right-4 bg-color3 text-white rounded-full shadow-lg hover:bg-color2 transition-colors duration-200"
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
-          aria-label="Back to top"
+          aria-label="cart"
         >
          <ShoppingCart size={20} />
         </motion.button>
@@ -282,7 +282,6 @@ function LivePreview({ store }) {
 const MemoLivePreview = React.memo(LivePreview);
 
 export default function PreviewPanel({ mystore, control, products, categories }) {
-  // If using RHF control, use watch via useWatch; otherwise fall back to defaults
   const name = useWatch({ control, name: "name" }) ?? "";
   const subdomain = useWatch({ control, name: "subdomain" }) ?? "";
   const description = useWatch({ control, name: "description" }) ?? "";

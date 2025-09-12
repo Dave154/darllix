@@ -539,7 +539,7 @@ async function publish() {
                 <div className="text-sm text-gray-500">Store details</div>
                 <div className="mt-3 space-y-2">
                   <div className="p-3 border rounded">Name: <strong>{getValues().name}</strong></div>
-                  <div className="p-3 border rounded">Subdomain: <strong>{getValues().subdomain}.darllix.shop</strong></div>
+                  <div className="p-3 border rounded overflow-hidden">Subdomain: <strong>{getValues().subdomain}.darllix.shop</strong></div>
                   <div className="p-3 border rounded">Products: <strong>{products.length}</strong></div>
                 </div>
               </div>
@@ -612,19 +612,19 @@ async function publish() {
               </Card>
               
             </div>
+             {/* <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <div className="">
+                  <p className="text-gray-500 text-sm md:text-lg ml-3 mb-3 ">Sales</p>
+                  <CustomerGraph/>
+                  </div>
+                  <div className="">
+                <p className="text-gray-500 text-sm md:text-lg ml-3 mb-3 ">Finance</p>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-              <div className="">
-              <p className="text-gray-500 text-sm md:text-lg ml-3 mb-3 ">Sales</p>
-              <CustomerGraph/>
-              </div>
-              <div className="">
-             <p className="text-gray-500 text-sm md:text-lg ml-3 mb-3 ">Finance</p>
+                  <CustomerGraph/>
+                  </div>
 
-              <CustomerGraph/>
-              </div>
-
-            </div>
+               </div> */}
+               
             </>
           )}
         </motion.div>
@@ -664,12 +664,16 @@ async function publish() {
 
             <div className="mt-4">
               <div className="flex gap-4 overflow-x-auto pb-2 scrollbar-thin">
-                {["Details", "Products", "Customize", "Launch"].map((label, i) => (
-                  <div key={label} className={`flex-shrink-0 flex items-center gap-3 py-1 ${i === step ? "opacity-100" : "opacity-60"}`}>
+                {["Details", "Products", "Customize", "Launch"].map((label, i) => {
+                  return (
+                      ( !editing && label === 'Products') ? '':
+                      <div key={label + i} className={`flex-shrink-0 flex items-center gap-3 py-1 ${i === step ? "opacity-100" : "opacity-60"}`}>
                     <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold ${i === step ? "bg-sky-600 text-white" : "bg-gray-100 text-gray-600"}`}>{i + 1}</div>
                     <div className={`text-xs ${i === step ? "text-gray-800 font-semibold" : "text-gray-400"}`}>{label}</div>
                   </div>
-                ))}
+                  )        
+})
+                }
               </div>
             </div>
           </header>
@@ -710,14 +714,14 @@ async function publish() {
 
             <div className="grid grid-cols-1 gap-3">
               <MiniStat icon={<Tag />} label="Products" value={products?.length || 0} />
-              <MiniStat icon={<Edit3 />} label="Theme" value={getValues().theme?.primary || "#0f172a"} />
+              <MiniStat icon={<Edit3 />} label="Theme" value={getValues().theme?.primary} />
               <div className="p-3 bg-white rounded-xl shadow-sm flex items-center justify-between">
                 <div>
                   <div className="text-xs text-gray-500">Live store</div>
                   <div className="font-semibold">{getValues().subdomain ? `${getValues().subdomain}.darllix.shop` : "Not live"}</div>
                 </div>
                 <div>
-                  <Ghost onClick={() => window.open(`https://${getValues().subdomain || "your-subdomain"}.darllix.shop`, "_blank")}>Open</Ghost>
+                  <Ghost onClick={() => window.open(`http://${getValues().subdomain}.darllix.shop`, "_blank")}>Open</Ghost>
                 </div>
               </div>
             </div>

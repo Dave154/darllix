@@ -143,7 +143,7 @@ export default function DarllixLogin() {
     };
   }, [router]);
   return (
-    <div className="min-h-screen w-full bg-[radial-gradient(1200px_700px_at_80%_-10%,#6fd8ac_0%,transparent_60%),radial-gradient(1200px_700px_at_20%_110%,#4a21ef_0%,#0d0b33_60%)] text-white flex items-center justify-center md:p-4 pt-4">
+    <div className="min-h-screen w-full bg-[radial-gradient(1200px_700px_at_80%_-10%,#6fd8ac_0%,transparent_60%),radial-gradient(1200px_700px_at_20%_110%,#4a21ef_0%,#fff_60%)] text-white flex items-center justify-center md:p-4 pt-4">
       <motion.div
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
@@ -169,7 +169,7 @@ export default function DarllixLogin() {
                 </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="max-h-60 w-56 overflow-y-auto">
-                {["Nigeria", "Ghana"].map((c) => (
+                {["Nigeria"].map((c) => (
                   <DropdownMenuItem key={c} onClick={() => setCountry(c)}>
                     {c}
                   </DropdownMenuItem>
@@ -246,14 +246,14 @@ export default function DarllixLogin() {
             </Button>
 
             {/* Or */}
-            <div className="flex items-center gap-4">
+            {/* <div className="flex items-center gap-4">
               <Separator className="flex-1" />
               <span className="text-sm text-slate-400">or</span>
               <Separator className="flex-1" />
-            </div>
+            </div> */}
 
             {/* OAuth */}
-            <div className="grid grid-cols-1 gap-4">
+            {/* <div className="grid grid-cols-1 gap-4">
               <Button
                 type="button"
                 variant="outline"
@@ -270,7 +270,7 @@ export default function DarllixLogin() {
               >
                 <Apple className="mr-2 h-5 w-5" /> Continue with Apple
               </Button>
-            </div>
+            </div> */}
 
             <p className="text-sm text-slate-500">
               Don’t have a Darllix account?{" "}

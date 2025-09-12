@@ -14,9 +14,10 @@ import {
   ChevronDown,
   Menu,
   X,
+  LogOut,
 } from "lucide-react";
 import { FaTruck } from "react-icons/fa";
-import { BsCreditCard2FrontFill} from "react-icons/bs";
+import { BsCreditCard2FrontFill, BsPersonFillExclamation} from "react-icons/bs";
 import { PiPiggyBankThin } from "react-icons/pi";
 import { RxLightningBolt } from "react-icons/rx";
 import { useRouter } from "next/router";
@@ -26,6 +27,7 @@ import Loader from "./loader";
 import TrialBanner from "./trialBanner";
 import Image from "next/image";
 import { Toaster } from "sonner";
+import { useSupabaseClient } from "@supabase/auth-helpers-react";
 
 const menuItems = [
   { title: "Dashboard", icon: Home, href: "/dashboard" },
@@ -36,12 +38,7 @@ const menuItems = [
   { title: "Fufilment", icon: FaTruck , href: "/dashboard/fufilment" },
   { title: "Sell & Save", icon: PiPiggyBankThin, href: "/dashboard/sellandsave" },
 
-
-
-
-
 ];
-
 
 
 
@@ -49,9 +46,11 @@ export default function DashboardLayout({ children }) {
   const [openStore, setOpenStore] = React.useState(false);
   const [mobileOpen, setMobileOpen] = React.useState(false);
   const [storeDropdown, setStoreDropdown] = React.useState(false);
+  const router = useRouter();
+const [loading, setLoading] = useState(false);
 
-    const router = useRouter();
-  const [loading, setLoading] = useState(false);
+ 
+
   useEffect(() => {
     const handleStart = () => setLoading(true);
     const handleStop = () => setLoading(false);
@@ -148,7 +147,7 @@ export default function DashboardLayout({ children }) {
                 transition={{ duration: 0.2 }}
                 className="absolute right-12 top-12 bg-white text-black rounded-md shadow-lg py-2 w-48 z-50"
               >
-                {storeSubItems.map((sub, i) => (
+                {/* {storeSubItems.map((sub, i) => (
                   <Link
                     key={i}
                     href={sub.href}
@@ -156,7 +155,7 @@ export default function DashboardLayout({ children }) {
                   >
                     {sub.title}
                   </Link>
-                ))}
+                ))} */}
               </motion.div>
             )}
           </AnimatePresence>
@@ -235,6 +234,18 @@ export default function DashboardLayout({ children }) {
 /* Sidebar Content */
 function SidebarContent({ openStore, setOpenStore, setMobileOpen }) {
   const router = useRouter();
+  
+
+ const supabase = useSupabaseClient();
+  const handleLogout = async () => {
+    try {
+      const { error } = await supabase.auth.signOut();
+      if (error) throw error;
+      router.push("/auth/login");
+    } catch (err) {
+      console.error("Error during logout:", err.message);
+    }
+  };
   return (
     <nav className="flex-1 flex flex-col px-2 py-4 space-y-1">
       <div className="flex-1">
@@ -287,7 +298,7 @@ function SidebarContent({ openStore, setOpenStore, setMobileOpen }) {
             exit={{ height: 0, opacity: 0 }}
             className="pl-10 flex flex-col space-y-1"
             >
-              {storeSubItems.map((sub, i) => (
+              {/* {storeSubItems.map((sub, i) => (
                 <Link
                 key={i}
                 href={sub.href}
@@ -296,7 +307,7 @@ function SidebarContent({ openStore, setOpenStore, setMobileOpen }) {
                 >
                   {sub.title}
                 </Link>
-              ))}
+              ))} */}
             </motion.div>
           )}
         </AnimatePresence>
@@ -310,7 +321,7 @@ function SidebarContent({ openStore, setOpenStore, setMobileOpen }) {
 
           <motion.div
         whileHover={{ x: 5 }}
-        className="flex items-center gap-3 px-3 py-2 rounded-md cursor-pointer bg-blue-300/50 backdrop-blur text-white shadow-md shadow-blue-200  rounded-xl hover:bg-gray-300"
+        className="flex items-center gap-3 px-3 py-2  cursor-pointer bg-blue-300/50 backdrop-blur text-white shadow-md shadow-blue-200  rounded-xl hover:bg-gray-300"
       >
         <RxLightningBolt className="h-5 w-5 text-blue-300" />
         <Link href="/dashboard/pricing" onClick={() => setMobileOpen(false)}>
@@ -322,11 +333,21 @@ function SidebarContent({ openStore, setOpenStore, setMobileOpen }) {
         whileHover={{ x: 5 }}
         className="flex items-center gap-3 px-3 py-2 rounded-md cursor-pointer hover:bg-gray-300"
       >
+        <BsPersonFillExclamation className="h-5 w-5 text-gray-500" />
+        <Link href="/dashboard/profile" onClick={() => setMobileOpen(false)}>
+          Profile
+        </Link>
+      </motion.div>
+      <motion.div
+        whileHover={{ x: 5 }}
+        className="flex items-center gap-3 px-3 py-2 rounded-md cursor-pointer hover:bg-gray-300"
+      >
         <HelpCircle className="h-5 w-5 text-gray-500" />
         <Link href="/dashboard/help" onClick={() => setMobileOpen(false)}>
           Help
         </Link>
       </motion.div>
+
 
       {/* Settings */}
       <motion.div
@@ -337,6 +358,15 @@ function SidebarContent({ openStore, setOpenStore, setMobileOpen }) {
         <Link href="/dashboard/settings" onClick={() => setMobileOpen(false)}>
           Settings
         </Link>
+      </motion.div>
+       <motion.div
+        whileHover={{ x: 5 }}
+        className="flex items-center text-red-600 gap-3 px-3 py-2 rounded-md cursor-pointer hover:bg-gray-300"
+      >
+        <LogOut className="h-5 w-5 text-red-600" />
+        <div onClick={handleLogout}>
+          Logout
+        </div>
       </motion.div>
     </nav>
   );
