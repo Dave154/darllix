@@ -1,7 +1,8 @@
+// pages/create-profile.jsx
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { useRouter } from "next/router";
-import { useSupabaseClient, useUser } from "@supabase/auth-helpers-react";
+import { useSupabaseClient } from "@supabase/auth-helpers-react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -9,9 +10,9 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import Loader from "../../components/dashboardComponents/loader";
+import Loader from "@/components/dashboardComponents/loader";
+import { useUser } from "../../hooks/useUser";
 
-// ✅ Validation schema
 const schema = z.object({
   full_name: z.string().min(2, "Full name is required"),
   account_name: z.string().min(2, "Account name is required"),
@@ -39,6 +40,7 @@ export default function CreateProfile() {
     if (!user) return;
     try {
       setLoading(true);
+
       const { error } = await supabase.from("profiles").insert([
         {
           id: user.id,
@@ -50,6 +52,7 @@ export default function CreateProfile() {
           phone: values.phone,
         },
       ]);
+
       if (error) throw error;
       router.push("/dashboard");
     } catch (err) {
@@ -70,7 +73,7 @@ export default function CreateProfile() {
         <img
           src="/vendor1.jpg"
           alt="Profile setup"
-          className="w-full opacity-65 max-h- object-cover"
+          className="w-full h-full object-cover opacity-70"
         />
       </div>
 
@@ -85,86 +88,94 @@ export default function CreateProfile() {
           <h1 className="text-3xl font-bold text-gray-900 mb-6">
             Create Your Profile
           </h1>
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-6 w-full ">
-  {/* Full Name */}
-  <div>
-    <Label className="text-sm text-gray-700">Full Name</Label>
-    <Input
-      placeholder="John Doe"
-      className="mt-2 h-14 w-full text-base px-4"
-      {...register("full_name")}
-    />
-    {errors.full_name && (
-      <p className="text-sm text-red-500 mt-1">{errors.full_name.message}</p>
-    )}
-  </div>
 
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+            {/* Full Name */}
+            <div>
+              <Label className="text-sm text-gray-700">Full Name</Label>
+              <Input
+                placeholder="John Doe"
+                className="mt-2 h-14 w-full text-base px-4"
+                {...register("full_name")}
+              />
+              {errors.full_name && (
+                <p className="text-sm text-red-500 mt-1">
+                  {errors.full_name.message}
+                </p>
+              )}
+            </div>
 
-  {/* Bank Name */}
-  <div>
-    <Label className="text-sm text-gray-700">Bank Name</Label>
-    <Input
-      placeholder="First Bank"
-      className="mt-2 h-14 w-full text-base px-4"
-      {...register("bank_name")}
-    />
-    {errors.bank_name && (
-      <p className="text-sm text-red-500 mt-1">{errors.bank_name.message}</p>
-    )}
-  </div>
+            {/* Bank Name */}
+            <div>
+              <Label className="text-sm text-gray-700">Bank Name</Label>
+              <Input
+                placeholder="First Bank"
+                className="mt-2 h-14 w-full text-base px-4"
+                {...register("bank_name")}
+              />
+              {errors.bank_name && (
+                <p className="text-sm text-red-500 mt-1">
+                  {errors.bank_name.message}
+                </p>
+              )}
+            </div>
 
-  {/* Account Number */}
-  <div>
-    <Label className="text-sm text-gray-700">Account Number</Label>
-    <Input
-      placeholder="0123456789"
-      className="mt-2 h-14 w-full text-base px-4"
-      {...register("account_number")}
-    />
-    {errors.account_number && (
-      <p className="text-sm text-red-500 mt-1">
-        {errors.account_number.message}
-      </p>
-    )}
-  </div>
+            {/* Account Number */}
+            <div>
+              <Label className="text-sm text-gray-700">Account Number</Label>
+              <Input
+                placeholder="0123456789"
+                className="mt-2 h-14 w-full text-base px-4"
+                {...register("account_number")}
+              />
+              {errors.account_number && (
+                <p className="text-sm text-red-500 mt-1">
+                  {errors.account_number.message}
+                </p>
+              )}
+            </div>
 
-  {/* Account Name */}
-  <div>
-    <Label className="text-sm text-gray-700">Account Name</Label>
-    <Input
-      placeholder="John Doe"
-      className="mt-2 h-14 w-full text-base px-4"
-      {...register("account_name")}
-    />
-    {errors.account_name && (
-      <p className="text-sm text-red-500 mt-1">
-        {errors.account_name.message}
-      </p>
-    )}
-  </div>
-  {/* Phone Number */}
-  <div>
-    <Label className="text-sm text-gray-700">Phone Number</Label>
-    <Input
-      placeholder="+2348012345678"
-      className="mt-2 h-14 w-full text-base px-4"
-      {...register("phone")}
-    />
-    {errors.phone && (
-      <p className="text-sm text-red-500 mt-1">{errors.phone.message}</p>
-    )}
-  </div>
+            {/* Account Name */}
+            <div>
+              <Label className="text-sm text-gray-700">Account Name</Label>
+              <Input
+                placeholder="John Doe"
+                className="mt-2 h-14 w-full text-base px-4"
+                {...register("account_name")}
+              />
+              {errors.account_name && (
+                <p className="text-sm text-red-500 mt-1">
+                  {errors.account_name.message}
+                </p>
+              )}
+            </div>
 
-  <Button
-    type="submit"
-    className="w-full h-14 text-base bg-indigo-600 hover:bg-indigo-700 text-white font-semibold"
-    disabled={isSubmitting}
-  >
-    {loading ? "Saving..." : "Create Profile"}
-  </Button>
-</form>
+            {/* Phone */}
+            <div>
+              <Label className="text-sm text-gray-700">Phone Number</Label>
+              <Input
+                placeholder="+2348012345678"
+                className="mt-2 h-14 w-full text-base px-4"
+                {...register("phone")}
+              />
+              {errors.phone && (
+                <p className="text-sm text-red-500 mt-1">
+                  {errors.phone.message}
+                </p>
+              )}
+            </div>
+
+            <Button
+              type="submit"
+              className="w-full h-14 text-base bg-indigo-600 hover:bg-indigo-700 text-white font-semibold"
+              disabled={isSubmitting}
+            >
+              {loading ? "Saving..." : "Create Profile"}
+            </Button>
+          </form>
         </motion.div>
       </div>
+
       {loading && <Loader />}
     </div>
   );
