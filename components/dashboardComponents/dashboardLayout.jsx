@@ -28,6 +28,7 @@ import TrialBanner from "./trialBanner";
 import Image from "next/image";
 import { Toaster } from "sonner";
 import { useSupabaseClient } from "@supabase/auth-helpers-react";
+import { useUser } from "../../hooks/useUser";
 
 const menuItems = [
   { title: "Dashboard", icon: Home, href: "/dashboard" },
@@ -49,7 +50,7 @@ export default function DashboardLayout({ children }) {
   const router = useRouter();
 const [loading, setLoading] = useState(false);
 
- 
+   const { user, profile } = useUser();
 
   useEffect(() => {
     const handleStart = () => setLoading(true);
@@ -331,9 +332,9 @@ function SidebarContent({ openStore, setOpenStore, setMobileOpen }) {
 
       <motion.div
         whileHover={{ x: 5 }}
-        className="flex items-center gap-3 px-3 py-2 rounded-md cursor-pointer hover:bg-gray-300"
+        className={`flex items-center gap-3 px-3 py-2 rounded-md cursor-pointer hover:bg-gray-300  ${router.pathname === '/dashboard/profile' && 'bg-gray-200'}` }
       >
-        <BsPersonFillExclamation className="h-5 w-5 text-gray-500" />
+        <BsPersonFillExclamation className={`h-5 w-5 text-gray-500`}/>
         <Link href="/dashboard/profile" onClick={() => setMobileOpen(false)}>
           Profile
         </Link>

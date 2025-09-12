@@ -1,12 +1,16 @@
 // hooks/useUser.ts
 import { useEffect, useState } from "react";
 import { useSupabaseClient } from "@supabase/auth-helpers-react";
+import { useRouter } from "next/router";
+import { toast } from "sonner";
 
 export function useUser() {
   const supabase = useSupabaseClient();
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [profile, setProfile] = useState<any>(null);
+  const [profile, setProfile] = useState(null);
+
+  const router = useRouter()
 
   useEffect(() => {
     const getUser = async () => {
@@ -20,7 +24,6 @@ export function useUser() {
       const currentUser = session?.user ?? null;
       setUser(currentUser);
 
-      // If logged in, fetch profile
       if (currentUser) {
         const { data, error } = await supabase
           .from("profiles")
@@ -30,6 +33,11 @@ export function useUser() {
 
         if (!error) {
           setProfile(data);
+
+        }else if(error.code === "PGRST116"){
+            router.push('/auth/create-profile')
+        }else{
+            toast.error('Something went wrong. Try Again')
         }
       }
 

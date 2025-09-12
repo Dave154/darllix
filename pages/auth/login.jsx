@@ -104,7 +104,7 @@ export default function DarllixLogin() {
     const { data: { session }, error: sessionError } =
       await supabase.auth.getSession();
     if (sessionError) throw sessionError;
-    router.push("/dashboard");
+    router.push(`/dashboard`);
    } catch (err) {
      setError("email", {
        type: "manual",

@@ -7,23 +7,30 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useUser } from "../../../hooks/useUser";
+import { useSupabaseClient } from "@supabase/auth-helpers-react";
+import { toast } from "sonner";
+import Loader from "../../../components/dashboardComponents/loader";
 
 export default function ProfilePage() {
+  const supabase = useSupabaseClient();
+
+ const user = useUser()
   const [profile, setProfile] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [editing, setEditing] = useState(false);
   const [form, setForm] = useState({});
 
-  useEffect(() => {
-    const fetchProfile = async () => {
-      const res = await fetch("/api/profile");
-      const data = await res.json();
-      setProfile(data);
-      setForm(data);
-      setLoading(false);
-    };
-    fetchProfile();
-  }, []);
+
+  useEffect(()=>{
+    // console.log(user.profile !== null)
+    if(user.profile !== null){
+
+        setProfile(user.profile)
+        setForm(user.profile)
+        console.log(user.profile)
+    }
+  },[user, user.profile])
 
   const getInitials = (name) => {
     if (!name) return "?";
@@ -40,23 +47,34 @@ export default function ProfilePage() {
   };
 
   const handleSave = async () => {
-    const res = await fetch("/api/profile", {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(form),
-    });
+    console.log(user)
+  if (!user.user || !user.user.id) {
+    console.error("User or user ID not available. Cannot update profile.");
+    return;
+  }
 
-    if (res.ok) {
-      const updated = await res.json();
-      setProfile(updated);
-      setForm(updated);
-      setEditing(false);
-    } else {
-      console.error("Failed to save profile");
-    }
-  };
+  try {
+    setLoading(true);
+    console.log("Updating profile for user ID:", user.user.id);
 
-  if (false) {
+    const { error } = await supabase
+      .from("profiles")
+      .update(form) 
+      .eq("id", user.user.id); 
+
+    if (error) throw error;
+    toast.success("Profile updated successfully");
+    setEditing(false)
+  } catch (err) {
+    console.error("Error updating profile:", err);
+    toast.error("Error updating profile.");
+  } finally {
+    setLoading(false);
+  }
+};
+
+
+  if (!profile) {
     return (
       <DashboardLayout>
         <div className="p-6 space-y-6">
@@ -74,6 +92,11 @@ export default function ProfilePage() {
   }
 
   return (
+    <>
+        {
+            loading && <Loader/>
+        }
+
     <DashboardLayout>
       <div className="p-6 space-y-8">
         {/* Header */}
@@ -90,7 +113,7 @@ export default function ProfilePage() {
               Edit
             </Button>
           ) : (
-            <div className="flex gap-2">
+              <div className="flex gap-2">
               <Button
                 onClick={handleSave}
                 size="sm"
@@ -117,8 +140,8 @@ export default function ProfilePage() {
 
         {/* Avatar */}
         <div className="mb-6">
-          <Avatar className="w-24 h-24 text-2xl font-bold bg-blue-600 text-white shadow-md">
-            <AvatarFallback>{getInitials(profile?.full_name)}</AvatarFallback>
+          <Avatar className="w-24 h-24 text-2xl font-bold bg-black text-white shadow-md">
+            <AvatarFallback className='bg-black'>{getInitials(profile.full_name)}</AvatarFallback>
           </Avatar>
         </div>
 
@@ -155,7 +178,7 @@ export default function ProfilePage() {
               disabled={!editing}
               className="h-14 text-base"
 
-            />
+              />
           </div>
           <div>
             <label className="text-sm font-medium text-black">Bank Name</label>
@@ -166,7 +189,7 @@ export default function ProfilePage() {
               disabled={!editing}
               className="h-14 text-base"
 
-            />
+              />
           </div>
           <div>
             <label className="text-sm font-medium text-black">Account Number</label>
@@ -191,12 +214,8 @@ export default function ProfilePage() {
             />
           </div>
         </div>
-
-        {/* Meta */}
-        <div className="mt-6 text-xs text-gray-500">
-          <p>Last updated: {new Date(profile?.updated_at).toLocaleDateString()}</p>
-        </div>
       </div>
     </DashboardLayout>
+              </>
   );
 }

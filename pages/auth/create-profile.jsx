@@ -1,5 +1,5 @@
 // pages/create-profile.jsx
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { useRouter } from "next/router";
 import { useSupabaseClient } from "@supabase/auth-helpers-react";
@@ -23,7 +23,7 @@ const schema = z.object({
 
 export default function CreateProfile() {
   const supabase = useSupabaseClient();
-  const user = useUser();
+  const {user, profile} = useUser();
   const router = useRouter();
   const [loading, setLoading] = useState(false);
 
@@ -36,15 +36,23 @@ export default function CreateProfile() {
     resolver: zodResolver(schema),
   });
 
+  useEffect(()=>{
+        router.push('/dashboard')
+  },[profile])
   const onSubmit = async (values) => {
-    if (!user) return;
-    try {
-      setLoading(true);
 
+      if (!user || !user.id) {
+        console.error("User or user ID not available. Cannot submit profile.");
+        return; 
+    }
+      try {
+          setLoading(true);
+          
+          console.log(user.id)
       const { error } = await supabase.from("profiles").insert([
         {
           id: user.id,
-          email: user.email,
+          email: user.user_metadata.email,
           full_name: values.full_name,
           account_name: values.account_name,
           bank_name: values.bank_name,
