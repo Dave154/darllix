@@ -652,11 +652,15 @@ async function publish() {
                 <h1 className="text-2xl sm:text-3xl font-extrabold truncate">
                    {editing ? 'Edit' : "Create" } your store
                   </h1>
+                  {
+                    editing &&
+
                   <Button className={'bg-color1'} onClick={()=>{
                     setEditing(false)
                   }}>
                     Cancel
                   </Button>
+                  }
                 </div>
                 <p className="text-sm text-gray-500 mt-1">A premium guided flow to get your store live fast.</p>
               </div>

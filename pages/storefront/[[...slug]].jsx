@@ -203,7 +203,7 @@ export default function StorefrontDynamic({ store, slug }) {
     "--color3": store?.theme?.primary || '' ,
     "--color4": store?.theme?.background || '' ,
   };
-  
+
   return (
     <main style={themeVars}>
      <Toaster
@@ -219,6 +219,10 @@ import { getSupabaseServer } from "../../lib/supabaseClient";
 import { toast } from "sonner";
 
 export async function getServerSideProps({ params, req, res }) {
+  const slug = params.slug
+  if(!slug){
+     return { notFound: true };
+  }
   const host = req.headers.host || "";
   let subdomain = null;
 
