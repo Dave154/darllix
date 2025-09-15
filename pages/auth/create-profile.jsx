@@ -36,9 +36,10 @@ export default function CreateProfile() {
     resolver: zodResolver(schema),
   });
 
-  useEffect(()=>{
-        router.push('/dashboard')
-  },[profile])
+  // useEffect(()=>{
+  //       router.push('/dashboard')
+  // },[profile])
+  
   const onSubmit = async (values) => {
 
       if (!user || !user.id) {
