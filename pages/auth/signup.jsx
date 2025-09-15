@@ -25,6 +25,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Globe, ChevronDown, Eye, EyeOff, ShieldCheck, Mail, Lock, Apple, Chrome } from "lucide-react";
 import Image from "next/image";
+import { useRouter } from "next/router";
 
 // Create Supabase client (client-side)
 const supabase = createClient(
@@ -74,6 +75,7 @@ const images = ["/vendor1.jpg", "/vendor6.jpg", "/vendor6.jpg"];
     return () => clearInterval(interval);
   }, []);
 
+    const router = useRouter()
 
  
   async function onSubmit(values) {
@@ -82,14 +84,14 @@ const images = ["/vendor1.jpg", "/vendor6.jpg", "/vendor6.jpg"];
       const { data, error } = await supabase.auth.signUp({
         email: values.email,
         password: values.password,
-        options: {
-          emailRedirectTo:
-            (typeof window !== "undefined" ? window.location.origin : "") + 
-            "/auth/callback",
-        },
+        // options: {
+        //   emailRedirectTo:
+        //     (typeof window !== "undefined" ? window.location.origin : "") + 
+        //     "/auth/callback",
+        // },
       });
       if (error) throw error;
-      alert("Check your email to verify your account.");
+       router.push('/auth/login')
     } catch (err) {
       setError("email", { message: err?.message || "Failed to sign up" });
     }
