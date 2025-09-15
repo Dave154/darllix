@@ -78,74 +78,74 @@
 
 
 // // pages/auth/callback.jsx
-// import { useRouter } from "next/router";
-// import { useEffect, useState } from "react";
-// import { supabaseBrowser } from "@/lib/supabaseClient";
-// import Loader from "../../components/dashboardComponents/loader";
+import { useRouter } from "next/router";
+import { useEffect, useState } from "react";
+import { supabaseBrowser } from "@/lib/supabaseClient";
+import Loader from "../../components/dashboardComponents/loader";
 
-// export default function CallbackPage() {
-//   const router = useRouter();
-//   const [loading, setLoading] = useState(true);
+export default function CallbackPage() {
+  const router = useRouter();
+  const [loading, setLoading] = useState(true);
 
-//   useEffect(() => {
-//     const run = async () => {
-//       try{
+  useEffect(() => {
+    const run = async () => {
+      try{
 
-//       const code = router.query.code;
-//       console.log(router.query)
-//       if (!code) return;
+      const code = router.query.code;
+      console.log(router.query)
+      if (!code) return;
 
-//       const supabase = supabaseBrowser();
-//       const { error } = await supabase.auth.exchangeCodeForSession(code);
+      const supabase = supabaseBrowser();
+      const { error } = await supabase.auth.exchangeCodeForSession(code);
 
-//       console.log('test')
-//       if (error) {
-//         console.error("Auth error:", error.message);
-//         router.replace("/auth/login?error=auth");
-//         setLoading(false);
-//         return;
-//       }
+      console.log('test')
+      if (error) {
+        console.error("Auth error:", error.message);
+        router.replace("/auth/login?error=auth");
+        setLoading(false);
+        return;
+      }
 
-//       const {
-//         data: { user },
-//       } = await supabase.auth.getUser();
-//       console.log(user)
-//       if (!user) {
-//         router.replace("/login");
-//         setLoading(false);
-//         return;
-//       }
-//       const { data: profile } = await supabase
-//         .from("profiles")
-//         .select("id")
-//         .eq("id", user.id)
-//         .single();
-//         if (profile) {
-//         console.log(profile)
-//         router.replace("/dashboard");
-//       } else {
-//         router.replace("/create-profile");
-//       }
-//       }catch (error){
-//           console.log(error)
-//       }finally{
-//         console.log('hmmm')
-//         setLoading(false);
-//       }
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      console.log(user)
+      if (!user) {
+        router.replace("/login");
+        setLoading(false);
+        return;
+      }
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("id")
+        .eq("id", user.id)
+        .single();
+        if (profile) {
+        console.log(profile)
+        router.replace("/dashboard");
+      } else {
+        router.replace("/create-profile");
+      }
+      }catch (error){
+          console.log(error)
+      }finally{
+        console.log('hmmm')
+        setLoading(false);
+      }
 
-//     };
+    };
 
-//     if (router.isReady) {
-//       run();
-//     }
-//   }, [router]);
+    if (router.isReady) {
+      run();
+    }
+  }, [router]);
 
-//   return (
-//     <div className="flex items-center justify-center min-h-screen">
+  return (
+    <div className="flex items-center justify-center min-h-screen">
 
-//         <Loader />
+        <Loader />
   
-//     </div>
-//   );
-// }
+    </div>
+  );
+}
 

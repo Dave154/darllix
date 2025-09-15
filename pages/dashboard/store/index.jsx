@@ -159,7 +159,7 @@ export  function BannerUploader({ currentUrl, onUploaded, bucket = "store-assets
       onUploaded?.(publicUrl);
     } catch (err) {
       console.error("Banner upload failed:", err);
-      alert("Failed to upload banner: " + (err?.message || err));
+      toast.error("Failed to upload banner ");
     } finally {
       setUploading(false);
     }
@@ -345,7 +345,7 @@ useEffect(() => {
       console.log("Draft saved");
     } catch (err) {
       console.error(err);
-      alert("Failed to save draft: " + err.message);
+      toast.error("Failed to save draft");
     }
   }
 
@@ -357,7 +357,7 @@ async function publish() {
   const payload = { ...values, products };
 
   if (!editing && subdomainAvailable !== true) {
-    alert("Please choose an available subdomain before publishing.");
+    toast.error("Please choose an available subdomain before publishing.");
     setStep(0);
     return;
   }
@@ -378,13 +378,14 @@ async function publish() {
     if (!res.ok) throw new Error(json?.message || "Publish failed");
 
     const url = `${payload.subdomain}.darllix.shop`;
-    alert(editing ? "Store updated: " + url : "Store published: " + url);
+    toast.success(editing ? "Store updated: " + url : "Store published: " + url);
     onDone && onDone(json);
     setEditing(false)
     router.push('/dashboard/store')
+
   } catch (err) {
     console.error(err);
-    alert("Publish failed: " + err.message);
+    toast.error("Publish failed");
   } finally {
     setPublishing(false);
   }
@@ -647,9 +648,16 @@ async function publish() {
           <header className="rounded-2xl bg-gradient-to-r from-white via-indigo-50 to-white p-4 sm:p-5 shadow-sm">
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
               <div className="flex-1 min-w-0">
+                <div className="flex justify-between w-full">
                 <h1 className="text-2xl sm:text-3xl font-extrabold truncate">
                    {editing ? 'Edit' : "Create" } your store
                   </h1>
+                  <Button className={'bg-color1'} onClick={()=>{
+                    setEditing(false)
+                  }}>
+                    Cancel
+                  </Button>
+                </div>
                 <p className="text-sm text-gray-500 mt-1">A premium guided flow to get your store live fast.</p>
               </div>
 

@@ -206,7 +206,6 @@ export default function PaymentPage({ store }) {
     } catch (err) {
       console.error("createOrderAndInitPaystack error:", err);
       toast.error('Something went wrong. Try again')
-      alert("Failed to start payment: " + (err?.message || "Unknown error"));
       setLoading(false);
     }
   }

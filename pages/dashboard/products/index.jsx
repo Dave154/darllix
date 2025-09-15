@@ -54,6 +54,7 @@ import { toast } from "sonner";
 export default function ProductsPage({ store, hasStore }) {
   const setStore = useStore((s) => s.setStore);
   const router = useRouter();
+  const [addingCat, setAddingCat] = useState(false)
 
   // UI state
   const [query, setQuery] = useState("");
@@ -144,8 +145,9 @@ const fetchProducts = useCallback(
 );
 
 // --- category actions ---
-async function handleAddCategory() {
-  const name = prompt("Enter new category name:");
+async function handleAddCategory(e) {
+ e.preventDefault()
+ const name =e.target[0].value
   if (!name) return;
   const res = await fetch("/api/categories", {
     method: "POST",
@@ -153,6 +155,7 @@ async function handleAddCategory() {
     body: JSON.stringify({ name, storeId: store.id }),
   });
   toast.success('Category added succesfully')
+  setAddingCat(false)
   if (res.ok) fetchProducts();
 }
 
@@ -420,14 +423,14 @@ async function confirmDelete() {
 
         {/* Main card: Tabs + Table / Empty states */}
         <Card>
-          <CardHeader className="pb-3">
+          <CardHeader className="overflow-auto scrollbar-thin">
             <div className="flex items-center justify-between gap-3">
               <Tabs value={tab} onValueChange={(v) => setTab(v)}>
                 <TabsList>
                   <TabsTrigger value="All">All</TabsTrigger>
                   <TabsTrigger value="Active">Active</TabsTrigger>
                   <TabsTrigger value="Draft">Draft</TabsTrigger>
-                  <TabsTrigger value="Archived">Archived</TabsTrigger>
+                  {/* <TabsTrigger value="Archived">Archived</TabsTrigger> */}
                 </TabsList>
               </Tabs>
               {hasStore && (
@@ -441,7 +444,7 @@ async function confirmDelete() {
                   </div>
 
                   {/* sort dropdown */}
-                  <div className="flex items-center gap-2">
+                  {/* <div className="flex items-center gap-2">
                     <select
                       value={sortBy}
                       onChange={(e) => setSortBy(e.target.value)}
@@ -461,7 +464,7 @@ async function confirmDelete() {
                     <Button variant="outline" size="icon" className="shrink-0">
                       <SlidersHorizontal className="h-4 w-4" />
                     </Button>
-                  </div>
+                  </div> */}
                             
               
                   <DropdownMenu>
@@ -471,8 +474,15 @@ async function confirmDelete() {
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end" className='w-80'>
-                      <DropdownMenuItem onClick={handleAddCategory} className="bg-white shadow-sm"> <PlusIcon/> Add Category</DropdownMenuItem>
-                      <div className="grid gap-3 mt-4">                      
+                      <div onClick={()=>setAddingCat(true)} className="bg-white shadow-sm flex gap-2 p-2 cursor-pointer"> <PlusIcon/> Add Category</div>
+                      <div className="grid gap-3 mt-4">  
+                        {
+                          addingCat &&
+                          <form action="" className="" onSubmit={handleAddCategory} >
+                            <input type="text" placeholder="Enter Category name" className="px-2 outline-none text-xs my-4 " />                    
+                          </form>
+
+                        }
                       {categories.map((cat) => (
                         <div key={cat.id} className="flex justify-between items-center px-2 py-1 border-b bg-blue-100/20">
                           <span>{cat.name}</span>
