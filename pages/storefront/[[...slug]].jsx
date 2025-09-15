@@ -154,11 +154,7 @@ import StoreFront404 from "../../components/errors/storefront404";
 import { Toaster } from "@/components/ui/sonner";
 
 export default function StorefrontDynamic({ store, slug }) {
-  const themeVars = {
-    "--color2": store.theme?.accent,
-    "--color3": store.theme?.primary ,
-    "--color4": store.theme?.background ,
-  };
+
   const [pathname, setPath] = useState("");
   const router = useRouter();
 
@@ -201,7 +197,13 @@ export default function StorefrontDynamic({ store, slug }) {
     content = <StoreFront404 store={store} />;
   }
 
-  // Single return with everything wrapped in a fragment
+
+    const themeVars = {
+    "--color2": store?.theme?.accent || '',
+    "--color3": store?.theme?.primary || '' ,
+    "--color4": store?.theme?.background || '' ,
+  };
+  
   return (
     <main style={themeVars}>
      <Toaster
