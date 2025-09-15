@@ -13,9 +13,10 @@ export function useUser() {
   const router = useRouter()
 
   useEffect(() => {
-    const getUser = async () => {
-      setLoading(true);
+  const getUser = async () => {
+    setLoading(true);
 
+    try {
       // Get current session
       const {
         data: { session },
@@ -31,18 +32,27 @@ export function useUser() {
           .eq("id", currentUser.id)
           .single();
 
-        if (!error) {
+        if (error) {
+          // Handle "no rows found" separately
+          if (error.code === "PGRST116" || error.message.includes("No rows")) {
+            router.replace("/auth/create-profile");
+          } else {
+            toast.error("Something went wrong. Please try again.");
+          }
+        } else if (!data) {
+          // No profile row exists
+          router.replace("/auth/create-profile");
+        } else {
           setProfile(data);
-
-        }else if(error.code === "PGRST116"){
-            router.push('/auth/create-profile')
-        }else{
-            toast.error('Something went wrong. Try Again')
         }
       }
-
+    } catch (err) {
+      console.error("Unexpected error:", err);
+      toast.error("Network error. Please try again.");
+    } finally {
       setLoading(false);
-    };
+    }
+  };
 
     getUser();
 
