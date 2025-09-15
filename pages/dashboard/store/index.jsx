@@ -680,7 +680,10 @@ async function publish() {
                   return (
                       ( !editing && label === 'Products') ? '':
                       <div key={label + i} className={`flex-shrink-0 flex items-center gap-3 py-1 ${i === step ? "opacity-100" : "opacity-60"}`}>
-                    <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold ${i === step ? "bg-sky-600 text-white" : "bg-gray-100 text-gray-600"}`}>{i + 1}</div>
+                    <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold ${i === step ? "bg-sky-600 text-white" : "bg-gray-100 text-gray-600"}`}>
+                     { editing ? i + 1 : i === 0 ? 1 : i  }
+                      
+                      </div>
                     <div className={`text-xs ${i === step ? "text-gray-800 font-semibold" : "text-gray-400"}`}>{label}</div>
                   </div>
                   )        
