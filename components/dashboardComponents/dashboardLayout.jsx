@@ -339,7 +339,7 @@ function SidebarContent({ openStore, setOpenStore, setMobileOpen }) {
           Profile
         </Link>
       </motion.div>
-      <motion.div
+      {/* <motion.div
         whileHover={{ x: 5 }}
         className="flex items-center gap-3 px-3 py-2 rounded-md cursor-pointer hover:bg-gray-300"
       >
@@ -347,11 +347,11 @@ function SidebarContent({ openStore, setOpenStore, setMobileOpen }) {
         <Link href="/dashboard/help" onClick={() => setMobileOpen(false)}>
           Help
         </Link>
-      </motion.div>
+      </motion.div> */}
 
 
       {/* Settings */}
-      <motion.div
+      {/* <motion.div
         whileHover={{ x: 5 }}
         className="flex items-center gap-3 px-3 py-2 rounded-md cursor-pointer hover:bg-gray-300"
       >
@@ -359,7 +359,7 @@ function SidebarContent({ openStore, setOpenStore, setMobileOpen }) {
         <Link href="/dashboard/settings" onClick={() => setMobileOpen(false)}>
           Settings
         </Link>
-      </motion.div>
+      </motion.div> */}
        <motion.div
         whileHover={{ x: 5 }}
         className="flex items-center text-red-600 gap-3 px-3 py-2 rounded-md cursor-pointer hover:bg-gray-300"
