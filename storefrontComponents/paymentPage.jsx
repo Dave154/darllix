@@ -23,6 +23,8 @@ import dynamic from "next/dynamic";
 import { useEffect, useRef, useState } from "react";
 import Loader from "./loader";
 import { toast } from "sonner"
+import { sendEmail } from "../lib/emailClient";
+import { EMAIL_TEMPLATES } from "../lib/emailTemplates";
 export default function PaymentPage({ store }) {
   const { cart, checkoutData, setCheckoutData, cartTotal, clearCart } = useStore();
   const subtotal = cart.reduce((sum, i) => sum + i.price * i.quantity, 0);
@@ -88,6 +90,14 @@ export default function PaymentPage({ store }) {
       
       const orderId = verifyJson.order?.id || response.metadata?.orderId || response.reference;
       toast.success("Payment successful")
+            await sendEmail(EMAIL_TEMPLATES.orderBuyer, {
+            buyer_name: "John",
+            order_id: orderId,
+            buyer_email: checkoutData.email,
+            order_amount: total,
+          });
+
+         
       router.push(`/payment-success?order_id=${orderId}&ref=${response.reference}`);
     } catch (err) {
       console.error("Error verifying payment:", err);
@@ -164,11 +174,10 @@ export default function PaymentPage({ store }) {
 
       if (!createRes.ok) {
         console.error("Create order failed:", createJson);
-                toast.error("Failed create order")
+          toast.error("Failed create order")
 
         throw new Error(createJson?.error || `Create order failed: ${createRes.status}`);
       }
-
       const createdOrder = createJson.order;
       if (!createdOrder || !createdOrder.id) {
         console.warn("Order created but no id returned", createJson);
@@ -189,13 +198,13 @@ export default function PaymentPage({ store }) {
       setPaystackConfig(cfg);
 
       // wait a tick to allow hidden PaystackButton to render with the new config
-      await new Promise((r) => setTimeout(r, 70));
+      await new Promise((r) => setTimeout(r, 1000));
 
       const wrapper = paystackRef.current;
       const btn = wrapper?.querySelector("button");
       if (!btn) {
         console.error("Hidden Paystack button not found - ensure PaystackButton rendered.");
-                toast.error("Something went wrong. Try again")
+        toast.error("Something went wrong. Try again")
 
       }
 

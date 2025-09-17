@@ -49,12 +49,14 @@ import { withAuth } from "../../../lib/withAuth";
 import { openProductModal } from "../../../components/dashboardComponents/productModal";
 import AreYouSureModal from "../../../components/dashboardComponents/areYouSure";
 import { toast } from "sonner";
+import { useUser } from "../../../hooks/useUser";
 
 
 export default function ProductsPage({ store, hasStore }) {
   const setStore = useStore((s) => s.setStore);
   const router = useRouter();
   const [addingCat, setAddingCat] = useState(false)
+  const {user} = useUser()
 
   // UI state
   const [query, setQuery] = useState("");
@@ -192,8 +194,11 @@ async function handleDeleteCategory(cat) {
 
   // Add product flow
   async function handleAddProduct() {
+    const options = {
+      user
+    }
     try {
-      const created = await openProductModal();
+      const created = await openProductModal(options);
       // If created is falsy -> cancelled
       if (!created) return;
       if (created?.id) {
@@ -312,7 +317,7 @@ async function handleDeleteCategory(cat) {
 
   const handleEditProduct =async(p)=>{
        try {
-      const edited = await openProductModal({initialProduct: p});
+      const edited = await openProductModal({initialProduct: p, user});
       // If created is falsy -> cancelled
       if (!edited) return;
       if (edited?.id) {

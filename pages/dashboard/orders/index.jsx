@@ -191,6 +191,41 @@ export default function OrdersPage({ store, hasStore }) {
        
         </Badge>;
   };
+
+  const handleCompleted = async (orderId) => {
+  setLoading(true);
+  try {
+    const res = await fetch(`/api/orders`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        order: {
+          id: orderId,       
+          status: "delivered" 
+        },
+      }),
+    });
+
+    if (!res.ok) {
+      const err = await res.json();
+      throw new Error(err.error || "Failed to mark order as delivered");
+    }
+
+    const data = await res.json();
+    console.log(data)
+    setLoading(false);
+   router.push('/dashboard/orders')
+  } catch (error) {
+    console.error("Error marking order delivered:", error);
+    toast.error("Error marking order delivered");
+    
+  } finally {
+    setLoading(false);
+  }
+};
+
  
   if(viewing){
     return <OrderPage />
@@ -212,7 +247,7 @@ export default function OrdersPage({ store, hasStore }) {
       <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}>
         <div className="flex items-center justify-between mb-4">
           <h1 className="text-xl md:text-2xl font-semibold">Orders</h1>
-
+{/* 
           {hasStore && (
               <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -228,7 +263,7 @@ export default function OrdersPage({ store, hasStore }) {
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
-          )}
+          )} */}
         </div>
           {hasStore && (
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-4">
@@ -336,7 +371,7 @@ export default function OrdersPage({ store, hasStore }) {
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
                               <DropdownMenuItem
-                                onClick={() => handleDeleteClick(o.id)}
+                                onClick={() => handleCompleted(o.id)}
                                 className="flex items-center gap-2 text-green-600"
                               >
                                 <Check className="h-4 w-4" /> Mark as completed
@@ -354,12 +389,12 @@ export default function OrdersPage({ store, hasStore }) {
                               >
                                 <Box className="h-4 w-4" /> View Order
                               </DropdownMenuItem>
-                               <DropdownMenuItem
+                               {/* <DropdownMenuItem
                                 onClick={() => handleDeleteClick(o.id)}
                                 className="flex items-center gap-2 text-red-600"
                               >
                                 <Trash2 className="h-4 w-4" /> Delete
-                              </DropdownMenuItem>
+                              </DropdownMenuItem> */}
                             </DropdownMenuContent>
                           </DropdownMenu>
                         </TableCell>

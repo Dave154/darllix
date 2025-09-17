@@ -11,12 +11,14 @@ import { withAuth } from "../../lib/withAuth";
 import { useStore } from "@/store";
 import { useRouter } from "next/router";
 import { toast } from "sonner";
+import { useUser } from "../../hooks/useUser";
 
 
 
 export default function DashboardPage({user,store,hasStore}){
     const setStore = useStore((s) => s.setStore);
-    
+
+    const {profile} = useUser()
     const [dashboardInfo, setDashboardInfo] = useState({
      product: null,
      order: null,
@@ -70,7 +72,14 @@ export default function DashboardPage({user,store,hasStore}){
         setCompleted([...completed, 'products']);
     }
   }
-  },[dashboardInfo])
+
+  if (profile?.bank_name){
+
+    if (!completed.includes('bank')) {
+        setCompleted([...completed, 'bank']);
+    }
+  }
+  },[dashboardInfo,profile])
 
   const steps = [
     { key: "bank", title: "Add bank details", description: "Add your bank details to receive payments." },
@@ -119,7 +128,9 @@ export default function DashboardPage({user,store,hasStore}){
         )}
         {/* Onboarding Section */}
         {
-          completed.length < 3  &&
+          // completed.length < 3
+          true
+            &&
         <Card>
           <CardHeader>
             <CardTitle className="text-xl">Get ready to sell</CardTitle>
@@ -158,7 +169,17 @@ export default function DashboardPage({user,store,hasStore}){
                     className="pl-4 pb-4 space-y-3"
                   >
                     <p className="text-sm text-gray-600">{step.description}</p>
-                    <Button onClick={() => router.push('/dashboard/products')}>
+                    <Button onClick={() =>{
+                      if(step.key === 'products'){
+
+                        router.push('/dashboard/products')
+                      }else if(step.key === 'bank'){
+                        router.push('/dashboard/profile')
+                      }else{
+                        router.push('/dashboard/store')
+
+                      }
+                      }}>
                       {
                         step.key ==='products' ?
                         'Add Product'
@@ -190,16 +211,16 @@ export default function DashboardPage({user,store,hasStore}){
               <p className="text-sm text-gray-600 mb-2">
                 Save up to 10% of every sale you make.
               </p>
-              <Button variant="outline">Coming Soon</Button>
+              <Button onClick={()=>router.push('/dashboard/sellandsave')} variant="">Save now</Button>
             </CardContent>
           </Card>
           <Card>
-            <CardHeader><CardTitle>Analytics</CardTitle></CardHeader>
+            <CardHeader><CardTitle>Darllix Capital</CardTitle></CardHeader>
             <CardContent>
               <p className="text-sm text-gray-600 mb-2">
-                Track your income and profit margin across all products.
+                Lorem ipsum dolor sit amet consectetur, adipisicing elit. Est, pariatur.
               </p>
-              <Button variant="outline">Coming Soon</Button>
+              <Button variant="">Coming Soon</Button>
             </CardContent>
           </Card>
         </div>

@@ -27,7 +27,7 @@ import { useEffect } from "react";
 import Loader from "./loader";
 import TrialBanner from "./trialBanner";
 import Image from "next/image";
-import { Toaster } from "sonner";
+import { toast, Toaster } from "sonner";
 import { useSupabaseClient } from "@supabase/auth-helpers-react";
 import { useUser } from "../../hooks/useUser";
 
@@ -36,7 +36,7 @@ const menuItems = [
   { title: "Products", icon: ShoppingBag, href: "/dashboard/products" },
   { title: "Customers", icon: Users, href: "/dashboard/customers" },
   { title: "Orders", icon: Package, href: "/dashboard/orders" },
-  { title: "Finance", icon: BsCreditCard2FrontFill, href: "/dashboard/darllix-capital" },
+  { title: "Finance", icon: BsCreditCard2FrontFill, href: "/dashboard/finance" },
   { title: "Fufilment", icon: FaTruck , href: "/dashboard/fufilment" },
   { title: "Sell & Save", icon: PiPiggyBankThin, href: "/dashboard/sellandsave" },
 
@@ -50,6 +50,7 @@ export default function DashboardLayout({ children }) {
   const [storeDropdown, setStoreDropdown] = React.useState(false);
   const router = useRouter();
 const [loading, setLoading] = useState(false);
+const [withdrawing,setWithdrawing]= useState(false)
 
    const { user, profile } = useUser();
 
@@ -77,6 +78,35 @@ const [loading, setLoading] = useState(false);
     );
   };
 
+
+async function handleWithdraw() {
+  if (Number(profile?.available_balance || 0) <= 0) {
+    toast.error("No balance to withdraw");
+    return;
+  }
+
+
+
+  setWithdrawing(true);
+  try {
+    const res = await fetch("/api/wallet", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ amount: Number(profile.available_balance) }),
+    });
+
+    const json = await res.json();
+    if (!res.ok) throw new Error(json?.error || json?.message || "Withdrawal failed");
+
+    toast.success("Withdrawal requested successfully!");
+    router.reload();
+  } catch (err) {
+    console.error("Withdraw error", err);
+    toast.error(err.message || "Something went wrong");
+  } finally {
+    setWithdrawing(false);
+  }
+}
 
   return (
     <>
@@ -148,26 +178,35 @@ const [loading, setLoading] = useState(false);
 
           {/* Dropdown menu */}
           <AnimatePresence>
-            {storeDropdown && (
-              <motion.div
-                initial={{ opacity: 0, y: -10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                transition={{ duration: 0.2 }}
-                className="absolute right-12 top-12 bg-white text-black rounded-md shadow-lg py-2 w-48 z-50"
-              >
-                {/* {storeSubItems.map((sub, i) => (
-                  <Link
-                    key={i}
-                    href={sub.href}
-                    className="block px-4 py-2 text-sm hover:bg-gray-100"
-                  >
-                    {sub.title}
-                  </Link>
-                ))} */}
-              </motion.div>
-            )}
-          </AnimatePresence>
+  {storeDropdown && (
+    <motion.div
+      initial={{ opacity: 0, y: -10 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -10 }}
+      transition={{ duration: 0.2 }}
+      className="absolute right-12 top-12 bg-white text-black rounded-xl shadow-lg py-4 w-64 z-50 border border-slate-100"
+    >
+      <div className="px-4 pb-3 border-b border-slate-200">
+        <div className="text-sm text-slate-500">Wallet Balance</div>
+        <div className="text-2xl font-bold text-indigo-700">₦{Number(profile?.available_balance || 0).toFixed(2)}</div>
+      </div>
+
+      <div className="px-4 py-3">
+        <button
+          onClick={handleWithdraw}
+          disabled={withdrawing || Number(profile?.available_balance || 0) <= 0}
+          className="w-full h-10 bg-indigo-600 text-white rounded-lg font-medium hover:bg-indigo-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          {withdrawing ? "Processing…" : "Request Withdrawal"}
+        </button>
+      </div>
+
+      <div className="px-4 py-2 text-xs text-slate-500 border-t border-slate-200">
+        Funds will be transferred to your saved bank account via Paystack.
+      </div>
+    </motion.div>
+  )}
+</AnimatePresence>
 
           <div className="h-8 w-8 flex items-center justify-center rounded-full bg-green-500 text-black font-semibold cursor-pointer">
            { getInitials(profile?.full_name)}

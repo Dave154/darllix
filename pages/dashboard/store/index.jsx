@@ -37,6 +37,7 @@ import AddProductButton from "../../../components/dashboardComponents/addProduct
 import { toast } from "sonner";
 import Image from "next/image";
 import { useRouter } from "next/router";
+import { useUser } from "../../../hooks/useUser";
 
 /* ---------------------------
    Schema & stable defaults
@@ -118,7 +119,7 @@ function buildPublicUrl(supabaseUrl, bucketName, path) {
 export  function BannerUploader({ currentUrl, onUploaded, bucket = "store-assets" }) {
   const [preview, setPreview] = useState(currentUrl || "");
   const [uploading, setUploading] = useState(false);
-
+    const {user} = useUser()
   // supabase client
   const supabaseClient = createSupabaseClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL,
@@ -137,11 +138,11 @@ export  function BannerUploader({ currentUrl, onUploaded, bucket = "store-assets
       setUploading(true);
 
       // get user (needed for folder structure)
-      const { data: userData, error: userErr } = await supabaseClient.auth.getUser();
-      if (userErr || !userData?.user) {
-        throw new Error("You must be signed in to upload a banner.");
-      }
-      const userId = userData.user.id;
+      // const { data: userData, error: userErr } = await supabaseClient.auth.getUser();
+      // if (userErr || !userData?.user) {
+      //   throw new Error("You must be signed in to upload a banner.");
+      // }
+      const userId = user.id;
 
       const safeName = f.name.replace(/\s+/g, "_");
       const path = `${userId}/banners/${Date.now()}-${Math.random().toString(36).slice(2, 8)}-${safeName}`;

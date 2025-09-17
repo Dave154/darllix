@@ -36,7 +36,8 @@ import { useSupabaseClient } from "@supabase/auth-helpers-react";
 import { supabaseBrowser, getSupabaseServer } from "@/lib/supabaseClient";
 import Loader from "../../components/dashboardComponents/loader";
 import { toast, Toaster } from "sonner";
-
+    import { sendEmail } from "@/lib/emailClient";
+import { EMAIL_TEMPLATES } from "@/lib/emailTemplates";
 
 export async function getServerSideProps(ctx) {
   const supabase = getSupabaseServer(ctx);
@@ -105,6 +106,13 @@ export default function DarllixLogin() {
     const { data: { session }, error: sessionError } =
       await supabase.auth.getSession();
     if (sessionError) throw sessionError;
+    console.log(values.email)
+
+    // await sendEmail(EMAIL_TEMPLATES.login, {
+    //   // user_name: "Dave",
+    //   user_email: values.email,
+    //   to_email: values.email,
+    // });
     router.push(`/dashboard`);
    } catch (err) {
     if (err.message === 'Failed to fetch'){

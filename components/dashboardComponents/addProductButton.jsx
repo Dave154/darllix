@@ -4,12 +4,18 @@ import React, { useCallback } from "react";
 import { openProductModal } from "./productModal";
 import {Button} from  "@/components/ui/button";
 import { Plus } from "lucide-react";
+import { useUser } from "../../hooks/useUser";
+
+
 export default function AddProductButton({ onCreated, supabase, bucket = "product-images" }) {
-  // onCreated(product) will be called if provided
-  // Add product flow
+  const {user}= useUser()
+  const options ={
+    user,
+    bucket
+  }
   async function handleClick() {
     try {
-      const created = await openProductModal();
+      const created = await openProductModal({options});
       if (!created) return;
       if (created?.id) {
        onCreated()

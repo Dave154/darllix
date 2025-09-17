@@ -128,7 +128,7 @@ const handleCompleted = async () => {
             <p><span className="font-medium">Order ID:</span> {order.id}</p>
             <p><span className="font-medium">Status:</span> <span className="capitalize">{order.status}</span></p>
             <p><span className="font-medium">Placed At:</span> {new Date(order.created_at).toLocaleString()}</p>
-            <p><span className="font-medium">Total:</span> <span className="font-semibold text-green-600">${order.total}</span></p>
+            <p><span className="font-medium">Total:</span> <span className="font-semibold text-green-600">₦{order.total}</span></p>
           </CardContent>
         </Card>
 
@@ -145,7 +145,7 @@ const handleCompleted = async () => {
 
         {/* Order Items */}
         <Card className="shadow-sm border lg:col-span-2">
-          <CardHeader className="font-semibold text-lg">📦 Order Items</CardHeader>
+          <CardHeader className="font-semibold text-lg">Order Items</CardHeader>
           <CardContent className="divide-y text-sm">
             {order.order_items?.length ? (
               order.order_items.map((item) => (
@@ -154,7 +154,7 @@ const handleCompleted = async () => {
                     <p className="font-medium">{item.product_name}</p>
                     <p className="text-xs text-gray-500">Qty: {item.quantity}</p>
                   </div>
-                  <span className="font-semibold">${item.unit_price}</span>
+                  <span className="font-semibold">₦{item.unit_price}</span>
                 </div>
               ))
             ) : (
@@ -167,8 +167,8 @@ const handleCompleted = async () => {
         <Card className="shadow-sm border lg:col-span-2">
           <CardHeader className="font-semibold text-lg">📊 Summary</CardHeader>
           <CardContent className="space-y-2 text-sm text-gray-700">
-            <p><span className="font-medium">Subtotal:</span> ${order.subtotal}</p>
-            <p><span className="font-medium">Discount:</span> ${order.discount ?? 0}</p>
+            <p><span className="font-medium">Subtotal:</span> ₦{order.subtotal}</p>
+            <p><span className="font-medium">Discount:</span> ₦{order.discount ?? 0}</p>
             <p><span className="font-medium">Payment Method:</span> {order.payment_method}</p>
           </CardContent>
         </Card>

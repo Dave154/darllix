@@ -11,6 +11,9 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { X, Plus, Trash2 } from "lucide-react";
 import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 import { toast } from "sonner";
+import { supabase } from "@/lib/supabaseClient";
+import { supabaseBrowser } from "../../lib/supabaseClient";
+
 
 // zod validation
 const productSchema = z.object({
@@ -72,6 +75,7 @@ function ModalImpl({ resolvePromise, options = {} }) {
     onCreateProduct = handleCreateProduct,
     onUpdateProduct = handleUpdateProduct,
     storeId: passedStoreId = null,
+    user,
     initialProduct = null,
   } = options;
 
@@ -98,7 +102,6 @@ function ModalImpl({ resolvePromise, options = {} }) {
   const [categories, setCategories] = useState([]); // { id, name }
   const [selectedCats, setSelectedCats] = useState([]); // array of category names
   const [isEditMode] = useState(Boolean(initialProduct));
-
   // preload initial product when editing
   useEffect(() => {
     if (!initialProduct) return;
@@ -131,8 +134,8 @@ function ModalImpl({ resolvePromise, options = {} }) {
         // If storeId was passed, use it; otherwise attempt to resolve from session
         let sId = passedStoreId;
         if (!sId) {
-          const { data: userData } = await supabaseClient.auth.getUser();
-          const user = userData?.user;
+          // const { data: userData } = await supabaseClient.auth.getUser();
+          // const user = userData?.user;
           if (user) {
             const { data: store } = await supabaseClient.from("stores").select("id").eq("owner_id", user.id).maybeSingle();
             sId = store?.id;
@@ -180,25 +183,24 @@ function ModalImpl({ resolvePromise, options = {} }) {
     });
   }
 
-  // Upload helper: prefix uploads with userId so RLS permits writes to user's folder
+  
   async function uploadFilesToSupabase(filesToUpload) {
-    if (!supabaseClient) throw new Error("Supabase client not configured (provide supabase in options or set NEXT_PUBLIC_SUPABASE_* env).");
+    if (!user) throw new Error("You must be signed in to upload images.");
     if (!filesToUpload.length) return [];
 
-    const { data: userData, error: userErr } = await supabaseClient.auth.getUser();
-    if (userErr || !userData?.user) {
-      throw new Error("You must be signed in to upload images.");
-    }
-    const userId = userData.user.id;
+
+    const userId = user.id;
 
     const results = [];
     for (const fobj of filesToUpload) {
       const file = fobj.file;
       const safeName = file.name.replace(/\s+/g, "_");
       const path = `${userId}/products/${Date.now()}-${Math.random().toString(36).slice(2, 8)}-${safeName}`;
-      const { error } = await supabaseClient.storage.from(bucket).upload(path, file, { cacheControl: "3600", upsert: false });
+      const { error } = await supabaseClient.storage.from('product-images').upload(path, file, { cacheControl: "3600", upsert: false });
       if (error) {
         // surface supabase message
+        console.log(error)
+        toast.error('Failed to upload images / save product')
         throw new Error(error.message || "Upload failed");
       }
       const publicUrl = buildPublicUrl(process.env.NEXT_PUBLIC_SUPABASE_URL, bucket, path);
@@ -226,6 +228,7 @@ function ModalImpl({ resolvePromise, options = {} }) {
       // upload files that are real File objects
       const toUpload = images.filter((i) => i.file);
       const uploaded = await uploadFilesToSupabase(toUpload);
+      console.log(uploaded)
 
       // keep existing preview-only images (no file) as url-only entries
       const existingPreviews = images.filter((i) => !i.file).map((i) => ({ path: i.path || null, url: i.preview }));
@@ -261,7 +264,7 @@ function ModalImpl({ resolvePromise, options = {} }) {
     } catch (err) {
       toast.error('Something went wrong. Try again')
       console.error("Upload error:", err);
-      toast.error('Failed to upload images / save product')
+      
     } finally {
       setUploading(false);
     }

@@ -3,7 +3,7 @@ import { getSupabaseServer, supabaseAdmin } from "@/lib/supabaseClient";
 
 const PAYSTACK_SECRET = process.env.PAYSTACK_SECRET_KEY;
 
-async function createPaystackRecipient(bank_name, account_number, account_name) {
+async function createPaystackRecipient(bank_name, bank_code, account_number, account_name) {
   // Create transfer recipient to Paystack to get recipient_code
   const url = "https://api.paystack.co/transferrecipient";
   const res = await fetch(url, {
@@ -16,7 +16,7 @@ async function createPaystackRecipient(bank_name, account_number, account_name) 
       type: "nuban",
       name: account_name,
       account_number,
-      bank_code: null, // best to map bank_name -> bank_code beforehand
+      bank_code, // best to map bank_name -> bank_code beforehand
       currency: "NGN",
       metadata: {},
     }),
@@ -59,7 +59,7 @@ export default async function handler(req, res) {
       if (requestedAmount > available) return res.status(400).json({ error: "Insufficient balance" });
 
       // ensure profile has bank details
-      if (!profile.account_number || !profile.bank_name || !profile.account_name) {
+      if (!profile.account_number || !profile.bank_name || !profile.account_name || !profile.bank_code) {
         return res.status(400).json({ error: "Missing bank details" });
       }
 
@@ -77,10 +77,10 @@ export default async function handler(req, res) {
           account_number: profile.account_number,
           currency: "NGN",
           metadata: { userId: user.id },
+          bank_code: profile.bank_code
         };
 
-        // Optionally map bank name to code; if you have bank_code stored, add it here: bank_code: profile.bank_code
-        if (profile.bank_code) payload.bank_code = profile.bank_code;
+
 
         const createRes = await fetch("https://api.paystack.co/transferrecipient", {
           method: "POST",
