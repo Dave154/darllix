@@ -1,16 +1,6 @@
 // pages/api/orders/index.js
 import { getSupabaseServer, supabaseAdmin } from "@/lib/supabaseClient";
 
-/**
- * Orders API
- *
- * - POST (no query.action)         => create order (payload: { order })
- * - POST?action=verify             => verify payment reference with Paystack (body: { reference, orderId? })
- * - GET                            => list orders (seller) or GET?id=... => single order (buyer or owner)
- * - PUT                            => update order (seller) (body: { order })
- *
- * Requires env: PAYSTACK_SECRET_KEY for verify route
- */
 
 export default async function handler(req, res) {
   try {
@@ -261,15 +251,10 @@ if (req.method === "GET") {
   if (dataErr) return res.status(500).json({ error: dataErr.message });
 
   // ------------------ compute totalSales (DB-side) ------------------
-  // Try RPC first (recommended). Fallback to PostgREST aggregate if RPC missing.
+  
   let totalSales = 0;
   try {
-    // RPC path: implement this SQL function once in your DB:
-    // create or replace function public.sum_delivered_totals(store_ids uuid[])
-    // returns numeric language sql stable as $$
-    //   select coalesce(sum(total), 0)::numeric from public.orders
-    //   where store_id = any(store_ids) and status = 'delivered';
-    // $$;
+
     const { data: rpcResult, error: rpcErr } = await admin.rpc("sum_delivered_totals", { store_ids: storeIds });
     if (!rpcErr && rpcResult !== null && rpcResult !== undefined) {
       // rpcResult may be: number | string | [{ sum: "123" }] | { sum: "123" }
@@ -342,7 +327,9 @@ if (req.method === "GET") {
         updated_at: new Date().toISOString(),
       };
       if (order.status === "delivered") {
-  updatePayload.delivered_at = order.delivered_at ?? new Date().toISOString();
+        updatePayload.delivered_at = order.delivered_at ?? new Date().toISOString();
+  updatePayload.completed_at = order.completed_at ?? new Date().toISOString();
+ 
 }
 
       const { data: updated, error: updErr } = await admin

@@ -1,32 +1,51 @@
 // pages/dashboard/sell-save.jsx
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ChevronLeft, ChevronRight, RefreshCcw } from "lucide-react";
 import DashboardLayout from "../../../components/dashboardComponents/dashboardLayout";
+import { toast } from "sonner";
+import { withAuth } from "../../../lib/withAuth";
 
-
-
-function TopBalanceCard({ balance, onWithdraw }) {
+function TopBalanceCard({ balance, setBalance, onWithdraw, withdrawing, onRefresh }) {
   return (
     <div className="rounded-2xl bg-gradient-to-b from-white/60 to-white/30 backdrop-blur-md border border-white/10 p-6 shadow-[0_8px_30px_rgba(15,23,42,0.06)]">
       <div className="flex items-center justify-between">
-        <div className="text-sm font-medium text-slate-600">Spend & Save </div>
+        <div className="text-sm font-medium text-slate-600">Spend & Save</div>
+        {/* <div>
+          <button
+            onClick={onRefresh}
+            title="Refresh"
+            className="p-2 rounded-md hover:bg-slate-50"
+            aria-label="Refresh"
+          >
+            <RefreshCcw className="w-4 h-4 text-slate-600" />
+          </button>
+        </div> */}
       </div>
-
       <div className="mt-6 rounded-xl bg-gradient-to-b from-indigo-50 to-white p-6 border border-indigo-100 shadow-sm flex flex-col items-center gap-4">
         <div className="text-sm text-slate-500">Balance</div>
-        <div className="text-3xl md:text-4xl font-extrabold text-indigo-700">₦{Number(balance).toFixed(2)}</div>
-        <div className="text-sm text-slate-500 text-center">A percentage is tucked away every time you complete and order</div>
+         <div className="flex gap-1 justify-center items-center">
+            <span className="text-3xl md:text-4xl bg-transparent outline-none font-extrabold text-indigo-700"> ₦</span>
+          <input type="number"
+                value={Number(balance || 0).toFixed(2)}
+                className='text-3xl md:text-4xl bg- text-center outline-none font-extrabold text-indigo-700'
+                onChange={(e)=>setBalance(Number(e.target.value || 0).toFixed(2))}
+            />
+
+
+            </div> 
+        <div className="text-sm text-slate-500 text-center">A percentage is tucked away every time an order is released.</div>
         <div className="w-full">
           <Button
             onClick={onWithdraw}
             className="w-full h-12 bg-indigo-700 hover:bg-indigo-800 text-white font-semibold shadow-md"
             aria-label="Withdraw balance"
+            disabled={withdrawing || (Number(balance || 0) <= 0)}
           >
-            Withdraw
+            {withdrawing ? "Processing…" : "Withdraw"}
           </Button>
         </div>
       </div>
@@ -36,7 +55,6 @@ function TopBalanceCard({ balance, onWithdraw }) {
 
 function PercentagePicker({ value, onChange }) {
   const setPct = (v) => onChange(Math.max(0, Math.min(100, Math.round(v * 10) / 10)));
-
   const presets = [5, 10, 16, 20, 50, 70, 100];
 
   return (
@@ -72,9 +90,7 @@ function PercentagePicker({ value, onChange }) {
             key={p}
             onClick={() => setPct(p)}
             className={`py-2 rounded-lg text-sm font-medium transition ${
-              Math.abs(value - p) < 0.01
-                ? "bg-indigo-600 text-white shadow-md"
-                : "bg-white border hover:bg-slate-50 text-slate-700"
+              Math.abs(value - p) < 0.01 ? "bg-indigo-600 text-white shadow-md" : "bg-white border hover:bg-slate-50 text-slate-700"
             }`}
             aria-pressed={Math.abs(value - p) < 0.01}
           >
@@ -85,8 +101,6 @@ function PercentagePicker({ value, onChange }) {
     </div>
   );
 }
-
-
 
 function OverviewCard({ percentage, activated, source }) {
   return (
@@ -114,8 +128,8 @@ function RecentActivities({ activities = [] }) {
     <Card className="rounded-2xl overflow-hidden">
       <CardHeader >
         <div className="flex items-center justify-between">
-        <div className="text-sm font-semibold">Recent activities</div>
-        <div className="text-sm text-indigo-600 cursor-pointer">View all</div>
+          <div className="text-sm font-semibold">Recent activities</div>
+          <div className="text-sm text-indigo-600 cursor-pointer">View all</div>
         </div>
       </CardHeader>
       <CardContent>
@@ -125,7 +139,7 @@ function RecentActivities({ activities = [] }) {
             <div key={a.id} className="flex items-start gap-3">
               <div className="flex-shrink-0">
                 <div className="w-10 h-10 rounded-full bg-indigo-50 flex items-center justify-center text-indigo-700 font-semibold">
-                  {a.title.split(" ").slice(0,2).map(s => s[0]).join("").toUpperCase()}
+                  {a.title.split(" ").slice(0,2).map(s => (s?.[0] || "")).join("").toUpperCase()}
                 </div>
               </div>
               <div className="flex-1">
@@ -141,40 +155,101 @@ function RecentActivities({ activities = [] }) {
   );
 }
 
-export default function SellSavePage() {
+export default function SellSavePage({store}) {
   const [balance, setBalance] = useState(0.0);
   const [percentage, setPercentage] = useState(16.0);
   const [source, setSource] = useState("Darllix Wallet");
   const [activated, setActivated] = useState(false);
-  const [activities, setActivities] = useState([
-    // { id: "1", title: "Spend & Save set to 10%", when: Date.now() - 1000 * 60 * 60 * 24 * 3, meta: "Auto" },
-    // { id: "2", title: "First deposit", when: Date.now() - 1000 * 60 * 60 * 24 * 10, meta: "₦2,000.00" },
-  ]);
+  const [activities, setActivities] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [loadingActivate, setLoadingActivate] = useState(false);
-
-  function handleWithdraw() {
-    // wire to your withdraw flow
-    alert("Withdraw flow — integrate your API here");
+  const [withdrawing, setWithdrawing] = useState(false);
+  
+  const fetchData = useCallback(async () => {
+      setLoading(true);
+      try {
+      console.log(store)
+    if (store) {
+      setPercentage(Number(store.sell_save_percentage ?? 0));
+      setBalance(Number(store.sell_save_balance ?? 0));
+      setActivated(Number(store.sell_save_percentage ?? 0) > 0);
+      setSource("Store revenue");
+    }
+  } catch (err) {
+    console.error("fetchData error", err);
+    toast.error("Failed to load spend & save data");
+  } finally {
+    setLoading(false);
   }
+}, [store]);
 
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
 
-
+  // Activate / save percentage
   async function handleActivate() {
     setLoadingActivate(true);
+    
     try {
-      await new Promise((r) => setTimeout(r, 700));
-      setActivated(true);
+        const storeId= store?.id
+      // call backend to set sell_save percentage
+      const res = await fetch("/api/stores/sell-save", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        credentials: "same-origin",
+        body: JSON.stringify({ storeId , percentage }),
+      });
+      const json = await res.json();
+      if (!res.ok) {
+        throw new Error(json?.error || json?.message || "Failed to update percentage");
+      }
+      setActivated(Number(json?.store?.sell_save_percentage ?? percentage) > 0);
+      toast.success("Spend & Save updated");
       setActivities((prev) => [
-        { id: String(Date.now()), title: `Spend & Save activated at ${percentage}%`, when: Date.now(), meta: "" },
+        { id: String(Date.now()), title: `Spend & Save set to ${percentage}%`, when: Date.now(), meta: "" },
         ...prev,
       ]);
     } catch (err) {
       console.error(err);
-      alert("Activation failed");
+      toast.error(err?.message || "Activation failed");
     } finally {
       setLoadingActivate(false);
     }
   }
+
+  async function handleWithdraw() {
+    if (Number(balance || 0) <= 0) {
+      toast.error("No balance to withdraw");
+      return;
+    }
+    if (!confirm(`Request withdrawal of ₦${Number(balance).toFixed(2)} to your saved account?`)) return;
+    setWithdrawing(true);
+    try {
+      const res = await fetch("/api/wallet/withdraw", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "same-origin",
+        body: JSON.stringify({ storeId:store?.id, amount: Number(balance) }),
+      });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json?.error || json?.message || "Withdraw request failed");
+      toast.success("Withdrawal requested");
+      // optimistic update
+      setActivities((prev) => [
+        { id: String(Date.now()), title: `Withdrawal requested`, when: Date.now(), meta: `₦${Number(balance).toFixed(2)}` },
+        ...prev,
+      ]);
+      setBalance(0);
+    } catch (err) {
+      console.error("withdraw error", err);
+      toast.error(err?.message || "Withdraw failed");
+    } finally {
+      setWithdrawing(false);
+    }
+  }
+
+  const handleRefresh = () => fetchData();
 
   return (
     <DashboardLayout>
@@ -182,10 +257,10 @@ export default function SellSavePage() {
         <div className="flex flex-col lg:flex-row gap-6">
           {/* Left column: main controls */}
           <div className="flex-1 space-y-6">
-            <TopBalanceCard balance={balance} onWithdraw={handleWithdraw} />
+            {/* {store.sell_save_balance} */}
+            <TopBalanceCard balance={balance} setBalance={setBalance} onWithdraw={handleWithdraw} withdrawing={withdrawing} onRefresh={handleRefresh} />
 
             <PercentagePicker value={percentage} onChange={setPercentage} />
-
 
             <div>
               <Button
@@ -193,7 +268,7 @@ export default function SellSavePage() {
                 className={`w-full h-14 text-white font-semibold ${activated ? "bg-emerald-600 hover:bg-emerald-700" : "bg-indigo-600 hover:bg-indigo-700"}`}
                 disabled={loadingActivate}
               >
-                {loadingActivate ? "Activating…" : activated ? "Activated" : "Activate Spend & Save"}
+                {loadingActivate ? "Saving…" : activated ? "Activated" : "Activate Spend & Save"}
               </Button>
             </div>
           </div>
@@ -203,7 +278,7 @@ export default function SellSavePage() {
             <div className="sticky top-6 space-y-4">
               <OverviewCard percentage={percentage} activated={activated} source={source} />
 
-              <RecentActivities activities={activities} />
+              {/* <RecentActivities activities={activities} /> */}
             </div>
           </div>
         </div>
@@ -211,3 +286,5 @@ export default function SellSavePage() {
     </DashboardLayout>
   );
 }
+
+export const getServerSideProps = withAuth();
