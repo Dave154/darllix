@@ -7,20 +7,13 @@ import { Button } from "@/components/ui/button";
 import { ChevronLeft, ChevronRight, RefreshCcw } from "lucide-react";
 import DashboardLayout from "../../../components/dashboardComponents/dashboardLayout";
 
-/**
- * Premium, responsive Spend & Save UI
- * - responsive: stacked on mobile, two-column on wider screens
- * - refined styling: glass cards, gradients, bigger controls, subtle shadows
- * - accessible buttons and larger tap targets
- *
- * No backend calls — wire handlers to your APIs as needed.
- */
+
 
 function TopBalanceCard({ balance, onWithdraw }) {
   return (
     <div className="rounded-2xl bg-gradient-to-b from-white/60 to-white/30 backdrop-blur-md border border-white/10 p-6 shadow-[0_8px_30px_rgba(15,23,42,0.06)]">
       <div className="flex items-center justify-between">
-        <div className="text-sm font-medium text-slate-600">Spend & Save <span className="text-xs text-slate-400">(up to 15% p.a.)</span></div>
+        <div className="text-sm font-medium text-slate-600">Spend & Save </div>
       </div>
 
       <div className="mt-6 rounded-xl bg-gradient-to-b from-indigo-50 to-white p-6 border border-indigo-100 shadow-sm flex flex-col items-center gap-4">
@@ -164,9 +157,7 @@ export default function SellSavePage() {
     alert("Withdraw flow — integrate your API here");
   }
 
-  function handleChangeSource() {
-    setSource((s) => (s === "Darllix Wallet" ? "Bank • 0123456789" : "Darllix Wallet"));
-  }
+
 
   async function handleActivate() {
     setLoadingActivate(true);

@@ -10,11 +10,13 @@ import SalesGraph from "../../components/salesGraph";
 import { withAuth } from "../../lib/withAuth";
 import { useStore } from "@/store";
 import { useRouter } from "next/router";
+import { toast } from "sonner";
 
 
 
 export default function DashboardPage({user,store,hasStore}){
     const setStore = useStore((s) => s.setStore);
+    
     const [dashboardInfo, setDashboardInfo] = useState({
      product: null,
      order: null,
@@ -48,11 +50,12 @@ export default function DashboardPage({user,store,hasStore}){
 
       setDashboardInfo({
         product: prodJson.products || null,
-        order: orderJson.orders || null,
+        order: orderJson || null,
         customer: custJson.customers || null,
       });
 
     } catch (err) {
+      toast.error('Something went wrong, Try Again')
       console.error("fetchDashboardInfo error:", err);
     }
   };

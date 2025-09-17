@@ -41,11 +41,11 @@ export default function SalesDashboard({ dashboardInfo = {}, store = {} }) {
   // delivered-statuses to consider (adjust if your app uses different status names)
   const deliveredStatuses = new Set(["delivered", "completed", "fulfilled"]);
 
-  // unify orders array from different possible keys (dashboardInfo.order or dashboardInfo.orders)
-  const ordersRaw = Array.isArray(dashboardInfo.orders)
-    ? dashboardInfo.orders
-    : Array.isArray(dashboardInfo.order)
-    ? dashboardInfo.order
+ console.log(dashboardInfo)
+  const ordersRaw = Array.isArray(dashboardInfo?.order?.orders)
+    ? dashboardInfo?.order?.orders
+    : Array.isArray(dashboardInfo?.order?.orders)
+    ? dashboardInfo?.order?.orders
     : [];
 
   // Filter delivered orders and ensure we only use those with created_at
@@ -147,12 +147,12 @@ export default function SalesDashboard({ dashboardInfo = {}, store = {} }) {
       <div className="grid grid-cols-3 gap-2 text-center">
         <div className="bg-gray-100 p-3 rounded-md">
           <p className="text-gray-500 text-xs">Total sales</p>
-          <p className="text-xl font-semibold flex justify-center items-center gap-1">₦0.00</p>
+          <p className="text-xl font-semibold flex justify-center items-center gap-1">₦{dashboardInfo?.order?.totalSales.toLocaleString()}</p>
         </div>
         <div>
           <p className="text-gray-500 text-xs">Orders</p>
           <p className="text-xl font-semibold flex justify-center items-center gap-1">
-            <ShoppingBag className="w-4 h-4 text-blue-600" /> {ordersRaw.length}
+            <ShoppingBag className="w-4 h-4 text-blue-600" /> {dashboardInfo?.order?.total}
           </p>
         </div>
         <div>

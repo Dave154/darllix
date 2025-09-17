@@ -229,8 +229,7 @@ if (req.method === "GET") {
 
   if (storesErr) return res.status(500).json({ error: storesErr.message });
   const storeIds = (stores || []).map((s) => s.id);
-  if (!storeIds.length)
-    return res.status(200).json({ orders: [], total: 0 });
+  if (!storeIds.length) return res.status(200).json({ orders: [], total: 0, totalSales: 0 });
 
   let qb = admin
     .from("orders")
@@ -261,9 +260,64 @@ if (req.method === "GET") {
   const { data: rows, error: dataErr, count } = await qb;
   if (dataErr) return res.status(500).json({ error: dataErr.message });
 
+  // ------------------ compute totalSales (DB-side) ------------------
+  // Try RPC first (recommended). Fallback to PostgREST aggregate if RPC missing.
+  let totalSales = 0;
+  try {
+    // RPC path: implement this SQL function once in your DB:
+    // create or replace function public.sum_delivered_totals(store_ids uuid[])
+    // returns numeric language sql stable as $$
+    //   select coalesce(sum(total), 0)::numeric from public.orders
+    //   where store_id = any(store_ids) and status = 'delivered';
+    // $$;
+    const { data: rpcResult, error: rpcErr } = await admin.rpc("sum_delivered_totals", { store_ids: storeIds });
+    if (!rpcErr && rpcResult !== null && rpcResult !== undefined) {
+      // rpcResult may be: number | string | [{ sum: "123" }] | { sum: "123" }
+      const parseRpc = (v) => {
+        if (Array.isArray(v) && v.length > 0) return parseFloat(Object.values(v[0])[0]) || 0;
+        if (typeof v === "object") {
+          const vals = Object.values(v);
+          if (vals.length) return parseFloat(vals[0]) || 0;
+          return 0;
+        }
+        return parseFloat(v) || 0;
+      };
+      totalSales = parseRpc(rpcResult);
+    } else {
+      // RPC not available or failed -> fallback
+      throw rpcErr || new Error("RPC unavailable");
+    }
+  } catch (err) {
+    // Fallback: PostgREST aggregate
+    try {
+      const { data: agg, error: aggErr } = await admin
+        .from("orders")
+        .select("sum(total)")
+        .in("store_id", storeIds)
+        .eq("status", "delivered")
+        .maybeSingle();
+
+      if (!aggErr && agg) {
+        // agg may be { sum: "123.45" } or { sum_total: "123.45" } depending on pg version
+        const raw = agg.sum ?? agg.sum_total ?? Object.values(agg || {})[0] ?? null;
+        totalSales = raw !== null && raw !== undefined ? parseFloat(raw) || 0 : 0;
+      } else {
+        console.warn("Aggregate fallback error:", aggErr);
+        totalSales = 0;
+      }
+    } catch (e) {
+      console.error("Failed to calculate totalSales fallback:", e);
+      totalSales = 0;
+    }
+  }
+
+  // round to 2 decimals
+  totalSales = Math.round((Number(totalSales) + Number.EPSILON) * 100) / 100;
+
   return res.status(200).json({
     orders: rows || [],
     total: typeof count === "number" ? count : (rows || []).length,
+    totalSales,
   });
 }
 
@@ -287,6 +341,9 @@ if (req.method === "GET") {
         ...(order.meta ? { meta: order.meta } : {}),
         updated_at: new Date().toISOString(),
       };
+      if (order.status === "delivered") {
+  updatePayload.delivered_at = order.delivered_at ?? new Date().toISOString();
+}
 
       const { data: updated, error: updErr } = await admin
         .from("orders")

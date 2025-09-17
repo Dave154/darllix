@@ -35,6 +35,7 @@ import { useRouter } from "next/router";
 import { useSupabaseClient } from "@supabase/auth-helpers-react";
 import { supabaseBrowser, getSupabaseServer } from "@/lib/supabaseClient";
 import Loader from "../../components/dashboardComponents/loader";
+import { toast, Toaster } from "sonner";
 
 
 export async function getServerSideProps(ctx) {
@@ -106,10 +107,14 @@ export default function DarllixLogin() {
     if (sessionError) throw sessionError;
     router.push(`/dashboard`);
    } catch (err) {
-     setError("email", {
+    if (err.message === 'Failed to fetch'){
+      toast.error('Network error')
+    }else{
+      setError("email", {
        type: "manual",
        message: err?.message || "Failed to log in",
-     });
+      });
+    }
    }finally{
     setLoading(false)
    }
@@ -143,6 +148,10 @@ export default function DarllixLogin() {
     };
   }, [router]);
   return (
+    <>
+    <Toaster
+          position="top-right"
+        />
     <div className="min-h-screen w-full bg-[radial-gradient(1200px_700px_at_80%_-10%,#6fd8ac_0%,transparent_60%),radial-gradient(1200px_700px_at_20%_110%,#4a21ef_0%,#fff_60%)] text-white flex items-center justify-center md:p-4 pt-4">
       <motion.div
         initial={{ opacity: 0, y: 10 }}
@@ -317,5 +326,6 @@ export default function DarllixLogin() {
       </motion.div>
                 {loading &&  <Loader />}
     </div>
+              </>
   );
 }

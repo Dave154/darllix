@@ -15,6 +15,7 @@ import {
   Menu,
   X,
   LogOut,
+  Eye,
 } from "lucide-react";
 import { FaTruck } from "react-icons/fa";
 import { BsCreditCard2FrontFill, BsPersonFillExclamation} from "react-icons/bs";
@@ -66,6 +67,16 @@ const [loading, setLoading] = useState(false);
       router.events.off("routeChangeError", handleStop);
     };
   }, [router]);
+    const getInitials = (name) => {
+    if (!name) return "?";
+    const parts = name.trim().split(" ");
+    if (parts.length === 1) return parts[0][0].toUpperCase();
+    return (
+      (parts[0][0] || "").toUpperCase() +
+      (parts[parts.length - 1][0] || "").toUpperCase()
+    );
+  };
+
 
   return (
     <>
@@ -128,14 +139,11 @@ const [loading, setLoading] = useState(false);
         <div className="flex items-center gap-4 relative">
           <button
             onClick={() => setStoreDropdown(!storeDropdown)}
-            className="hidden sm:flex items-center gap-1 bg-gray-800 px-3 py-1 rounded-md text-sm hover:bg-gray-700"
+            className="flex items-center gap-1 bg-gray-800 px-3 py-1 rounded-md text-sm hover:bg-gray-700"
           >
-            My Store
-            <ChevronDown
-              className={`h-3 w-3 transition-transform ${
-                storeDropdown ? "rotate-180" : ""
-              }`}
-            />
+            {/* <Eye className="w-5 mr-2"/> */}
+            ₦{profile?.available_balance?.toLocaleString()}
+            
           </button>
 
           {/* Dropdown menu */}
@@ -162,7 +170,7 @@ const [loading, setLoading] = useState(false);
           </AnimatePresence>
 
           <div className="h-8 w-8 flex items-center justify-center rounded-full bg-green-500 text-black font-semibold cursor-pointer">
-            MS
+           { getInitials(profile?.full_name)}
           </div>
         </div>
       </header>
