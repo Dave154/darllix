@@ -11,8 +11,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { X, Plus, Trash2 } from "lucide-react";
 import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 import { toast } from "sonner";
-import { supabase } from "@/lib/supabaseClient";
-import { supabaseBrowser } from "../../lib/supabaseClient";
+
 
 
 // zod validation
@@ -70,7 +69,7 @@ async function handleUpdateProduct(product) {
 
 function ModalImpl({ resolvePromise, options = {} }) {
    const {
-    supabase: supabaseProp = null,
+    supabase,
     bucket = "product-images",
     onCreateProduct = handleCreateProduct,
     onUpdateProduct = handleUpdateProduct,
@@ -80,11 +79,14 @@ function ModalImpl({ resolvePromise, options = {} }) {
   } = options;
 
   // create client if not provided
-  const supabaseClient = React.useMemo(() => {
-    if (supabaseProp) return supabaseProp;
-    if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) return null;
-    return createSupabaseClient(process.env.NEXT_PUBLIC_SUPABASE_URL, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY);
-  }, [supabaseProp]);
+
+  const supabaseClient = supabase
+  console.log(supabase)
+  // const supabaseClient = React.useMemo(() => {
+  //   if (supabaseProp) return supabaseProp;
+  //   // if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) return null;
+  //   // return createSupabaseClient(process.env.NEXT_PUBLIC_SUPABASE_URL, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY);
+  // }, [supabaseProp]);
 
   const {
     register,
@@ -185,11 +187,14 @@ function ModalImpl({ resolvePromise, options = {} }) {
 
   
   async function uploadFilesToSupabase(filesToUpload) {
-    if (!user) throw new Error("You must be signed in to upload images.");
     if (!filesToUpload.length) return [];
-
-
-    const userId = user.id;
+    console.log("supabase session", supabaseClient);
+    
+    
+    const {data} = await supabaseClient.auth.getSession();
+   
+    if (!user) throw new Error("You must be signed in to upload images.");
+    const userId = data.session.user.id;
 
     const results = [];
     for (const fobj of filesToUpload) {
@@ -204,6 +209,7 @@ function ModalImpl({ resolvePromise, options = {} }) {
         throw new Error(error.message || "Upload failed");
       }
       const publicUrl = buildPublicUrl(process.env.NEXT_PUBLIC_SUPABASE_URL, bucket, path);
+      console.log(path,)
       results.push({ path, url: publicUrl });
     }
     return results;
@@ -228,8 +234,6 @@ function ModalImpl({ resolvePromise, options = {} }) {
       // upload files that are real File objects
       const toUpload = images.filter((i) => i.file);
       const uploaded = await uploadFilesToSupabase(toUpload);
-      console.log(uploaded)
-
       // keep existing preview-only images (no file) as url-only entries
       const existingPreviews = images.filter((i) => !i.file).map((i) => ({ path: i.path || null, url: i.preview }));
       const finalImages = [...existingPreviews, ...uploaded];

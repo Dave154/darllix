@@ -50,6 +50,7 @@ import { openProductModal } from "../../../components/dashboardComponents/produc
 import AreYouSureModal from "../../../components/dashboardComponents/areYouSure";
 import { toast } from "sonner";
 import { useUser } from "../../../hooks/useUser";
+import { useSupabaseClient } from "@supabase/auth-helpers-react";
 
 
 export default function ProductsPage({ store, hasStore }) {
@@ -77,6 +78,7 @@ export default function ProductsPage({ store, hasStore }) {
   const [sortDir, setSortDir] = useState("desc");
   const [categories, setCategories] = useState([]);
 const [selectedCategory, setSelectedCategory] = useState("all");
+  const supabase = useSupabaseClient();
 
   // search debounce
   const [debouncedQuery, setDebouncedQuery] = useState(query);
@@ -195,7 +197,8 @@ async function handleDeleteCategory(cat) {
   // Add product flow
   async function handleAddProduct() {
     const options = {
-      user
+      user,
+      supabase
     }
     try {
       const created = await openProductModal(options);
@@ -314,10 +317,9 @@ async function handleDeleteCategory(cat) {
     { value: "price", label: "Price" },
     { value: "name", label: "Name" },
   ];
-
   const handleEditProduct =async(p)=>{
        try {
-      const edited = await openProductModal({initialProduct: p, user});
+      const edited = await openProductModal({initialProduct: p, user, supabase});
       // If created is falsy -> cancelled
       if (!edited) return;
       if (edited?.id) {

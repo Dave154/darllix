@@ -27,33 +27,27 @@ export default function ProfilePage() {
 const [initialized, setInitialized] = useState(false);
 
 useEffect(() => {
+  console.log(user)
   if (!user?.profile) {
-    console.log(user)
     setCreating(true)
     setEditing(true)
     setProfile({})
-    setForm({
-          id: user?.user?.id,
-          email: user?.user?.user_metadata.email,
-          full_name: '',
-          account_name: '',
-          bank_name: '',
-          // account_number: values.account_number,
-          // phone: values.phone,
-
-    })
-
     
+  }else{
+    setEditing(false)
+    setCreating(false)
+  }
 
-  }else{setEditing(false)}
+
   if (initialized) return;
   if (editing) return;
 
   setProfile(user.profile);
   setForm(user.profile || {});
-  setInitialized(true);
+  console.log(user.profile)
+  if(user.profile) setInitialized(true);
   // eslint-disable-next-line react-hooks/exhaustive-deps
-}, [user?.profile, editing]);
+}, [user?.profile]);
 
   // fetch banks from server route
   useEffect(() => {
@@ -106,8 +100,21 @@ const handleChange = (e) => {
       }
       try {
           setLoading(true);
-          const payload = { ...form };
+         
           
+            const payload ={
+          id: user.user.id,
+          email: user.user.user_metadata.email,
+          full_name: form.full_name,
+          account_name: form.account_name,
+          bank_name: form.bank_name || '',
+          account_number: form.account_number || 0,
+          phone: form.phone ,
+       
+            }
+
+
+
           const { error } = await supabase.from("profiles").insert([
             payload
           ]);

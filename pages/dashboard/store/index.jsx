@@ -38,6 +38,8 @@ import { toast } from "sonner";
 import Image from "next/image";
 import { useRouter } from "next/router";
 import { useUser } from "../../../hooks/useUser";
+import { supabaseBrowser } from "../../../lib/supabaseClient";
+import { useSupabaseClient } from "@supabase/auth-helpers-react";
 
 /* ---------------------------
    Schema & stable defaults
@@ -116,15 +118,27 @@ function buildPublicUrl(supabaseUrl, bucketName, path) {
   return `${supabaseUrl.replace(/\/$/, "")}/storage/v1/object/public/${encodeURIComponent(bucketName)}/${encodeURIComponent(path)}`;
 }
 
+export async function getAuthUserId(supabase) {
+    const {
+    data: { user },
+    error,
+  } = await supabase.auth.getUser();
+  if (error || !user) {
+    console.error("No authenticated user found:", error);
+    return null;
+  }
+
+  return user.id; // This is the auth.uid()
+}
+
 export  function BannerUploader({ currentUrl, onUploaded, bucket = "store-assets" }) {
   const [preview, setPreview] = useState(currentUrl || "");
   const [uploading, setUploading] = useState(false);
-    const {user} = useUser()
+   const supabase = useSupabaseClient();
+
   // supabase client
-  const supabaseClient = createSupabaseClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-  );
+  const supabaseClient = supabase
+  
 
   useEffect(() => {
     setPreview(currentUrl || "");
@@ -133,17 +147,19 @@ export  function BannerUploader({ currentUrl, onUploaded, bucket = "store-assets
   async function handleFile(e) {
     const f = e.target.files?.[0];
     if (!f) return;
-
     try {
       setUploading(true);
+      // const userId = await getAuthUserId(supabase);
+      // console.log(userId)
+
 
       // get user (needed for folder structure)
-      // const { data: userData, error: userErr } = await supabaseClient.auth.getUser();
-      // if (userErr || !userData?.user) {
-      //   throw new Error("You must be signed in to upload a banner.");
-      // }
-      const userId = user.id;
-
+      const { data: userData, error: userErr } = await supabaseClient.auth.getUser();
+      if (userErr || !userData?.user) {
+        throw new Error("You must be signed in to upload a banner.");
+      }
+      console.log(userData)
+      const userId = userData.id
       const safeName = f.name.replace(/\s+/g, "_");
       const path = `${userId}/banners/${Date.now()}-${Math.random().toString(36).slice(2, 8)}-${safeName}`;
 
@@ -432,7 +448,10 @@ async function publish() {
               <div className="flex w-full sm:w-auto gap-2">
                   <CTA onClick={()=>{
                     next()
-                    next()
+                    if(!editing){
+
+                      next()
+                    }
                   }} className="flex-1 sm:flex-none">Continue</CTA>
 
               </div>

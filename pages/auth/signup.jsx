@@ -26,12 +26,8 @@ import {
 import { Globe, ChevronDown, Eye, EyeOff, ShieldCheck, Mail, Lock, Apple, Chrome } from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "next/router";
+import { useSupabaseClient } from "@supabase/auth-helpers-react";
 
-// Create Supabase client (client-side)
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-);
 
 // Form schema using Zod (tight validation)
 const schema = z.object({
@@ -52,6 +48,8 @@ const schema = z.object({
 });
 
 export default function DarllixAuth() {
+     const supabase = useSupabaseClient();
+
   const {
     register,
     handleSubmit,

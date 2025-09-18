@@ -5,26 +5,19 @@ import { openProductModal } from "./productModal";
 import {Button} from  "@/components/ui/button";
 import { Plus } from "lucide-react";
 import { useUser } from "../../hooks/useUser";
+import { useSupabaseClient } from "@supabase/auth-helpers-react";
 
 
-export default function AddProductButton({ onCreated, supabase, bucket = "product-images" }) {
+export default function AddProductButton({ onCreated, bucket = "product-images" }) {
   const {user}= useUser()
-  const options ={
-    user,
-    bucket
-  }
+  const supabase = useSupabaseClient();
+
   async function handleClick() {
     try {
-      const created = await openProductModal({options});
-      if (!created) return;
-      if (created?.id) {
-       onCreated()
-      
-      } else {
-        
-              onCreated()
 
-      }
+      const created = await openProductModal({user,supabase});
+      if (!created) return;
+      
     } catch (err) {
       console.error("Add product error:", err);
       alert("Failed to add product: " + (err?.message || err));
