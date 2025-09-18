@@ -34,7 +34,7 @@ export default function StorefrontDynamic({ store, slug }) {
   // Determine what to render based on store, slug and pathname
   let content = null;
 
-  if (!store) {
+  if (!store && slug[0] === "storefront") {
     content = <Global404 />;
   } else if (slug[0] === "storefront" && pathname.startsWith("/payment-success")) {
     content = <PaymentSuccess />;
