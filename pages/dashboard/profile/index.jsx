@@ -9,6 +9,7 @@ import { useUser } from '../../../hooks/useUser';
 import { useSupabaseClient } from '@supabase/auth-helpers-react';
 import { toast } from 'sonner';
 import Loader from '../../../components/dashboardComponents/loader';
+import { useRouter } from 'next/router';
 
 export default function ProfilePage() {
   const supabase = useSupabaseClient();
@@ -91,7 +92,7 @@ const handleChange = (e) => {
     setForm({ ...form, bank_name: e.target.value, bank_code: code });
   };
 
-  
+  const router = useRouter()
   const onSubmit = async () => {
     
       if (!user.user || !user.user.id) {
@@ -123,7 +124,7 @@ const handleChange = (e) => {
           setCreating(false)
           toast.success("Profile Created Successfully")
 
-          // router.push("/dashboard");
+          router.push("/dashboard");
 
         } catch (err) {
           console.error(err);

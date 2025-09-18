@@ -15,6 +15,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
+
 import { MdKeyboardArrowDown } from "react-icons/md";
 import { BsPeople } from "react-icons/bs";
 
@@ -37,7 +39,7 @@ function formatNumber(n) {
   return n?.toLocaleString?.() ?? String(n);
 }
 
-export default function SalesDashboard({ dashboardInfo = {}, store = {} }) {
+export default function SalesDashboard({ dashboardInfo = {}, store = {}, loading= false }) {
   // delivered-statuses to consider (adjust if your app uses different status names)
   const deliveredStatuses = new Set(["delivered", "completed", "fulfilled"]);
 
@@ -147,18 +149,36 @@ export default function SalesDashboard({ dashboardInfo = {}, store = {} }) {
       <div className="grid grid-cols-3 gap-2 text-center">
         <div className="bg-gray-100 p-3 rounded-md">
           <p className="text-gray-500 text-xs">Total sales</p>
+          {
+            loading ?
+            <Skeleton className='w-full h-6' /> :
           <p className="text-xl font-semibold flex justify-center items-center gap-1">₦{dashboardInfo?.order?.totalSales?.toLocaleString()}</p>
+          }
         </div>
         <div>
           <p className="text-gray-500 text-xs">Orders</p>
           <p className="text-xl font-semibold flex justify-center items-center gap-1">
-            <ShoppingBag className="w-4 h-4 text-blue-600" /> {dashboardInfo?.order?.total}
+            <ShoppingBag className="w-4 h-4 text-blue-600" /> 
+             {
+            loading ?
+            <Skeleton className='w-8 h-4' /> :
+            <>
+            {dashboardInfo?.order?.total}
+            </>
+             }
           </p>
         </div>
         <div>
           <p className="text-gray-500 text-xs">Customers</p>
           <p className="text-xl font-semibold flex justify-center items-center gap-1">
-            <BsPeople className="w-5 h-5 text-blue-600" /> {Array.isArray(dashboardInfo.customer) ? dashboardInfo.customer.length : (dashboardInfo.customers?.length ?? 0)}
+            <BsPeople className="w-5 h-5 text-blue-600" /> 
+             {
+            loading ?
+            <Skeleton className='w-8 h-4' /> :
+            <>
+            {Array.isArray(dashboardInfo.customer) ? dashboardInfo.customer.length : (dashboardInfo.customers?.length ?? 0)}
+            </>
+             }
           </p>
         </div>
       </div>

@@ -189,27 +189,27 @@ if (req.method === "GET") {
         return res.status(404).json({ error: "Product not found for this store" });
       }
 
-      // normalize categories into [{id, name}, ...]
-      let productCategoriesReadable = [];
-      if (Array.isArray(singleProd.categories) && singleProd.categories.length) {
-        productCategoriesReadable = singleProd.categories.map((cid) => {
-          const cidStr = String(cid);
-          return { id: cidStr, name: catMap.get(cidStr) || cidStr };
-        });
-      } else if (singleProd.categories && typeof singleProd.categories === "string") {
-        // legacy text stored
-        productCategoriesReadable = [{ id: singleProd.categories, name: singleProd.categories }];
-      }
+      // // normalize categories into [{id, name}, ...]
+      // let productCategoriesReadable = [];
+      // if (Array.isArray(singleProd.categories) && singleProd.categories.length) {
+      //   productCategoriesReadable = singleProd.categories.map((cid) => {
+      //     const cidStr = String(cid);
+      //     return { id: cidStr, name: catMap.get(cidStr) || cidStr };
+      //   });
+      // } else if (singleProd.categories && typeof singleProd.categories === "string") {
+      //   // legacy text stored
+      //   productCategoriesReadable = [{ id: singleProd.categories, name: singleProd.categories }];
+      // }
 
       // available normalization
       const available = typeof singleProd.available === "number"
         ? singleProd.available
         : (singleProd.available ? Number(singleProd.available) : 0);
-
+        console.log(singleProd)
       return res.status(200).json({
         product: {
           ...singleProd,
-          categories: productCategoriesReadable,
+          // categories: productCategoriesReadable,
           available,
         },
         categories: categories || [],
@@ -280,29 +280,29 @@ if (req.method === "GET") {
     }
 
     // Map each product's categories (array of ids) to readable array of {id,name}
-    const mapped = (products || []).map((p) => {
-      let productCats = [];
-      if (Array.isArray(p.categories) && p.categories.length) {
-        productCats = p.categories.map((cid) => {
-          const cidStr = String(cid);
-          return { id: cidStr, name: catMap.get(cidStr) || cidStr };
-        });
-      } else if (p.categories && typeof p.categories === "string") {
-        // legacy text category - return as single-item object
-        productCats = [{ id: p.categories, name: p.categories }];
-      }
+    // const mapped = (products || []).map((p) => {
+    //   let productCats = [];
+    //   if (Array.isArray(p.categories) && p.categories.length) {
+    //     productCats = p.categories.map((cid) => {
+    //       const cidStr = String(cid);
+    //       return { id: cidStr, name: catMap.get(cidStr) || cidStr };
+    //     });
+    //   } else if (p.categories && typeof p.categories === "string") {
+    //     // legacy text category - return as single-item object
+    //     productCats = [{ id: p.categories.id, name: p.categories.name }];
+    //   }
 
-      return {
-        ...p,
-        categories: productCats,
-        // also keep a convenient string fallback for older UI if needed
-        category: Array.isArray(productCats) && productCats.length ? productCats.map((c) => c.name).join(", ") : "—",
-        available: typeof p.available === "number" ? p.available : (p.available ? Number(p.available) : 0),
-      };
-    });
+    //   return {
+    //     ...p,
+    //     categories: productCats,
+    //     // also keep a convenient string fallback for older UI if needed
+    //     category: Array.isArray(productCats) && productCats.length ? productCats.map((c) => c.name).join(", ") : "—",
+    //     available: typeof p.available === "number" ? p.available : (p.available ? Number(p.available) : 0),
+    //   };
+    // });
 
     const total = typeof count === "number" ? count : mapped.length;
-    return res.status(200).json({ products: mapped, categories: categories || [], total });
+    return res.status(200).json({ products, categories: categories || [], total });
   } catch (err) {
     console.error("Products GET unexpected error:", err);
     return res.status(500).json({ error: err?.message || "Server error" });

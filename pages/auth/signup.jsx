@@ -27,6 +27,7 @@ import { Globe, ChevronDown, Eye, EyeOff, ShieldCheck, Mail, Lock, Apple, Chrome
 import Image from "next/image";
 import { useRouter } from "next/router";
 import { useSupabaseClient } from "@supabase/auth-helpers-react";
+import { FaLess } from "react-icons/fa";
 
 
 // Form schema using Zod (tight validation)
@@ -61,7 +62,7 @@ export default function DarllixAuth() {
   const [country, setCountry] = useState("Nigeria");
   const [showPass, setShowPass] = useState(false);
   const password = watch("password") || "";
-
+  const [loading, setLoading] = useState(false)
   const strength = useMemo(() => (password ? zxcvbn(password).score : 0), [password]);
   const strengthText = ["very weak", "weak", "fair", "good", "strong"][strength];
 const images = ["/vendor1.jpg", "/vendor6.jpg", "/vendor6.jpg"]; 
@@ -77,7 +78,7 @@ const images = ["/vendor1.jpg", "/vendor6.jpg", "/vendor6.jpg"];
 
  
   async function onSubmit(values) {
-
+    setLoading(true)
     try {
       const { data, error } = await supabase.auth.signUp({
         email: values.email,
@@ -89,8 +90,10 @@ const images = ["/vendor1.jpg", "/vendor6.jpg", "/vendor6.jpg"];
         // },
       });
       if (error) throw error;
-       router.push('/auth/login')
+      router.push('/auth/login')
+      setLoading(false)
     } catch (err) {
+      setLoading(false)
       setError("email", { message: err?.message || "Failed to sign up" });
     }
   }
@@ -226,7 +229,7 @@ const images = ["/vendor1.jpg", "/vendor6.jpg", "/vendor6.jpg"];
             )} */}
 
             <Button type="submit" className="w-full h-11 bg-slate-900 text-white hover:bg-black text-base" disabled={isSubmitting}>
-              {isSubmitting ? "Creating..." : "Create Darllix account"}
+              {isSubmitting || loading ? "Creating..." : "Create Darllix account"}
             </Button>
 
             {/* <div className="flex items-center gap-4">

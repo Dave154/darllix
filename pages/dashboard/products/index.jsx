@@ -398,7 +398,7 @@ async function confirmDelete() {
                 <DropdownMenuContent align="end">
                   <DropdownMenuLabel>Bulk actions</DropdownMenuLabel>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem>Archive selected</DropdownMenuItem>
+                  {/* <DropdownMenuItem>Archive selected</DropdownMenuItem> */}
                   <DropdownMenuItem onClick={()=>handleDeleteClick()} >Delete selected</DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
@@ -553,7 +553,11 @@ async function confirmDelete() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {products.map((p) => (
+                    {products.map((p) =>{
+
+                      console.log(p)
+                      return(
+                      
                       <TableRow key={p.id} className="hover:bg-muted/40">
                         <TableCell>
                           <Checkbox
@@ -579,7 +583,12 @@ async function confirmDelete() {
                         <TableCell className="text-sm text-muted-foreground">₦{Number(p.price).toFixed(2)}</TableCell>
                        <TableCell className="text-sm text-muted-foreground line-clamp-1  overflow-hidden">
 
-                         {p.category}
+                         {
+                         p.categories.map(i=>{
+                          return `${i.name} , `
+                         })
+                         
+                         }
                         </TableCell>
                        <TableCell className="text-sm text-muted-foreground">{p.available ?? 0}</TableCell>
 
@@ -610,7 +619,9 @@ async function confirmDelete() {
                           </DropdownMenu>
                         </TableCell>
                       </TableRow>
-                    ))}
+                    )
+                  }
+                  )}
                   </TableBody>
                 </Table>
               </div>

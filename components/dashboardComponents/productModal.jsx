@@ -81,7 +81,7 @@ function ModalImpl({ resolvePromise, options = {} }) {
   // create client if not provided
 
   const supabaseClient = supabase
-  console.log(supabase)
+  // console.log(supabase)
   // const supabaseClient = React.useMemo(() => {
   //   if (supabaseProp) return supabaseProp;
   //   // if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) return null;
@@ -107,8 +107,9 @@ function ModalImpl({ resolvePromise, options = {} }) {
   // preload initial product when editing
   useEffect(() => {
     if (!initialProduct) return;
-    const { name, price, discountPrice, description, images: imgs = [], categories: cats = [] } = initialProduct;
-    reset({ name, price: price ?? "", discountPrice: discountPrice ?? "", description: description ?? "", categories: cats ?? [] });
+    const { name, price, discountPrice, description, available,images: imgs = [], categories: cats = [] } = initialProduct;
+
+    reset({ name, price: price ?? "", available: available ?? "", discountPrice: discountPrice ?? "", description: description ?? "", categories: cats ?? [] });
     setSelectedCats(Array.isArray(cats) ? cats.slice(0, 3) : []);
     const imgsNormalized = imgs.map((it, idx) => {
       if (!it) return null;
@@ -150,6 +151,7 @@ function ModalImpl({ resolvePromise, options = {} }) {
             const res = await fetch(`/api/categories?storeId=${encodeURIComponent(sId)}`, { credentials: "same-origin" });
             if (res.ok) {
               const json = await res.json();
+              // console.log(json)
               if (mounted) setCategories(json.categories || []);
             } else {
               // ignore failure to keep UI functioning; categories will be empty
@@ -188,7 +190,7 @@ function ModalImpl({ resolvePromise, options = {} }) {
   
   async function uploadFilesToSupabase(filesToUpload) {
     if (!filesToUpload.length) return [];
-    console.log("supabase session", supabaseClient);
+    // console.log("supabase session", supabaseClient);
     
     
     const {data} = await supabaseClient.auth.getSession();
@@ -209,26 +211,27 @@ function ModalImpl({ resolvePromise, options = {} }) {
         throw new Error(error.message || "Upload failed");
       }
       const publicUrl = buildPublicUrl(process.env.NEXT_PUBLIC_SUPABASE_URL, bucket, path);
-      console.log(path,)
       results.push({ path, url: publicUrl });
     }
     return results;
   }
 
   // category toggle
-  function toggleCategory(id) {
+  function toggleCategory(c) {
+    console.log(c, selectedCats)
     setSelectedCats((prev) => {
-      const has = prev.includes(id);
-      if (has) return prev.filter((c) => c !== id);
+      const has = prev.find(p=> p.id === c.id)
+      if (has) return prev.filter((p) => p.id !== c.id);
       if (prev.length >= 3) {
         // subtle UX: small non-blocking warning
         return prev;
       }
-      return [...prev, id];
+      return [...prev, c];
     });
   }
 
   async function onSubmit(values) {
+    console.log(values)
     setUploading(true);
     try {
       // upload files that are real File objects
@@ -252,6 +255,7 @@ function ModalImpl({ resolvePromise, options = {} }) {
       };
 
       let createdOrUpdated = null;
+      console.log(initialProduct)
       if (initialProduct?.id) {
         // update flow
         if (typeof onUpdateProduct === "function") {
@@ -295,7 +299,8 @@ function ModalImpl({ resolvePromise, options = {} }) {
           </button>
         </div>
 
-        <form onSubmit={handleSubmit(onSubmit)} className="p-4 space-y-4">
+        <form 
+           className="p-4 space-y-4">
           <div>
             <label className="block text-sm font-medium">Product name</label>
             <input {...register("name")} className="mt-2 w-full border rounded-lg p-3 focus:ring-2 focus:ring-sky-200" disabled={uploading} />
@@ -308,14 +313,14 @@ function ModalImpl({ resolvePromise, options = {} }) {
               <input {...register("price")} type="number" step="0.01" className="mt-2 w-full border rounded-lg p-3 focus:ring-2 focus:ring-sky-200" disabled={uploading} />
               {errors.price && <p className="text-xs text-red-600 mt-1">{errors.price.message}</p>}
             </div>
-            <div>
+            {/* <div>
               <label className="block text-sm font-medium">Discount price</label>
               <input {...register("discountPrice")} type="number" step="0.01" className="mt-2 w-full border rounded-lg p-3 focus:ring-2 focus:ring-sky-200" disabled={uploading} />
               {errors.discountPrice && <p className="text-xs text-red-600 mt-1">{errors.discountPrice.message}</p>}
-            </div>
+            </div> */}
              <div>
               <label className="block text-sm font-medium">Available</label>
-              <input {...register("available")} type="number" step="1" min="0" className="mt-2 w-full border rounded-lg p-3 focus:ring-2 focus:ring-sky-200" disabled={uploading} />
+              <input {...register("available")} type="number" step="1" min="1" className="mt-2 w-full border rounded-lg p-3 focus:ring-2 focus:ring-sky-200" disabled={uploading} />
               {errors.available && <p className="text-xs text-red-600 mt-1">{errors.available.message}</p>}
             </div>
           </div>
@@ -334,12 +339,13 @@ function ModalImpl({ resolvePromise, options = {} }) {
                 <div className="text-sm text-gray-400 px-2 py-1">No categories available</div>
               ) : (
                 categories.map((c) => {
-                  const active = selectedCats.includes(c.name);
+                  const active = selectedCats.find(cat=> cat.id === c.id)
+                  // console.log(active, selectedCats)
                   return (
                     <button
                       key={c.id}
                       type="button"
-                      onClick={() => toggleCategory(c.id)}
+                      onClick={() => toggleCategory(c)}
                       className={`select-none transition inline-flex items-center gap-2 px-3 py-1 rounded-full text-sm border ${
                         active
                           ? "bg-gradient-to-r from-sky-600 to-indigo-600 text-white shadow"
@@ -354,9 +360,9 @@ function ModalImpl({ resolvePromise, options = {} }) {
                 })
               )}
             </div>
-            <div className="text-xs text-muted-foreground mt-2">Selected: {selectedCats.length ? selectedCats.map(id => {
-              const found = categories.find(c => String(c.id) === String(id));
-              return found ? found.name : String(id).slice(0,8);
+            <div className="text-xs text-muted-foreground mt-2">Selected: {selectedCats.length ? selectedCats.map(cat => {
+            
+              return cat.name;
             }).join(", ") : "—"}</div>
           </div>
 
@@ -388,7 +394,7 @@ function ModalImpl({ resolvePromise, options = {} }) {
 
           <div className="flex items-center justify-end gap-3 pt-2 border-t">
             <button type="button" onClick={onCancel} className="px-4 py-2 rounded-md bg-white border hover:bg-gray-50" disabled={uploading}>Cancel</button>
-            <button type="submit" disabled={isSubmitting || uploading} className="px-4 py-2 rounded-md bg-sky-600 text-white hover:bg-sky-700">
+            <button type="button" onClick={handleSubmit(onSubmit)} disabled={isSubmitting || uploading} className="px-4 py-2 rounded-md bg-sky-600 text-white hover:bg-sky-700">
               {uploading ? "Uploading..." : (initialProduct ? "Save changes" : "Save product")}
             </button>
           </div>

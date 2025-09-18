@@ -4,6 +4,8 @@ import DashboardLayout from "../../components/dashboardComponents/dashboardLayou
 import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ChevronDown, ChevronUp, CheckCircle2 } from "lucide-react";
 import SalesGraph from "../../components/salesGraph";
@@ -24,6 +26,7 @@ export default function DashboardPage({user,store,hasStore}){
      order: null,
      customer: null,
     });
+    const [loading,setLoading] = useState(false)
     
   useEffect(() => {
     if (store) {
@@ -36,6 +39,7 @@ export default function DashboardPage({user,store,hasStore}){
 
 
   const fetchDashboardInfo = async () => {
+    setLoading(true)
     try {
       const [prodRes, orderRes, custRes] = await Promise.all([
         fetch(`api/products?page=1&limit=10&storeId=${store?.id}&sort_by=created_at&sort_dir=desc`),
@@ -59,6 +63,8 @@ export default function DashboardPage({user,store,hasStore}){
     } catch (err) {
       toast.error('Something went wrong, Try Again')
       console.error("fetchDashboardInfo error:", err);
+    }finally{
+      setLoading(false)
     }
   };
 
@@ -123,14 +129,15 @@ export default function DashboardPage({user,store,hasStore}){
 
             {/* Charts Section */}
 
-            <SalesGraph dashboardInfo={dashboardInfo} store={store} />
+            <SalesGraph dashboardInfo={dashboardInfo} store={store} loading={loading} />
           </>
         )}
         {/* Onboarding Section */}
         {
           // completed.length < 3
-          true
-            &&
+          loading
+          ?
+          <Skeleton className='w-full  bg-white h-64'/> :
         <Card>
           <CardHeader>
             <CardTitle className="text-xl">Get ready to sell</CardTitle>
@@ -191,7 +198,8 @@ export default function DashboardPage({user,store,hasStore}){
               </div>
             ))}
           </CardContent>
-        </Card>
+        </Card> 
+        
         }
 
         {/* Feature Cards (always visible) */}
