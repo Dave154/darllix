@@ -158,7 +158,7 @@ export  function BannerUploader({ currentUrl, onUploaded, bucket = "store-assets
       if (userErr || !userData?.user) {
         throw new Error("You must be signed in to upload a banner.");
       }
-      console.log(userData)
+      console.log(userData.id)
       const userId = userData.id
       const safeName = f.name.replace(/\s+/g, "_");
       const path = `${userId}/banners/${Date.now()}-${Math.random().toString(36).slice(2, 8)}-${safeName}`;
