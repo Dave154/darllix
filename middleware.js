@@ -14,8 +14,7 @@ export function middleware(req) {
   // Root domain or local root → dashboard
   if (cleanHost === rootDomain || cleanHost.endsWith(".vercel.app") || isLocalhostRoot) {
     if (url.pathname === "/") {
-      url.pathname = "/dashboard";
-      return NextResponse.redirect(url);
+     return NextResponse.redirect(new URL("/dashboard", req.url));
     }
     return NextResponse.next();
   }
