@@ -17,6 +17,7 @@ export default function ProfilePage() {
   const [loading, setLoading] = useState(false);
   const [editing, setEditing] = useState(false);
   const [form, setForm] = useState({});
+  const [creating,setCreating]= useState(false)
 
   // banks state
   const [banks, setBanks] = useState([]);
@@ -26,7 +27,25 @@ export default function ProfilePage() {
 const [initialized, setInitialized] = useState(false);
 
 useEffect(() => {
-  if (!user?.profile) return;
+  if (!user?.profile) {
+    console.log(user)
+    setCreating(true)
+    setEditing(true)
+    setProfile({})
+    setForm({
+          id: user?.user?.id,
+          email: user?.user?.user_metadata.email,
+          full_name: '',
+          account_name: '',
+          bank_name: '',
+          // account_number: values.account_number,
+          // phone: values.phone,
+
+    })
+
+    
+
+  }else{setEditing(false)}
   if (initialized) return;
   if (editing) return;
 
@@ -78,7 +97,40 @@ const handleChange = (e) => {
     setForm({ ...form, bank_name: e.target.value, bank_code: code });
   };
 
+  
+  const onSubmit = async () => {
+    
+      if (!user.user || !user.user.id) {
+        console.error("User or user ID not available. Cannot submit profile.");
+        return; 
+      }
+      try {
+          setLoading(true);
+          const payload = { ...form };
+          
+          const { error } = await supabase.from("profiles").insert([
+            payload
+          ]);
+          
+          if (error) throw error;
+          setCreating(false)
+          toast.success("Profile Created Successfully")
+
+          // router.push("/dashboard");
+
+        } catch (err) {
+          console.error(err);
+          toast.error("Failed to create profile")
+    } finally {
+      setLoading(false);
+    }
+  };
   const handleSave = async () => {
+
+    if (creating){
+      onSubmit()
+      return;
+    }
     if (!user.user || !user.user.id) {
       console.error('User or user ID not available. Cannot update profile.');
       return;
@@ -102,8 +154,9 @@ const handleChange = (e) => {
       setLoading(false);
     }
   };
+  
 
-  if (!profile) {
+  if (!profile  && !creating) {
     return (
       <DashboardLayout>
         <div className="p-6 space-y-6">
@@ -157,7 +210,7 @@ const handleChange = (e) => {
 
           <div className="mb-6">
             <Avatar className="w-24 h-24 text-2xl font-bold bg-black text-white shadow-md">
-              <AvatarFallback className="bg-black">{getInitials(profile.full_name)}</AvatarFallback>
+              <AvatarFallback className="bg-black">{getInitials(profile?.full_name)}</AvatarFallback>
             </Avatar>
           </div>
 
@@ -214,3 +267,6 @@ const handleChange = (e) => {
     </>
   );
 }
+
+
+

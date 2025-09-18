@@ -430,7 +430,10 @@ async function publish() {
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
               <Ghost onClick={saveDraft} className="w-full sm:w-auto">Save draft</Ghost>
               <div className="flex w-full sm:w-auto gap-2">
-                  <CTA onClick={next} className="flex-1 sm:flex-none">Continue</CTA>
+                  <CTA onClick={()=>{
+                    next()
+                    next()
+                  }} className="flex-1 sm:flex-none">Continue</CTA>
 
               </div>
             </div>
@@ -697,7 +700,7 @@ async function publish() {
           <div className="bg-white rounded-2xl p-4 sm:p-6 shadow-md">
             <div className="flex items-center justify-between mb-4">
               <div>
-                <div className="text-sm text-gray-500">Step {step + 1} of 4</div>
+                <div className="text-sm text-gray-500">Step { editing ? step + 1 : step === 0 ? 1 : step  } of {!editing? 3 : 4}</div>
                 <h2 className="text-lg sm:text-xl font-bold">{["Details", "Products", "Customize", "Launch"][step]}</h2>
               </div>
             </div>

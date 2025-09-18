@@ -101,7 +101,7 @@ export default function CallbackPage() {
       console.log('test')
       if (error) {
         console.error("Auth error:", error.message);
-        router.replace("/auth/login?error=auth");
+        router.replace("/auth/login");
         setLoading(false);
         return;
       }
@@ -124,7 +124,7 @@ export default function CallbackPage() {
         console.log(profile)
         router.replace("/dashboard");
       } else {
-        router.replace("/create-profile");
+        router.replace("/dashboard/profile");
       }
       }catch (error){
           console.log(error)

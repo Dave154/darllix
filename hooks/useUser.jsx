@@ -35,13 +35,13 @@ export function useUser() {
         if (error) {
           // Handle "no rows found" separately
           if (error.code === "PGRST116" || error.message.includes("No rows")) {
-            router.replace("/auth/create-profile");
+            router.replace("/dashboard/profile");
           } else {
             toast.error("Something went wrong. Please try again.");
           }
         } else if (!data) {
           // No profile row exists
-          router.replace("/auth/create-profile");
+          router.replace("/dashboard/profile");
         } else {
           setProfile(data);
         }
