@@ -210,7 +210,7 @@ export default function DashboardPage({user,store,hasStore}){
               <p className="text-sm text-gray-600 mb-2">
                 Make extra sales when you promote your business to our shoppers.
               </p>
-              <Button>Join Now</Button>
+              <Button variant='outline'>Coming soon</Button>
             </CardContent>
           </Card>
           <Card>
@@ -228,7 +228,7 @@ export default function DashboardPage({user,store,hasStore}){
               <p className="text-sm text-gray-600 mb-2">
                 Lorem ipsum dolor sit amet consectetur, adipisicing elit. Est, pariatur.
               </p>
-              <Button variant="">Coming Soon</Button>
+              <Button variant="" onClick={()=>router.push('/dashboard/finance')}>Start now</Button>
             </CardContent>
           </Card>
         </div>

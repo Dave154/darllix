@@ -272,7 +272,12 @@ export default function StoreCreator({ hasStore, store,onDone }) {
   const [showPreview, setShowPreview] = useState(true);
   const [editing, setEditing]= useState(false)
   const router = useRouter()
+  const {user}= useUser()
+  
 
+  // useEffect(()=>{
+  //       console.log(user)
+  // },[user])
 
 const fetchProducts = useCallback(
   async (opts = {}) => {
@@ -285,7 +290,7 @@ const fetchProducts = useCallback(
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch(`/api/products?page=1&limit=10&storeId=98241e12-4b20-4eda-8ce8-a37413873955&sort_by=created_at&sort_dir=desc`, {
+      const res = await fetch(`/api/products?page=1&limit=10&storeId=${store.id}&sort_by=created_at&sort_dir=desc`, {
         credentials: "same-origin",
       });
       if (!res.ok) {
@@ -295,6 +300,7 @@ const fetchProducts = useCallback(
       const json = await res.json();
       setProducts(json.products || []);
       setCategories(json.categories || []); 
+      console.log(json.categories)
       setTotal(json.total || 0);
     } catch (err) {
       console.error("fetchProducts", err);
@@ -350,7 +356,8 @@ useEffect(() => {
 
   async function saveDraft() {
     const values = getValues();
-    const payload = { ...values, products };
+
+    const payload = { ...values, products};
     try {
       const res = await fetch(`/api/stores/save`, {
         method: "POST",

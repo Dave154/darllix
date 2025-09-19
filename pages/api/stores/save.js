@@ -26,6 +26,7 @@ export default async function handler(req, res) {
   // Normalize payload
   const payload = {
     owner_id: user.id,
+    store_email:user.email,
     name: store.name?.trim() || null,
     subdomain: store.subdomain?.trim() || null,
     description: store.description || null,
