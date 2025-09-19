@@ -41,7 +41,7 @@ export default function CheckoutStepper({ step }) {
                     isActive
                       ? "text-black"
                       : isCompleted
-                      ? "text-green-600"
+                      ? "text-color2"
                       : "text-gray-400"
                   )}
                 >
