@@ -27,6 +27,7 @@ export function middleware(req) {
   }
 
   // Subdomain handling — only if it's NOT the root domain
+  console.log(cleanHost)
 if (
   (cleanHost.endsWith(`.${rootDomain}`) &&
     cleanHost !== rootDomain &&
