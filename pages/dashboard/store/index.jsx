@@ -431,7 +431,7 @@ async function publish() {
               <label className="block text-sm font-medium">Subdomain</label>
               <div className="flex items-center gap-2 mt-2">
                 <input {...register("subdomain")} disabled={editing} className="flex-1 border rounded-lg p-3" />
-                <span className="text-sm text-gray-500">.darllix.shop</span>
+                <span className="text-xs sm:text-sm text-gray-500">.darllix.shop</span>
               </div>
               {!editing && (
               <div className="mt-2 text-xs">
@@ -451,7 +451,7 @@ async function publish() {
             </div>
 
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-              <Ghost onClick={saveDraft} className="w-full sm:w-auto">Save draft</Ghost>
+              {/* <Ghost onClick={saveDraft} className="w-full sm:w-auto">Save draft</Ghost> */}
               <div className="flex w-full sm:w-auto gap-2">
                   <CTA onClick={()=>{
                     next()
@@ -491,7 +491,7 @@ async function publish() {
               <div className="flex flex-col sm:flex-row justify-between mt-4 gap-3">
                 <Ghost onClick={prev} className="w-full sm:w-auto">Back</Ghost>
                 <div className="flex w-full sm:w-auto gap-2">
-                  <Ghost onClick={saveDraft} className="w-full sm:w-auto">Save draft</Ghost>
+                  {/* <Ghost onClick={saveDraft} className="w-full sm:w-auto">Save draft</Ghost> */}
                   <CTA onClick={next} className="flex-1 sm:flex-none">Continue</CTA>
                 </div>
               </div>
@@ -553,7 +553,7 @@ async function publish() {
             <div className="flex flex-col sm:flex-row justify-between mt-4 gap-3">
               <Ghost onClick={prev} className="w-full sm:w-auto">Back</Ghost>
               <div className="flex w-full sm:w-auto gap-2">
-                <Ghost onClick={saveDraft} className="w-full sm:w-auto">Save draft</Ghost>
+                {/* <Ghost onClick={saveDraft} className="w-full sm:w-auto">Save draft</Ghost> */}
                 <CTA onClick={next} className="flex-1 sm:flex-none">Continue</CTA>
               </div>
             </div>
@@ -588,7 +588,7 @@ async function publish() {
             <div className="flex flex-col sm:flex-row justify-between mt-4 gap-3">
               <Ghost onClick={prev} className="w-full sm:w-auto">Back</Ghost>
               <div className="flex w-full sm:w-auto gap-2">
-                <Ghost onClick={saveDraft} className="w-full sm:w-auto">Save draft</Ghost>
+                {/* <Ghost onClick={saveDraft} className="w-full sm:w-auto">Save draft</Ghost> */}
                 <CTA onClick={publish} className="flex-1 sm:flex-none"><Loader2 className="w-4 h-4" /> Launch store</CTA>
               </div>
             </div>
