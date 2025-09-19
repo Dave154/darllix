@@ -97,7 +97,7 @@ export function CartDrawer({children}) {
                                 </button>
                                 </div>
                             <Image 
-                                src={product.images[0].url}
+                                src={product?.images[0]?.url}
                                 alt="product image"
                                 width={1000}
                                 height={1000}
