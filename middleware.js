@@ -47,40 +47,40 @@
 //   ],
 // };
 // middleware.js
+
 import { NextResponse } from "next/server";
+
 export function middleware(req) {
+  const url = req.nextUrl.clone();
   const hostname = req.headers.get("host") || "";
   const cleanHost = hostname.split(":")[0];
 
   const rootDomain = "darllix.shop";
-  const isLocalhostRoot =
-    cleanHost === "localhost" || cleanHost === "127.0.0.1";
-  const isLocalhostSub =
-    cleanHost.endsWith(".localhost") || cleanHost.endsWith(".127.0.0.1");
+  const isLocalhostRoot = cleanHost === "localhost" || cleanHost === "127.0.0.1";
+  const isLocalhostSub = cleanHost.endsWith(".localhost") || cleanHost.endsWith(".127.0.0.1");
 
-  // Root domain or Vercel preview → dashboard redirect
-  if (
-    cleanHost === rootDomain ||
-    cleanHost.endsWith(".vercel.app") ||
-    isLocalhostRoot
-  ) {
-    if (req.nextUrl.pathname === "/") {
-      return NextResponse.redirect(new URL("/dashboard", req.url));
+  // Root domain or Vercel preview → dashboard
+  if (cleanHost === rootDomain || cleanHost.endsWith(".vercel.app") || isLocalhostRoot) {
+    if (url.pathname === "/") {
+      url.pathname = "/dashboard";
+      return NextResponse.redirect(url);
     }
     return NextResponse.next();
   }
 
-  // Subdomain handling
-  if (cleanHost.endsWith(`.${rootDomain}`) || isLocalhostSub) {
+  // Subdomain handling — only if it's NOT the root domain
+  if (
+    (cleanHost.endsWith(`.${rootDomain}`) && cleanHost !== rootDomain) ||
+    isLocalhostSub
+  ) {
     const subdomain = isLocalhostSub
       ? cleanHost.replace(".localhost", "").replace(".127.0.0.1", "")
       : cleanHost.replace(`.${rootDomain}`, "");
 
     if (subdomain && subdomain.trim() !== "") {
-      const rewriteUrl = new URL(req.url);
-      rewriteUrl.pathname = `/storefront${rewriteUrl.pathname}`;
-      rewriteUrl.searchParams.set("store", subdomain);
-      return NextResponse.rewrite(rewriteUrl);
+      url.searchParams.set("store", subdomain);
+      url.pathname = `/storefront${url.pathname}`;
+      return NextResponse.rewrite(url);
     }
   }
 
