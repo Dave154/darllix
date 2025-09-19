@@ -96,13 +96,16 @@ export default function PaymentPage({ store }) {
             buyer_email: checkoutData.email,
             order_amount: total,
           });
- await sendEmail(EMAIL_TEMPLATES.orderSeller, {
-            order_id: orderId,
-            seller_email: store.store_email,
-            order_amount: subtotal,
-            buyer_name: checkoutData.firstName,
+          if(store?.store_email){
 
-          });
+            await sendEmail(EMAIL_TEMPLATES.orderSeller, {
+                       order_id: orderId,
+                       seller_email: store.store_email,
+                       order_amount: subtotal,
+                       buyer_name: checkoutData.firstName,
+           
+                     });
+          }
 
          
       router.push(`/payment-success?order_id=${orderId}&ref=${response.reference}`);
