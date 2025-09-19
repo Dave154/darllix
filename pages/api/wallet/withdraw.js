@@ -79,7 +79,6 @@ export default async function handler(req, res) {
     .eq("id", user.id)
     .select("available_balance")
     .single();
-
   if (updateProfileError) {
     return res.status(400).json({ message: updateProfileError.message });
   }

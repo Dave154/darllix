@@ -44,6 +44,7 @@ import { withAuth } from "@/lib/withAuth";
 import AreYouSureModal from "@/components/dashboardComponents/areYouSure";
 import { BsPeople } from "react-icons/bs";
 import OrderPage from "../../../components/dashboardComponents/orderPage";
+import { toast } from "sonner";
 
 export default function OrdersPage({ store, hasStore }) {
   const router = useRouter();

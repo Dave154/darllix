@@ -33,9 +33,9 @@ export default function StorefrontDynamic({ store, slug }) {
   }, [router.events]);
 
   // Determine what to render based on store, slug and pathname
+  
   let content = null;
 
-  console.log(slug)
   if (!store && slug[0] === "storefront") {
     content = <Global404 />;
   } else if (slug[0] === "storefront" && pathname.startsWith("/payment-success")) {
@@ -78,7 +78,6 @@ export default function StorefrontDynamic({ store, slug }) {
 }
 
 import { getSupabaseServer } from "../../lib/supabaseClient";
-import { toast } from "sonner";
 
 export async function getServerSideProps({ params, req, res }) {
   const slug = params.slug

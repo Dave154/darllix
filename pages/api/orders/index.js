@@ -229,7 +229,7 @@ if (req.method === "GET") {
   if (store_id) qb = qb.eq("store_id", store_id);
   if (status) qb = qb.eq("status", status);
 
-  // --- ✅ universal search (q) ---
+  
   if (q) {
     const isUuid = /^[0-9a-fA-F-]{36}$/.test(q);
     if (isUuid) {
@@ -313,10 +313,10 @@ if (req.method === "GET") {
       if (!order?.id) return res.status(400).json({ error: "Order id required" });
 
       // ensure user owns store for this order
-      const { data: orderRow } = await admin.from("orders").select("id, store_id").eq("id", order.id).maybeSingle();
+      const { data: orderRow } = await admin.from("orders").select("id, store_id, total").eq("id", order.id).maybeSingle();
       if (!orderRow) return res.status(404).json({ error: "Order not found" });
 
-      const { data: storeRow } = await admin.from("stores").select("owner_id").eq("id", orderRow.store_id).maybeSingle();
+      const { data: storeRow } = await admin.from("stores").select("owner_id,sell_save_percentage,sell_save_balance").eq("id", orderRow.store_id).maybeSingle();
       if (!storeRow || storeRow.owner_id !== user.id) return res.status(403).json({ error: "Forbidden" });
 
       const updatePayload = {
@@ -327,9 +327,49 @@ if (req.method === "GET") {
         updated_at: new Date().toISOString(),
       };
       if (order.status === "delivered") {
-        updatePayload.delivered_at = order.delivered_at ?? new Date().toISOString();
+  updatePayload.delivered_at = order.delivered_at ?? new Date().toISOString();
   updatePayload.completed_at = order.completed_at ?? new Date().toISOString();
+  //
+   const saved = (storeRow.sell_save_percentage / 100) * orderRow.total
+   const newSellSaveBalance = storeRow.sell_save_balance + saved;
+    const storeId = storeRow.owner_id
+//
+  const { error: updateStoreError } = await supabase
+    .from("stores")
+    .update({
+      sell_save_balance: newSellSaveBalance,
+    })
+    .eq("id", storeId);
  
+    if (updateStoreError) {
+        return res.status(400).json({ message: updateStoreError.message });
+      }
+//get previous balance
+    const { data: profile, error: profileError } = await supabase
+    .from("profiles")
+    .select("available_balance")
+    .eq("id", user.id)
+    .single();
+
+  if (profileError || !profile) {
+    return res.status(404).json({ message: "Profile not found" });
+  }
+//update available balance
+    const amount = orderRow.total - saved;
+    const newProfileBalance = (profile.available_balance || 0) + amount;
+    const { data: updatedProfile, error: updateProfileError } = await supabase
+    .from("profiles")
+    .update({
+      available_balance: newProfileBalance,
+    })
+    .eq("id", user.id)
+    .select("available_balance")
+    .single();
+
+  if (updateProfileError) {
+    return res.status(400).json({ message: updateProfileError.message });
+  }
+
 }
 
       const { data: updated, error: updErr } = await admin

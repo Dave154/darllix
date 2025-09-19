@@ -30,6 +30,7 @@ import Image from "next/image";
 import { toast, Toaster } from "sonner";
 import { useSupabaseClient } from "@supabase/auth-helpers-react";
 import { useUser } from "../../hooks/useUser";
+import { withAuth } from "../../lib/withAuth";
 
 const menuItems = [
   { title: "Dashboard", icon: Home, href: "/dashboard" },
@@ -68,6 +69,7 @@ const [withdrawing,setWithdrawing]= useState(false)
       router.events.off("routeChangeError", handleStop);
     };
   }, [router]);
+
     const getInitials = (name) => {
     if (!name) return "?";
     const parts = name.trim().split(" ");
@@ -419,3 +421,5 @@ function SidebarContent({ openStore, setOpenStore, setMobileOpen }) {
     </nav>
   );
 }
+
+export const getServerSideProps = withAuth();

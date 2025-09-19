@@ -11,14 +11,13 @@ export default async function handler(req, res) {
 
     const admin = supabaseAdmin();
 
-    // find orders: delivered_at <= now() - interval '3 days' AND payout_released = false
-    // also ensure payment_verified true (only release if payment verified)
+   
     const query = admin
       .from("orders")
       .select("id, store_id, total, buyer_id, buyer_name")
       .eq("payout_released", false)
-      .lte("delivered_at", new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString()) // delivered_at <= now()-3d
-      .is("delivered_at", null) // this line would be wrong; we'll instead filter for not null; see below
+      .lte("delivered_at", new Date(Date.now() -  60 * 60 * 1000).toISOString()) // delivered_at <= now()-3d
+      .is("delivered_at", null)
       ;
 
     // Supabase PostgREST query must check not null - we'll build using RPC-like approach:
@@ -27,7 +26,7 @@ export default async function handler(req, res) {
       .select("id, store_id, total, buyer_id, buyer_name, delivered_at")
       .eq("payout_released", false)
       .not("delivered_at", "is", null)
-      .lte("delivered_at", new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString());
+      .lte("delivered_at", new Date(Date.now() -  60 * 60 * 1000).toISOString());
 
     if (err) {
       console.error("release: fetch orders error", err);
@@ -37,7 +36,7 @@ export default async function handler(req, res) {
       return res.status(200).json({ released: 0, summary: [], message: "No payouts to release" });
     }
 
-    // We need to map store -> owner profile id. Fetch store owners
+    //
     const storeIds = [...new Set(orders.map((o) => o.store_id))];
     const { data: stores, error: storesErr } = await admin
       .from("stores")

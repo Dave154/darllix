@@ -616,9 +616,9 @@ async function publish() {
             <h1 className="text-xl md:text-2xl font-semibold">My Store</h1>
             {hasStore && (
               <div className="flex items-center gap-2">
-                <Button variant="outline" className="hidden sm:inline-flex gap-2">
+                {/* <Button variant="outline" className="hidden sm:inline-flex gap-2">
                   <BsRecord2Fill className="h-4 w-4" /> Live Preview
-                </Button>
+                </Button> */}
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button variant="outline" className="gap-2">
@@ -641,6 +641,24 @@ async function publish() {
                   <p className="text-[11px] text-muted-foreground mt-1"> {products.map(p=> p.available > 0).length} </p>
                 </CardContent>
               </Card>
+               <Card className="border-dashed">
+               <CardContent  className="py-3">
+                  
+              <div className=" flex items-center justify-between">
+                <div>
+                  <div className="text-xs text-gray-500">Live store</div>
+                  <div className="font-semibold">{store?.subdomain ? `${store?.subdomain}.darllix.shop` : "Not live"}</div>
+                </div>
+                <div>
+                  {
+                     store?.subdomain &&
+                  <Ghost onClick={() => window.open(`https://${store?.subdomain}.darllix.shop`, "_blank")}>Open</Ghost>
+                  }
+                </div>
+              </div>
+                </CardContent>
+               </Card>
+
               
             </div>
              {/* <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -759,16 +777,22 @@ async function publish() {
 
             <div className="grid grid-cols-1 gap-3">
               <MiniStat icon={<Tag />} label="Products" value={products?.length || 0} />
-              <MiniStat icon={<Edit3 />} label="Theme" value={getValues().theme?.primary} />
+              {/* <MiniStat icon={<Edit3 />} label="Theme" value={getValues().theme?.primary} /> */}
+              {
+                            editing &&
               <div className="p-3 bg-white rounded-xl shadow-sm flex items-center justify-between">
                 <div>
                   <div className="text-xs text-gray-500">Live store</div>
                   <div className="font-semibold">{getValues().subdomain ? `${getValues().subdomain}.darllix.shop` : "Not live"}</div>
                 </div>
                 <div>
-                  <Ghost onClick={() => window.open(`http://${getValues().subdomain}.darllix.shop`, "_blank")}>Open</Ghost>
+
+                          
+
+                  <Ghost onClick={() => window.open(`https://${getValues().subdomain}.darllix.shop`, "_blank")}>Open</Ghost>
                 </div>
               </div>
+                          }
             </div>
           </div>
         </motion.div>
