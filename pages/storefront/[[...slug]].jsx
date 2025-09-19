@@ -78,6 +78,7 @@ import { toast } from "sonner";
 
 export async function getServerSideProps({ params, req, res }) {
   const slug = params.slug
+  console.log(slug,req.headers.host)
   if(!slug){
      return { notFound: true };
   }
