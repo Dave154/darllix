@@ -91,10 +91,17 @@ export default function PaymentPage({ store }) {
       const orderId = verifyJson.order?.id || response.metadata?.orderId || response.reference;
       toast.success("Payment successful")
             await sendEmail(EMAIL_TEMPLATES.orderBuyer, {
-            buyer_name: "John",
+            buyer_name: checkoutData.firstName,
             order_id: orderId,
             buyer_email: checkoutData.email,
             order_amount: total,
+          });
+ await sendEmail(EMAIL_TEMPLATES.orderSeller, {
+            order_id: orderId,
+            seller_email: store.store_email,
+            order_amount: subtotal,
+            buyer_name: checkoutData.firstName,
+
           });
 
          
