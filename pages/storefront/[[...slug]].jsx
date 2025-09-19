@@ -51,8 +51,10 @@ export default function StorefrontDynamic({ store, slug }) {
   } else if (slug[0] === "storefront" && pathname.startsWith("/product/")) {
     const productId = pathname.split("/")[2];
     content = <ProductPage store={store} productId={productId} />;
-  } else {
+  } else if(slug[0] === "storefront") {
     content = <StoreFront404 store={store} />;
+  }else{
+    window.location.reload(true)
   }
 
 
