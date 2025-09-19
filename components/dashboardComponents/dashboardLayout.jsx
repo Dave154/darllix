@@ -161,7 +161,7 @@ async function handleWithdraw() {
                 strokeWidth={2}
                 d="M21 21l-4.35-4.35m0 0A7.5 7.5 0 1116.65 16.65z"
               />
-            </svg>/
+            </svg>
           </div>
         </div> */}
 
