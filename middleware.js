@@ -27,23 +27,22 @@ export function middleware(req) {
   }
 
   // Subdomain handling — only if it's NOT the root domain
-  if (
-    (cleanHost.endsWith(`.${rootDomain}`) && cleanHost !== rootDomain) ||
-    isLocalhostSub
-  ) {
-    const subdomain = isLocalhostSub
-      ? cleanHost.replace(".localhost", "").replace(".127.0.0.1", "")
-      : cleanHost.replace(`.${rootDomain}`, "");
+if (
+  (cleanHost.endsWith(`.${rootDomain}`) &&
+    cleanHost !== rootDomain &&
+    !cleanHost.startsWith("www.")) ||
+  isLocalhostSub
+) {
+  const subdomain = isLocalhostSub
+    ? cleanHost.replace(".localhost", "").replace(".127.0.0.1", "")
+    : cleanHost.replace(`.${rootDomain}`, "");
 
-    console.log("→ SUBDOMAIN BRANCH", { subdomain });
-
-    if (subdomain && subdomain.trim() !== "") {
-      url.searchParams.set("store", subdomain);
-      url.pathname = `/storefront${url.pathname}`;
-      console.log("Rewriting to", url.toString());
-      return NextResponse.rewrite(url);
-    }
+  if (subdomain && subdomain.trim() !== "") {
+    url.searchParams.set("store", subdomain);
+    url.pathname = `/storefront${url.pathname}`;
+    return NextResponse.rewrite(url);
   }
+}
 
   console.log("→ FALLBACK NEXT()");
   return NextResponse.next();
