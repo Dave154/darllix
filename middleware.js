@@ -19,17 +19,17 @@ export function middleware(req) {
     return NextResponse.next();
   }
 
-  // Real subdomains only
-  if (cleanHost.endsWith(`.${rootDomain}`) && !allowedRootHosts.includes(cleanHost)) {
-    const subdomain = cleanHost.replace(`.${rootDomain}`, "");
-    if (subdomain) {
-      url.searchParams.set("store", subdomain);
-      url.pathname = `/storefront${url.pathname}`;
-      return NextResponse.rewrite(url);
-    }
-  }
+  // // Real subdomains only
+  // if (cleanHost.endsWith(`.${rootDomain}`) && !allowedRootHosts.includes(cleanHost)) {
+  //   const subdomain = cleanHost.replace(`.${rootDomain}`, "");
+  //   if (subdomain) {
+  //     url.searchParams.set("store", subdomain);
+  //     url.pathname = `/storefront${url.pathname}`;
+  //     return NextResponse.rewrite(url);
+  //   }
+  // }
 
-  return NextResponse.next();
+  // return NextResponse.next();
 }
 
 export const config = {
