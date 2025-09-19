@@ -48,25 +48,23 @@
 // };
 // middleware.js
 import { NextResponse } from "next/server";
-
 export function middleware(req) {
-  const url = req.nextUrl.clone();
   const hostname = req.headers.get("host") || "";
   const cleanHost = hostname.split(":")[0];
 
   const rootDomain = "darllix.shop";
-  const isLocalhostRoot = cleanHost === "localhost" || cleanHost === "127.0.0.1";
-  const isLocalhostSub = cleanHost.endsWith(".localhost") || cleanHost.endsWith(".127.0.0.1");
-
- console.log("Middleware:", {
-  hostname,
-  pathname: url.pathname,
-  original: req.nextUrl.pathname
-});
+  const isLocalhostRoot =
+    cleanHost === "localhost" || cleanHost === "127.0.0.1";
+  const isLocalhostSub =
+    cleanHost.endsWith(".localhost") || cleanHost.endsWith(".127.0.0.1");
 
   // Root domain or Vercel preview → dashboard redirect
-  if (cleanHost === rootDomain || cleanHost.endsWith(".vercel.app") || isLocalhostRoot) {
-    if (url.pathname === "/") {
+  if (
+    cleanHost === rootDomain ||
+    cleanHost.endsWith(".vercel.app") ||
+    isLocalhostRoot
+  ) {
+    if (req.nextUrl.pathname === "/") {
       return NextResponse.redirect(new URL("/dashboard", req.url));
     }
     return NextResponse.next();
@@ -79,9 +77,10 @@ export function middleware(req) {
       : cleanHost.replace(`.${rootDomain}`, "");
 
     if (subdomain && subdomain.trim() !== "") {
-      url.searchParams.set("store", subdomain);
-      url.pathname = `/storefront${url.pathname}`;
-      return NextResponse.rewrite(url);
+      const rewriteUrl = new URL(req.url);
+      rewriteUrl.pathname = `/storefront${rewriteUrl.pathname}`;
+      rewriteUrl.searchParams.set("store", subdomain);
+      return NextResponse.rewrite(rewriteUrl);
     }
   }
 
