@@ -15,8 +15,9 @@ export function middleware(req) {
     search: url.search,
   });
 
+  console.log(cleanHost)
   // Root domain or Vercel preview → dashboard
-  if (cleanHost === rootDomain || cleanHost.endsWith(".vercel.app") || isLocalhostRoot) {
+  if (cleanHost === rootDomain || cleanHost === 'www.darllix.shop' || cleanHost.endsWith(".vercel.app") || isLocalhostRoot) {
     console.log("→ ROOT / PREVIEW BRANCH");
     if (url.pathname === "/") {
       url.pathname = "/dashboard";
@@ -27,7 +28,6 @@ export function middleware(req) {
   }
 
   // Subdomain handling — only if it's NOT the root domain
-  console.log(cleanHost)
 if (
   (cleanHost.endsWith(`.${rootDomain}`) &&
     cleanHost !== rootDomain &&
