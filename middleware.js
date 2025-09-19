@@ -8,21 +8,18 @@ export function middleware(req) {
   const rootDomain = "darllix.shop";
   const allowedRootHosts = [rootDomain, `www.${rootDomain}`];
 
-  // Log for debugging in prod
   console.log("MIDDLEWARE HIT", {
     hostname,
     pathname: url.pathname,
     search: url.search,
   });
 
-  // 1. Root domain + preview deployments + localhost → normal app
   if (
     allowedRootHosts.includes(hostname) ||
     hostname.endsWith(".vercel.app") ||
     hostname === "localhost" ||
     hostname === "127.0.0.1"
   ) {
-    // Redirect root path → /dashboard
     if (url.pathname === "/") {
       url.pathname = "/dashboard";
       return NextResponse.redirect(url);
@@ -30,7 +27,8 @@ export function middleware(req) {
     return NextResponse.next();
   }
 
-  // 2. Real subdomains → storefront
+  console.log('SUBDOMAIN HIT')
+
   if (hostname.endsWith(`.${rootDomain}`)) {
     const subdomain = hostname.replace(`.${rootDomain}`, "");
 
@@ -41,13 +39,11 @@ export function middleware(req) {
     }
   }
 
-  // 3. Fallback → let Next.js handle it
   return NextResponse.next();
 }
 
 export const config = {
   matcher: [
-    // Match all paths except Next.js internals and static files
     "/((?!_next|api|static|.*\\..*|favicon.ico).*)",
   ],
 };
