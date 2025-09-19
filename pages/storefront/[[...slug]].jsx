@@ -54,6 +54,7 @@ export default function StorefrontDynamic({ store, slug }) {
   } else if(slug[0] === "storefront") {
     content = <StoreFront404 store={store} />;
   }else{
+    console.log(window.location, window.location.pathname)
     window.location.reload(true)
   }
 
