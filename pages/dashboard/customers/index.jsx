@@ -171,7 +171,7 @@ export default function CustomersPage({ store, hasStore }) {
     <TableHead>Name</TableHead>
     <TableHead>Email</TableHead>
     <TableHead>Phone</TableHead>
-    <TableHead>Orders</TableHead>
+    {/* <TableHead>Orders</TableHead> */}
     <TableHead>Actions</TableHead>
   </TableRow>
 </TableHeader>
@@ -190,9 +190,9 @@ export default function CustomersPage({ store, hasStore }) {
               <TableCell onClick={() => router.push(`/dashboard/customers?id=${c.id}`, undefined, { shallow: true })} className="cursor-pointer">
                 {c.phone}
               </TableCell>
-              <TableCell onClick={() => router.push(`/dashboard/customers?id=${c.id}`, undefined, { shallow: true })} className="cursor-pointer">
+              {/* <TableCell onClick={() => router.push(`/dashboard/customers?id=${c.id}`, undefined, { shallow: true })} className="cursor-pointer">
                 {c.orders_count ?? 0}
-              </TableCell>
+              </TableCell> */}
               <TableCell>
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>

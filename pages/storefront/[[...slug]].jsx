@@ -16,6 +16,7 @@ export default function StorefrontDynamic({ store, slug }) {
   const [pathname, setPath] = useState("");
   const router = useRouter();
 
+
   useEffect(() => {
     // Set immediately on mount
     setPath(window.location.pathname);
@@ -34,6 +35,7 @@ export default function StorefrontDynamic({ store, slug }) {
   // Determine what to render based on store, slug and pathname
   let content = null;
 
+  console.log(slug)
   if (!store && slug[0] === "storefront") {
     content = <Global404 />;
   } else if (slug[0] === "storefront" && pathname.startsWith("/payment-success")) {
@@ -54,7 +56,6 @@ export default function StorefrontDynamic({ store, slug }) {
   } else if(slug[0] === "storefront") {
     content = <StoreFront404 store={store} />;
   }else{
-    console.log(window.location, window.location.pathname)
     window.location.reload(true)
   }
 
@@ -81,17 +82,18 @@ import { toast } from "sonner";
 
 export async function getServerSideProps({ params, req, res }) {
   const slug = params.slug
-  console.log(slug,req.headers.host)
   if(!slug){
      return { notFound: true };
   }
   const host = req.headers.host || "";
   let subdomain = null;
-
+  
   if (host.endsWith(".darllix.shop") || host.endsWith(".darllix.vercel.app")) {
     subdomain = host.split(".")[0];
   } else if (host.endsWith(".localhost:3000")) {
     subdomain = host.split(".")[0];
+    console.log('hello',subdomain)
+    
   }
 
   if (!subdomain || subdomain === "www" || subdomain === "darllix") {
@@ -113,7 +115,7 @@ export async function getServerSideProps({ params, req, res }) {
     .maybeSingle();
 
   if (error) {
-        toast.error("Something went wrong. Try again")
+        // toast.error("Something went wrong. Try again")
 
     console.error("Supabase error fetching store:", error);
     return { notFound: true };

@@ -37,7 +37,7 @@ const menuItems = [
   { title: "Customers", icon: Users, href: "/dashboard/customers" },
   { title: "Orders", icon: Package, href: "/dashboard/orders" },
   { title: "Finance", icon: BsCreditCard2FrontFill, href: "/dashboard/finance" },
-  { title: "Fufilment", icon: FaTruck , href: "/dashboard/fufilment" },
+  // { title: "Fufilment", icon: FaTruck , href: "/dashboard/fufilment" },
   { title: "Sell & Save", icon: PiPiggyBankThin, href: "/dashboard/sellandsave" },
 
 ];

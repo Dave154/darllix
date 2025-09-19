@@ -31,7 +31,7 @@ function TopBalanceCard({ balance, setBalance, onWithdraw, withdrawing, onRefres
             <span className="text-3xl md:text-4xl bg-transparent outline-none font-extrabold text-indigo-700"> ₦</span>
           <input type="number"
                 value={Number(balance || 0).toFixed(2)}
-                className='text-3xl md:text-4xl bg- text-center outline-none font-extrabold text-indigo-700'
+                className='text-3xl md:text-4xl bg-transparent w-full text-center outline-none font-extrabold text-indigo-700 '
                 onChange={(e)=>setBalance(Number(e.target.value || 0).toFixed(2))}
             />
 

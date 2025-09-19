@@ -112,32 +112,53 @@ export default function PaymentPage({ store }) {
     setLoading(false);
   }
 
-  // Create order on server then initialize Paystack (by clicking the hidden PaystackButton)
-  async function createOrderAndInitPaystack() {
-    try {
-      setLoading(true);
-      const reference = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
-        const customer = await fetch("/api/customers", {
+// Utility: retry waiting for Paystack button
+async function waitForPaystackButton(maxRetries = 10, interval = 500) {
+  let attempt = 0;
+  while (attempt < maxRetries) {
+    const btn = paystackRef.current?.querySelector("button");
+    if (btn) return btn;
+    await new Promise((r) => setTimeout(r, interval));
+    attempt++;
+  }
+  return null;
+}
+
+// State for created order so we don’t re-create
+const [createdOrder, setCreatedOrder] = useState(null);
+
+async function createOrderAndInitPaystack() {
+  try {
+    setLoading(true);
+
+    // Step 1: Create order once if not already created
+    let order = createdOrder;
+    let reference;
+
+    if (!order) {
+      reference = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+
+      // Create customer
+      const customerRes = await fetch("/api/customers", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           storeId: checkoutData.storefrontId || checkoutData.storeId || store?.id,
-          name: checkoutData.firstName + ' ' + checkoutData.lastName,
+          name: `${checkoutData.firstName} ${checkoutData.lastName}`,
           email: checkoutData.email,
           phone: checkoutData.phone,
-          address:  checkoutData.address ,
-          state:  checkoutData.state,
-          country:  checkoutData.country,
-          zip:  checkoutData.zip
+          address: checkoutData.address,
+          state: checkoutData.state,
+          country: checkoutData.country,
+          zip: checkoutData.zip
         }),
-      })
-      const customerData = await customer.json()
-     
-      // Build order payload expected by /api/orders
+      });
+      const customerData = await customerRes.json();
+
       const orderPayload = {
         store_id: checkoutData.storefrontId || checkoutData.storeId || store?.id,
-         buyer_id: customerData.customer.id,
-         buyer_name: customerData.customer.name,
+        buyer_id: customerData.customer.id,
+        buyer_name: customerData.customer.name,
         currency: "NGN",
         payment_method: "paystack",
         payment_provider: "paystack",
@@ -163,61 +184,52 @@ export default function PaymentPage({ store }) {
       });
 
       const createText = await createRes.text();
-      let createJson;
-      try {
-        createJson = JSON.parse(createText);
-      } catch (parseErr) {
-        toast.error("Something went wrong")
-        console.error("Non-JSON response creating order:", createText);
-        throw new Error("Server returned non-JSON when creating order — check server logs/terminal.");
-      }
+      const createJson = JSON.parse(createText);
 
       if (!createRes.ok) {
         console.error("Create order failed:", createJson);
-          toast.error("Failed create order")
-
+        toast.error("Failed to create order");
         throw new Error(createJson?.error || `Create order failed: ${createRes.status}`);
       }
-      const createdOrder = createJson.order;
-      if (!createdOrder || !createdOrder.id) {
-        console.warn("Order created but no id returned", createJson);
-        throw new Error("Order created but server didn't return an id.");
+
+      order = createJson.order;
+      if (!order?.id) {
+        throw new Error("Order created but no id returned.");
       }
 
-      // Build paystack config
-      const amountKobo = Math.round((subtotal + shipping) * 100);
-
-      const cfg = {
-        reference,
-        email: checkoutData.email,
-        amount: amountKobo,
-        publicKey: process.env.NEXT_PUBLIC_PAYSTACK_KEY,
-        metadata: { orderId: createdOrder.id, storeId: createdOrder.store_id },
-      };
-
-      setPaystackConfig(cfg);
-
-      // wait a tick to allow hidden PaystackButton to render with the new config
-      await new Promise((r) => setTimeout(r, 1000));
-
-      const wrapper = paystackRef.current;
-      const btn = wrapper?.querySelector("button");
-      if (!btn) {
-        console.error("Hidden Paystack button not found - ensure PaystackButton rendered.");
-        toast.error("Something went wrong. Try again")
-
-      }
-
-      // programmatically click the hidden button to open Paystack modal
-      btn.click();
-
-      // do not setLoading(false) here — wait until onSuccess/onClose
-    } catch (err) {
-      console.error("createOrderAndInitPaystack error:", err);
-      toast.error('Something went wrong. Try again')
-      setLoading(false);
+      setCreatedOrder(order);
+    } else {
+      reference = order.payment_reference;
     }
+
+    // Step 2: Configure Paystack
+    const amountKobo = Math.round((subtotal + shipping) * 100);
+    const cfg = {
+      reference,
+      email: checkoutData.email,
+      amount: amountKobo,
+      publicKey: process.env.NEXT_PUBLIC_PAYSTACK_KEY,
+      metadata: { orderId: order.id, storeId: order.store_id },
+    };
+    setPaystackConfig(cfg);
+
+    // Step 3: Retry until Paystack button is ready
+    const btn = await waitForPaystackButton(10, 500); // 5s total
+    if (!btn) {
+      toast.error("Paystack failed to initialize. Please try again.");
+      setLoading(false);
+      return;
+    }
+
+    // Trigger Paystack modal
+    btn.click();
+
+  } catch (err) {
+    console.error("createOrderAndInitPaystack error:", err);
+    toast.error("Something went wrong. Try again");
+    setLoading(false);
   }
+}
 
   // createOrder (non-paystack fallback) - kept minimal (UI unchanged)
   const createOrder = async (method) => {
