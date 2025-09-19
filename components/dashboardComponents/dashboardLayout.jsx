@@ -141,7 +141,7 @@ async function handleWithdraw() {
         </div>
 
         {/* Center: Search */}
-        <div className="flex-1 max-w-md mx-4 hidden sm:flex">
+        {/* <div className="flex-1 max-w-md mx-4 hidden sm:flex">
           <div className="relative w-full">
             <input
               type="text"
@@ -163,7 +163,7 @@ async function handleWithdraw() {
               />
             </svg>
           </div>
-        </div>
+        </div> */}
 
         {/* Right: Store Dropdown + Profile */}
         <div className="flex items-center gap-4 relative">
