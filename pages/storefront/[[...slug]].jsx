@@ -91,8 +91,14 @@ export async function getServerSideProps({ params, req, res }) {
   }
 
   if (!subdomain || subdomain === "www" || subdomain === "darllix") {
-    return { notFound: true };
+    return {
+    props: {
+      store: null,
+      slug: params.slug || [],
+    },
+  };
   }
+  
 
   const supabase = getSupabaseServer({ req, res });
 
