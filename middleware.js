@@ -1,37 +1,94 @@
-import { NextResponse } from "next/server";
 
+// middleware.js
+// import { NextResponse } from "next/server";
+
+// export function middleware(req) {
+//   const url = req.nextUrl.clone();
+//   const hostname = req.headers.get("host") || "";
+//   const cleanHost = hostname.split(":")[0];
+
+//   const rootDomain = "darllix.shop";
+//   const isLocalhostRoot = cleanHost === "localhost" || cleanHost === "127.0.0.1";
+//   const isLocalhostSub = cleanHost.endsWith(".localhost") || cleanHost.endsWith(".127.0.0.1");
+
+//   // Root domain or local root → dashboard
+//   if (cleanHost === rootDomain || cleanHost.endsWith(".vercel.app") || isLocalhostRoot) {
+//     if (url.pathname === "/") {
+//      return NextResponse.redirect(new URL("/dashboard", req.url));
+//     }
+//     return NextResponse.next();
+//   }
+
+//   // Subdomain handling
+//   if (cleanHost.endsWith(`.${rootDomain}`) || isLocalhostSub) {
+//     const subdomain = isLocalhostSub
+//       ? cleanHost.replace(".localhost", "").replace(".127.0.0.1", "")
+//       : cleanHost.replace(`.${rootDomain}`, "");
+
+//     if (subdomain && subdomain.trim() !== "") {
+//       url.searchParams.set("store", subdomain);
+//       url.pathname = "/storefront";
+//       return NextResponse.rewrite(url);
+//     }
+//   }
+
+//   return NextResponse.next();
+// }
+
+// export const config = {
+//   matcher: [
+//     /*
+//       Match all paths except:
+//       - /_next (Next.js internals)
+//       - /api (API routes)
+//       - /static, /public, favicon.ico, etc.
+//     */
+//     "/((?!_next|api|static|.*\\..*|favicon.ico).*)",
+//   ],
+// };
+// middleware.js
+import { NextResponse } from "next/server";
 export function middleware(req) {
-  const url = req.nextUrl.clone();
   const hostname = req.headers.get("host") || "";
   const cleanHost = hostname.split(":")[0];
 
   const rootDomain = "darllix.shop";
-  const allowedRootHosts = [rootDomain, `www.${rootDomain}`];
+  const isLocalhostRoot =
+    cleanHost === "localhost" || cleanHost === "127.0.0.1";
+  const isLocalhostSub =
+    cleanHost.endsWith(".localhost") || cleanHost.endsWith(".127.0.0.1");
 
-  console.log("MIDDLEWARE HIT", { cleanHost, pathname: url.pathname });
-
-  // Root domain or preview
-  if (allowedRootHosts.includes(cleanHost) || cleanHost.endsWith(".vercel.app") || cleanHost === "localhost" || cleanHost === "127.0.0.1") {
-    if (url.pathname === "/") {
-      url.pathname = "/dashboard";
-      return NextResponse.redirect(url);
+  // Root domain or Vercel preview → dashboard redirect
+  if (
+    cleanHost === rootDomain ||
+    cleanHost.endsWith(".vercel.app") ||
+    isLocalhostRoot
+  ) {
+    if (req.nextUrl.pathname === "/") {
+      return NextResponse.redirect(new URL("/dashboard", req.url));
     }
     return NextResponse.next();
   }
 
-  // // Real subdomains only
-  // if (cleanHost.endsWith(`.${rootDomain}`) && !allowedRootHosts.includes(cleanHost)) {
-  //   const subdomain = cleanHost.replace(`.${rootDomain}`, "");
-  //   if (subdomain) {
-  //     url.searchParams.set("store", subdomain);
-  //     url.pathname = `/storefront${url.pathname}`;
-  //     return NextResponse.rewrite(url);
+  // Subdomain handling
+  // if (cleanHost.endsWith(`.${rootDomain}`) || isLocalhostSub) {
+  //   const subdomain = isLocalhostSub
+  //     ? cleanHost.replace(".localhost", "").replace(".127.0.0.1", "")
+  //     : cleanHost.replace(`.${rootDomain}`, "");
+
+  //   if (subdomain && subdomain.trim() !== "") {
+  //     const rewriteUrl = new URL(req.url);
+  //     rewriteUrl.pathname = `/storefront${rewriteUrl.pathname}`;
+  //     rewriteUrl.searchParams.set("store", subdomain);
+  //     return NextResponse.rewrite(rewriteUrl);
   //   }
   // }
 
-  // return NextResponse.next();
+  return NextResponse.next();
 }
 
 export const config = {
-  matcher: ["/((?!_next|api|static|.*\\..*|favicon.ico).*)"],
+  matcher: [
+    "/((?!_next|api|static|.*\\..*|favicon.ico).*)",
+  ],
 };
