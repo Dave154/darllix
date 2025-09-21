@@ -10,53 +10,53 @@ export function useUser() {
   const [loading, setLoading] = useState(true);
   const [profile, setProfile] = useState(null);
 
-  const router = useRouter()
+  const router = useRouter();
 
   useEffect(() => {
-  const getUser = async () => {
-    setLoading(true);
+    const getUser = async () => {
+      setLoading(true);
 
-    try {
-      // Get current session
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
+      try {
+        const {
+          data: { session },
+        } = await supabase.auth.getSession();
 
-      const currentUser = session?.user ?? null;
-      setUser(currentUser);
+        const currentUser = session?.user ?? null;
+        setUser(currentUser);
 
-      if (currentUser) {
-        const { data, error } = await supabase
-          .from("profiles")
-          .select("*")
-          .eq("id", currentUser.id)
-          .single();
+        if (currentUser) {
+          const { data, error } = await supabase
+            .from("profiles")
+            .select("*")
+            .eq("id", currentUser.id)
+            .single();
 
-        if (error) {
-          // Handle "no rows found" separately
-          if (error.code === "PGRST116" || error.message.includes("No rows")) {
-            router.push("/dashboard/profile");
+          if (error) {
+            if (error.code === "PGRST116" || error.message.includes("No rows")) {
+              if (router.pathname !== "/dashboard/profile") {
+                router.push("/dashboard/profile");
+              }
+            } else {
+              toast.error("Something went wrong. Please try again.");
+            }
+          } else if (!data) {
+            if (router.pathname !== "/dashboard/profile") {
+              router.push("/dashboard/profile");
+            }
           } else {
-            toast.error("Something went wrong. Please try again.");
+            setProfile(data);
           }
-        } else if (!data) {
-          // No profile row exists
-          router.push("/dashboard/profile");
-        } else {
-          setProfile(data);
         }
+      } catch (err) {
+        console.error("Unexpected error:", err);
+        toast.error("Network error. Please try again.");
+      } finally {
+        setLoading(false);
       }
-    } catch (err) {
-      console.error("Unexpected error:", err);
-      toast.error("Network error. Please try again.");
-    } finally {
-      setLoading(false);
-    }
-  };
+    };
 
     getUser();
 
-    // Listen for auth changes (login, logout, token refresh)
     const { data: listener } = supabase.auth.onAuthStateChange(() => {
       getUser();
     });
@@ -64,7 +64,7 @@ export function useUser() {
     return () => {
       listener.subscription.unsubscribe();
     };
-  }, [supabase]);
+  }, [supabase, router.pathname]);
 
   return { user, profile, loading };
 }
