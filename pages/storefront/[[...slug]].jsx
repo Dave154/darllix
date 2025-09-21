@@ -20,7 +20,11 @@ export default function StorefrontDynamic({ store, slug }) {
   useEffect(() => {
     // Set immediately on mount
     setPath(window.location.pathname);
+ 
 
+    if(window.location.pathname.startsWith("/dashboard")){
+      router.push(window.location.pathname)
+    }
     // Listen for route changes
     const handleRouteChange = () => {
       setPath(window.location.pathname);
@@ -56,7 +60,7 @@ export default function StorefrontDynamic({ store, slug }) {
   } else if(slug[0] === "storefront") {
     content = <StoreFront404 store={store} />;
   }else{
-    window.location.reload(true)
+    console.log(window.location.pathname)
   }
 
 

@@ -255,10 +255,9 @@ if (req.method === "GET") {
 
     // category server-side filter: expect categories column to be a JSON array of ids (text/uuid)
     if (categoryIdToFilter) {
-      // .contains expects a JSON array value to check inclusion
-      queryBuilder = queryBuilder.contains("categories", [categoryIdToFilter]);
-      console.log('category', categoryIdToFilter, queryBuilder)
-      
+      queryBuilder = queryBuilder.contains("categories_ids", [categoryIdToFilter]);
+
+
     }
 
 
