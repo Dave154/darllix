@@ -371,6 +371,8 @@ export default function OrdersPage({ store, hasStore }) {
                               </button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
+                              {
+                               ( o.payment_status === 'paid' && o.status !== 'delivered' ) &&
                               <DropdownMenuItem
                                 onClick={() => handleCompleted(o.id)}
                                 className="flex items-center gap-2 text-green-600"
@@ -378,6 +380,7 @@ export default function OrdersPage({ store, hasStore }) {
                                 <Check className="h-4 w-4" /> Mark as completed
 
                               </DropdownMenuItem>
+                              }
                               <DropdownMenuItem
                                 onClick={() =>  router.push(`/dashboard/customers?id=${o.buyer_id}`) }
                                 className="flex items-center gap-2"

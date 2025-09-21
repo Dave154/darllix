@@ -332,14 +332,14 @@ if (req.method === "GET") {
   //
    const saved = (storeRow.sell_save_percentage / 100) * orderRow.total
    const newSellSaveBalance = storeRow.sell_save_balance + saved;
-    const storeId = storeRow.owner_id
+   console.log(storeRow.sell_save_balance, saved, newSellSaveBalance)
 //
   const { error: updateStoreError } = await supabase
     .from("stores")
     .update({
       sell_save_balance: newSellSaveBalance,
     })
-    .eq("id", storeId);
+    .eq("id", orderRow.store_id);
  
     if (updateStoreError) {
         return res.status(400).json({ message: updateStoreError.message });
