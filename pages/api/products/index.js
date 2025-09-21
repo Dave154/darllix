@@ -257,7 +257,10 @@ if (req.method === "GET") {
     if (categoryIdToFilter) {
       // .contains expects a JSON array value to check inclusion
       queryBuilder = queryBuilder.contains("categories", [categoryIdToFilter]);
+      console.log('category', categoryIdToFilter, queryBuilder)
+      
     }
+
 
     // full-text-ish search (name OR description)
     if (q && String(q).trim()) {
