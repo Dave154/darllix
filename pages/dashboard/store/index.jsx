@@ -762,10 +762,13 @@ async function publish() {
                 <div className="text-sm text-gray-500">Auto-updates as you type</div>
               </div>
 
+                {
+                  editing &&
               <div className="flex items-center gap-3">
                 <Ghost onClick={saveDraft}>Save</Ghost>
                 <AddProductButton />
               </div>
+                }
             </div>
             <SubdomainChecker control={control} onAvailableChange={setSubdomainAvailable} />
 

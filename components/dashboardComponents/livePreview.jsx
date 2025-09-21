@@ -152,7 +152,7 @@ function LivePreview({ store }) {
                                 : 'text-gray-700 '
                         }`}
                       >
-                        <span className="text-color1">
+                        <span className="text-color3">
                           <BsFire />
                         </span>
                         <span className="">
