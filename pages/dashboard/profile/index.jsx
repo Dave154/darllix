@@ -146,7 +146,10 @@ const handleChange = (e) => {
 
     try {
       setLoading(true);
-
+        if(!form.full_name){
+          toast.error('Enter Full name')
+          return;
+        }
       const updatePayload = { ...form };
       // ensure we do not try to write undefined fields if your table schema is strict
 
