@@ -16,12 +16,13 @@ async function createPaystackRecipient(bank_name, bank_code, account_number, acc
       type: "nuban",
       name: account_name,
       account_number,
-      bank_code, // best to map bank_name -> bank_code beforehand
+      bank_code,
       currency: "NGN",
       metadata: {},
     }),
   });
   const json = await res.json().catch(() => null);
+
   if (!res.ok) throw new Error(json?.message || "Failed creating recipient");
   // json.data.recipient_code expected
   return json.data;
@@ -132,10 +133,11 @@ export default async function handler(req, res) {
         // If payment provider not configured, leave withdrawal in pending for manual processing
         return res.status(200).json({ withdrawal: withdrawalRow, message: "Withdrawal queued; paystack not configured" });
       }
-
+      const deductedamount = amountKobo * 95/100
+      console.log(deductedamount)
       const transferPayload = {
         source: "balance",
-        amount: amountKobo,
+        amount: deductedamount,
         recipient: recipientCode,
         reason: `Darllix payout for ${user.id}`,
       };

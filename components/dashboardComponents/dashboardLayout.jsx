@@ -31,6 +31,7 @@ import { toast, Toaster } from "sonner";
 import { useSupabaseClient } from "@supabase/auth-helpers-react";
 import { useUser } from "../../hooks/useUser";
 import { withAuth } from "../../lib/withAuth";
+import AreYouSureModal from "./areYouSure";
 
 const menuItems = [
   { title: "Dashboard", icon: Home, href: "/dashboard" },
@@ -52,7 +53,7 @@ export default function DashboardLayout({ children }) {
   const router = useRouter();
 const [loading, setLoading] = useState(false);
 const [withdrawing,setWithdrawing]= useState(false)
-
+const [requesting, setRequesting]= useState(false)
    const { user, profile } = useUser();
 
   useEffect(() => {
@@ -114,6 +115,20 @@ async function handleWithdraw() {
     <>
     <Toaster
       position="top-right"
+    />
+    <AreYouSureModal
+        open={requesting}
+        onClose ={()=>setRequesting(false)}
+        onConfirm={handleWithdraw }
+        title = "Are you sure?"
+        description = {`You are about to withdraw ₦${profile?.available_balance.toLocaleString()
+          
+        }  to ${profile?.account_number} ${profile?.bank_name}. 
+         You will be charged 5% for each withdrawal`}
+        confirmLabel = "Yes, continue"
+        cancelLabel = "Cancel"
+        loading = {withdrawing}
+        safe
     />
     <div className="flex flex-col h-screen bg-color4 text-color3">
       {  loading &&  <Loader /> }
@@ -195,7 +210,7 @@ async function handleWithdraw() {
 
       <div className="px-4 py-3">
         <button
-          onClick={handleWithdraw}
+          onClick={()=> setRequesting(true)}
           disabled={withdrawing || Number(profile?.available_balance || 0) <= 0}
           className="w-full h-10 bg-indigo-600 text-white rounded-lg font-medium hover:bg-indigo-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
         >
@@ -284,7 +299,6 @@ async function handleWithdraw() {
 /* Sidebar Content */
 function SidebarContent({ openStore, setOpenStore, setMobileOpen }) {
   const router = useRouter();
-  
 
  const supabase = useSupabaseClient();
   const handleLogout = async () => {
