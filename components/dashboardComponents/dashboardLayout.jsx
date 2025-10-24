@@ -32,6 +32,7 @@ import { useSupabaseClient } from "@supabase/auth-helpers-react";
 import { useUser } from "../../hooks/useUser";
 import { withAuth } from "../../lib/withAuth";
 import AreYouSureModal from "./areYouSure";
+import Notification from "./bannerNotification";
 
 const menuItems = [
   { title: "Dashboard", icon: Home, href: "/dashboard" },
@@ -55,6 +56,8 @@ const [loading, setLoading] = useState(false);
 const [withdrawing,setWithdrawing]= useState(false)
 const [requesting, setRequesting]= useState(false)
    const { user, profile } = useUser();
+ const supabase = useSupabaseClient();
+
 
   useEffect(() => {
     const handleStart = () => setLoading(true);
@@ -87,32 +90,57 @@ async function handleWithdraw() {
     toast.error("No balance to withdraw");
     return;
   }
+  const withdrawal = {
+      owner_id: user.id,
+      accountname: profile.account_name,
+      accountnumber: profile?.account_number,
+      bankname: profile?.bank_name,
+      amount: profile?.available_balance * 95/100,
+      paymentreference: `PAY_REF_11223${new Date()}`,
+      date: new Date(),
+      status: "pending",
+    };
+    setWithdrawing(true);
+ try {
+    const { data, error } = await supabase
+      .from("withdrawalRequest")
+      .insert([withdrawal]);
 
-
-
-  setWithdrawing(true);
-  try {
-    const res = await fetch("/api/wallet", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ amount: Number(profile.available_balance) }),
-    });
-
-    const json = await res.json();
-    if (!res.ok) throw new Error(json?.error || json?.message || "Withdrawal failed");
-
-    toast.success("Withdrawal requested successfully!");
+      const {updateBal}= await supabase 
+      .from("profiles").update({ available_balance: 0 }).eq("id", user.id);
+    if (error) throw error;
+   toast.success("Withdrawal requested successfully!");
     router.reload();
-  } catch (err) {
-    console.error("Withdraw error", err);
-    toast.error(err.message || "Something went wrong");
-  } finally {
+  } catch (error) {
+    toast.error(error.message || "Something went wrong");
+  }
+
+
+  // try {
+  //   const res = await fetch("/api/wallet", {
+  //     method: "POST",
+  //     headers: { "Content-Type": "application/json" },
+  //     body: JSON.stringify({ amount: Number(profile.available_balance) }),
+  //   });
+
+  //   const json = await res.json();
+  //   if (!res.ok) throw new Error(json?.error || json?.message || "Withdrawal failed");
+
+  //   toast.success("Withdrawal requested successfully!");
+  //   router.reload();
+  // } catch (err) {
+  //   console.error("Withdraw error", err);
+  //   toast.error(err.message || "Something went wrong");
+  // }
+   finally {
     setWithdrawing(false);
   }
 }
 
   return (
+   
     <>
+
     <Toaster
       position="top-right"
     />
@@ -205,7 +233,7 @@ async function handleWithdraw() {
     >
       <div className="px-4 pb-3 border-b border-slate-200">
         <div className="text-sm text-slate-500">Wallet Balance</div>
-        <div className="text-2xl font-bold text-indigo-700">₦{Number(profile?.available_balance || 0).toFixed(2)}</div>
+        <div className="text-2xl font-bold text-indigo-700">₦{Number(profile?.available_balance || 0).toFixed(2).toLocaleString()}</div>
       </div>
 
       <div className="px-4 py-3">
@@ -287,6 +315,7 @@ async function handleWithdraw() {
 
         {/* Page content */}
         <main className="flex-1 p-1 md:p-6 space-y-6 overflow-y-auto">
+          <Notification message="Your request of 7,000 is pending and will be disbursed shortly" />
           <TrialBanner />
           {children}
         </main>
