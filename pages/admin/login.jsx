@@ -9,6 +9,7 @@ export default function AdminLogin() {
   const handleSubmit = (e) => {
     e.preventDefault();
     if (form.username === "admin" && form.password === "1234") {
+      sessionStorage.setItem('admin', true)
       router.push("/admin");
     } else {
       setError("Invalid credentials");

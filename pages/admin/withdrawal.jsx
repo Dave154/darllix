@@ -1,5 +1,6 @@
 import { useState, useMemo, useEffect } from "react";
 import { useSupabaseClient } from "@supabase/auth-helpers-react";
+import { useRouter } from "next/router";
 
 function formatCurrency(n) {
   return new Intl.NumberFormat("en-NG", { style: "currency", currency: "NGN" }).format(n);
@@ -45,7 +46,12 @@ export default function WithdrawalsList({ initialWithdrawals = null, onChange = 
       fetchWithdrawals()
   },[])
 
-
+const router = useRouter()
+useEffect(()=>{
+   const logged =sessionStorage.getItem('admin')
+  if(logged)return;
+    router.push('/admin/login')
+},[])
   
   const handleUpdate = (next) => {
     setWithdrawals(next);

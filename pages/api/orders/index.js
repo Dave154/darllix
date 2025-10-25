@@ -104,7 +104,7 @@ export default async function handler(req, res) {
           "Content-Type": "application/json",
         },
       });
-
+      console.log(payRes)
       if (!payRes.ok) {
         const errBody = await payRes.text().catch(() => null);
         console.error("Paystack verify HTTP error", payRes.status, errBody);
@@ -224,6 +224,7 @@ if (req.method === "GET") {
   let qb = admin
     .from("orders")
     .select("*, order_items(*)", { count: "exact" })
+  .neq("payment_status", 'pending')
     .in("store_id", storeIds);
 
   if (store_id) qb = qb.eq("store_id", store_id);

@@ -303,14 +303,14 @@ function ModalImpl({ resolvePromise, options = {} }) {
            className="p-4 space-y-4">
           <div>
             <label className="block text-sm font-medium">Product name</label>
-            <input {...register("name")} className="mt-2 w-full border rounded-lg p-3 focus:ring-2 focus:ring-sky-200" disabled={uploading} />
+            <input {...register("name")} placeholder="Enter your product name" className="mt-2 w-full border rounded-lg p-3 focus:ring-2 focus:ring-sky-200" disabled={uploading} />
             {errors.name && <p className="text-xs text-red-600 mt-1">{errors.name.message}</p>}
           </div>
 
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="block text-sm font-medium">Price</label>
-              <input {...register("price")} type="number" step="0.01" className="mt-2 w-full border rounded-lg p-3 focus:ring-2 focus:ring-sky-200" disabled={uploading} />
+              <input {...register("price")} placeholder="Enter price eg. 4000" type="number" step="0.01" className="mt-2 w-full border rounded-lg p-3 focus:ring-2 focus:ring-sky-200" disabled={uploading} />
               {errors.price && <p className="text-xs text-red-600 mt-1">{errors.price.message}</p>}
             </div>
             {/* <div>
@@ -320,14 +320,14 @@ function ModalImpl({ resolvePromise, options = {} }) {
             </div> */}
              <div>
               <label className="block text-sm font-medium">Available</label>
-              <input {...register("available")} type="number" step="1" min="1" className="mt-2 w-full border rounded-lg p-3 focus:ring-2 focus:ring-sky-200" disabled={uploading} />
+              <input {...register("available")} placeholder="Enter Inventory Number eg. 40" type="number" step="1" min="1" className="mt-2 w-full border rounded-lg p-3 focus:ring-2 focus:ring-sky-200" disabled={uploading} />
               {errors.available && <p className="text-xs text-red-600 mt-1">{errors.available.message}</p>}
             </div>
           </div>
 
           <div>
             <label className="block text-sm font-medium">Description</label>
-            <textarea {...register("description")} rows={4} className="mt-2 w-full border rounded-lg p-3 focus:ring-2 focus:ring-sky-200" disabled={uploading} />
+            <textarea {...register("description")} placeholder="Enter your product description" rows={4} className="mt-2 w-full border rounded-lg p-3 focus:ring-2 focus:ring-sky-200" disabled={uploading} />
             {errors.description && <p className="text-xs text-red-600 mt-1">{errors.description.message}</p>}
           </div>
 

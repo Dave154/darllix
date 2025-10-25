@@ -228,15 +228,15 @@ const handleChange = (e) => {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 text-black">
             <div>
               <label className="text-sm font-medium text-black">Full Name</label>
-              <Input name="full_name" value={form.full_name || ''} onChange={handleChange} disabled={!editing} className="h-14 text-base" />
+              <Input name="full_name" placeholder="Enter your Full Name" value={form.full_name || ''} onChange={handleChange} disabled={!editing} className="h-14 text-base" />
             </div>
             <div>
               <label className="text-sm font-medium text-black">Email</label>
-              <Input name="email" value={form.email || ''} onChange={handleChange} disabled className="h-14 text-base" />
+              <Input name="email"  value={form.email || ''} onChange={handleChange} disabled className="h-14 text-base" />
             </div>
             <div>
               <label className="text-sm font-medium text-black">Phone</label>
-              <Input name="phone" value={form.phone || ''} onChange={handleChange} disabled={!editing} className="h-14 text-base" />
+              <Input name="phone" placeholder="Enter your phone number" value={form.phone || ''} onChange={handleChange} disabled={!editing} className="h-14 text-base" />
             </div>
 
             <div>
@@ -264,12 +264,12 @@ const handleChange = (e) => {
 
             <div>
               <label className="text-sm font-medium text-black">Account Number</label>
-              <Input name="account_number" value={form.account_number || ''} onChange={handleChange} disabled={!editing} className="h-14 text-base" />
+              <Input name="account_number" placeholder="Enter your account number" value={form.account_number || ''} onChange={handleChange} disabled={!editing} className="h-14 text-base" />
             </div>
 
             <div>
               <label className="text-sm font-medium text-black">Address</label>
-              <Input name="address" value={form.address || ''} onChange={handleChange} disabled={!editing} className="h-14 text-base" />
+              <Input name="address" placeholder="Enter your residential address" value={form.address || ''} onChange={handleChange} disabled={!editing} className="h-14 text-base" />
             </div>
 
           </div>

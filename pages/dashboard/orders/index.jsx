@@ -106,6 +106,7 @@ export default function OrdersPage({ store, hasStore }) {
         const res = await fetch(`/api/orders?${params.toString()}`);
         if (!res.ok) throw new Error(`Failed: ${res.status}`);
         const json = await res.json();
+
         setOrders(json.orders || []);
         setTotal(json.total || 0);
       } catch (err) {
@@ -278,7 +279,7 @@ export default function OrdersPage({ store, hasStore }) {
                       <Card className="border-dashed">
                         <CardContent className="py-3">
                           <p className="text-xs text-muted-foreground"> Active Orders </p>
-                          <p className="text-[11px] text-xl text-muted-foreground mt-1">{orders.length}</p>
+                          <p className="text-[11px] text-xl text-muted-foreground mt-1">{orders.filter(order=>order.status === "pending").length}</p>
                         </CardContent>
                       </Card>
                      

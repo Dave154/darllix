@@ -118,7 +118,7 @@ export default function PaymentPage({ store }) {
   }
 
   function handlePaystackClose() {
- 
+      
     setLoading(false);
   }
 

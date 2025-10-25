@@ -100,6 +100,7 @@ export const createStorefrontSlice = (set, get) => ({
     newsletter: true,
     shipping: 0,
     paymentMethod: "darllix",
+    shippingMethod: "pickup"
   },
 
   setCheckoutData: (data) =>

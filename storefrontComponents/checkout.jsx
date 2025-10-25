@@ -57,6 +57,7 @@ export default function InformationPage({store}) {
                   <div>
                     <Label>First Name</Label>
                     <Input
+                      placeholder="Enter first name"
                       value={checkoutData.firstName}
                       onChange={(e) => handleChange("firstName", e.target.value)}
                       required
@@ -65,6 +66,7 @@ export default function InformationPage({store}) {
                   <div>
                     <Label>Last Name</Label>
                     <Input
+                      placeholder="Enter last name"
                       value={checkoutData.lastName}
                       onChange={(e) => handleChange("lastName", e.target.value)}
                       required
@@ -74,6 +76,7 @@ export default function InformationPage({store}) {
                 <div>
                   <Label>Email</Label>
                   <Input
+                    placeholder="Enter your email"
                     type="email"
                     value={checkoutData.email}
                     onChange={(e) => handleChange("email", e.target.value)}
@@ -83,6 +86,8 @@ export default function InformationPage({store}) {
                 <div>
                   <Label>Phone Number</Label>
                   <Input
+                      placeholder="08012345678"
+
                     type="tel"
                     value={checkoutData.phone}
                     onChange={(e) => handleChange("phone", e.target.value)}
@@ -92,6 +97,8 @@ export default function InformationPage({store}) {
                 <div>
                   <Label>Address</Label>
                   <Input
+                      placeholder="Enter your address"
+
                     value={checkoutData.address}
                     onChange={(e) => handleChange("address", e.target.value)}
                     required
@@ -125,6 +132,8 @@ export default function InformationPage({store}) {
                 <div>
                   <Label>Zip / Post Code</Label>
                   <Input
+                      placeholder="Enter Zipcode eg. 100001"
+
                     value={checkoutData.zip}
                     onChange={(e) => handleChange("zip", e.target.value)}
                   />

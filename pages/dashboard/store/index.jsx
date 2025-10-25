@@ -551,7 +551,13 @@ async function publish() {
             </div>
 
             <div className="flex flex-col sm:flex-row justify-between mt-4 gap-3">
-              <Ghost onClick={prev} className="w-full sm:w-auto">Back</Ghost>
+              <Ghost onClick={()=>{
+                prev()
+                 if(!editing){
+
+                      prev()
+                    }
+              }} className="w-full sm:w-auto">Back</Ghost>
               <div className="flex w-full sm:w-auto gap-2">
                 {/* <Ghost onClick={saveDraft} className="w-full sm:w-auto">Save draft</Ghost> */}
                 <CTA onClick={next} className="flex-1 sm:flex-none">Continue</CTA>

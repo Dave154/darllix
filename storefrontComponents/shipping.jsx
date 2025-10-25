@@ -83,7 +83,7 @@ export default function ShippingPage({store}) {
                     <RadioGroupItem value="pickup" id="pickup" className="mr-3" />
                     <Store className="w-5 h-5 mr-2" />
                     <div className="flex-1">
-                      <div className="font-medium">Click & Collect</div>
+                      <div className="font-medium">Pay on delivery</div>
                       <div className="text-xs text-muted-foreground">Collect from our store</div>
                     </div>
                     <span>₦0.00</span>
@@ -96,7 +96,7 @@ export default function ShippingPage({store}) {
                       checkoutData.shippingMethod === "nextday" ? "border-primary bg-accent" : ""
                     }`}
                   >
-                    <RadioGroupItem value="nextday" id="nextday" className="mr-2" />
+                    <RadioGroupItem value="nextday" id="nextday" className="mr-2" disabled />
                     {/* <Timer className="w-5 h-5 mr-2" /> */}
                     <Image
                       src={"/delivery_truck.svg"}
@@ -129,7 +129,7 @@ export default function ShippingPage({store}) {
                       checkoutData.shippingMethod === "priority" ? "border-primary bg-accent" : ""
                     }`}
                   >
-                    <RadioGroupItem value="priority" id="priority" className="mr-3" />
+                    <RadioGroupItem value="priority" id="priority" className="mr-3" disabled/>
                     <Truck className="w-5 h-5 mr-2" />
                     <div className="flex-1">
                       <div className="font-medium">DHL Priority</div>
