@@ -34,7 +34,7 @@ export default function WithdrawalsPage() {
 
   useEffect(()=>{
     fetchWithdrawalsForUser()
-  },[])
+  },[user])
 
   if (loading) {
     return (

@@ -55,6 +55,7 @@ export default function DashboardLayout({ children }) {
 const [loading, setLoading] = useState(false);
 const [withdrawing,setWithdrawing]= useState(false)
 const [requesting, setRequesting]= useState(false)
+const [pendingWithdrawal,setPendingWithdrawal] = useState([])
    const { user, profile } = useUser();
  const supabase = useSupabaseClient();
 
@@ -84,6 +85,25 @@ const [requesting, setRequesting]= useState(false)
     );
   };
 
+async function fetchPendingWithdrawals() {
+  const { data, error } = await supabase
+    .from("withdrawalRequest")
+    .select("*")
+    .eq("owner_id", user?.id)
+    .eq("status", "pending")
+    .order("date", { ascending: false });
+
+  if (error) {
+    console.error("Error fetching pending withdrawals:", error.message);
+    return;
+  }
+    console.log(data)
+    setPendingWithdrawal(data)
+}
+
+useEffect(()=>{
+  fetchPendingWithdrawals()
+},[user])
 
 async function handleWithdraw() {
   if (Number(profile?.available_balance || 0) <= 0) {
@@ -96,7 +116,7 @@ async function handleWithdraw() {
       accountnumber: profile?.account_number,
       bankname: profile?.bank_name,
       amount: profile?.available_balance * 95/100,
-      paymentreference: `PAY_REF_11223${new Date()}`,
+      paymentreference: `PAY_REF_${crypto.randomUUID()}`,
       date: new Date(),
       status: "pending",
     };
@@ -232,7 +252,10 @@ async function handleWithdraw() {
       className="absolute right-12 top-12 bg-white text-black rounded-xl shadow-lg py-4 w-64 z-50 border border-slate-100"
     >
       <div className="px-4 pb-3 border-b border-slate-200">
-        <div className="text-sm text-slate-500">Wallet Balance</div>
+        <div className="flex justify-between">
+        <span className="text-sm text-slate-500">Wallet Balance</span>
+        <Link href={'/dashboard/withdrawalhistory'} className="text-color1 text-xs underline">History</Link>
+        </div>
         <div className="text-2xl font-bold text-indigo-700">₦{Number(profile?.available_balance || 0).toFixed(2).toLocaleString()}</div>
       </div>
 
@@ -315,7 +338,10 @@ async function handleWithdraw() {
 
         {/* Page content */}
         <main className="flex-1 p-1 md:p-6 space-y-6 overflow-y-auto">
-          <Notification message="Your request of 7,000 is pending and will be disbursed shortly" />
+          {
+            pendingWithdrawal.length > 0 &&
+          <Notification message={`Your request of ₦${pendingWithdrawal[0].amount.toLocaleString()} is pending and will be disbursed shortly`} />
+          }
           <TrialBanner />
           {children}
         </main>

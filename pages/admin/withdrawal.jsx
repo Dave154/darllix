@@ -17,7 +17,7 @@ export default function WithdrawalsList({ initialWithdrawals = null, onChange = 
 
   const [withdrawals, setWithdrawals] = useState([]);
   const [query, setQuery] = useState("");
-  const [filter, setFilter] = useState("all"); // all, pending, completed
+  const [filter, setFilter] = useState("pending"); // all, pending, completed
   const [selected, setSelected] = useState(null); // item for details modal
   const [page, setPage] = useState(1);
   const supabase = useSupabaseClient()
@@ -154,7 +154,6 @@ export default function WithdrawalsList({ initialWithdrawals = null, onChange = 
                   Export CSV
                 </button>
 
-                <div className="text-sm text-gray-500">Showing {filtered.length} requests</div>
               </div>
             </div>
           </div>
