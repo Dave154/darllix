@@ -428,14 +428,14 @@ async function publish() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium">Subdomain</label>
+              <label className="block text-sm font-medium">Store Link</label>
               <div className="flex items-center gap-2 mt-2">
-                <input {...register("subdomain")} disabled={editing} className="flex-1 border rounded-lg p-3" />
+                <input {...register("subdomain")} placeholder="shopwithella" disabled={editing} className="flex-1 border rounded-lg p-3" />
                 <span className="text-xs sm:text-sm text-gray-500">.darllix.shop</span>
               </div>
               {!editing && (
               <div className="mt-2 text-xs">
-                {subdomainAvailable === null && <span className="text-gray-500">Choose a subdomain</span>}
+                {subdomainAvailable === null && <span className="text-gray-500">Choose a store link</span>}
                 {subdomainAvailable === "checking" && <span className="text-yellow-600">Checking…</span>}
                 {subdomainAvailable === true && <span className="text-green-600">Available ✓</span>}
                 {subdomainAvailable === false && <span className="text-red-600">Taken ✕</span>}
@@ -576,7 +576,7 @@ async function publish() {
                 <div className="text-sm text-gray-500">Store details</div>
                 <div className="mt-3 space-y-2">
                   <div className="p-3 border rounded">Name: <strong>{getValues().name}</strong></div>
-                  <div className="p-3 border rounded overflow-hidden">Subdomain: <strong>{getValues().subdomain}.darllix.shop</strong></div>
+                  <div className="p-3 border rounded overflow-hidden">Store Link: <strong>{getValues().subdomain}.darllix.shop</strong></div>
                   <div className="p-3 border rounded">Products: <strong>{products.length}</strong></div>
                 </div>
               </div>

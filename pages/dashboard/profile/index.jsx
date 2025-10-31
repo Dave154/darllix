@@ -82,6 +82,9 @@ useEffect(() => {
 
 const handleChange = (e) => {
   const { name, value } = e.target;
+  if(name === "account_number" && value.trim().length === 10){
+    fetchAccName(value)
+  }
   setForm((prev) => ({ ...prev, [name]: value }));
 };
 
@@ -99,6 +102,17 @@ const handleChange = (e) => {
         console.error("User or user ID not available. Cannot submit profile.");
         return; 
       }
+      if(!form.full_name){
+        toast.error("Enter Full name")
+        return;
+      }
+       if(form.account_number.length !==10 && !form.account_name ){
+        toast.error("Enter a valid account number")
+        return;
+      }
+      //   if(!form.bank_name){
+      //   toast.error("Enter Full name")
+      // }
       try {
           setLoading(true);
          
@@ -166,6 +180,20 @@ const handleChange = (e) => {
     }
   };
   
+  const [fetchingAccount, setFetchingAccount] = useState(false)
+  async function fetchAccName (number){
+    try{
+      setFetchingAccount(true)
+        const res = await fetch(`/api/banks/resolve?account_number=${number}&bank_code=${form.bank_code}`);
+        const data = await res.json();
+        setForm({ ...form, account_name:data.data.account_name, account_number:data.data.account_number});    
+    }
+    catch(error){
+      toast.error(error)
+    }finally{
+      setFetchingAccount(false)
+    }
+  }
 
   if (!profile  && !creating) {
     return (
@@ -261,11 +289,17 @@ const handleChange = (e) => {
                 </select>
               )}
             </div>
-
+              {
+                form.bank_name &&
+                <>
             <div>
               <label className="text-sm font-medium text-black">Account Number</label>
               <Input name="account_number" placeholder="Enter your account number" value={form.account_number || ''} onChange={handleChange} disabled={!editing} className="h-14 text-base" />
+              <p className="text-color2 ml-2 text-semibold text-sm">{fetchingAccount ? "Checking" :form.account_name}</p>
             </div>
+                </>
+            
+              }
 
             <div>
               <label className="text-sm font-medium text-black">Address</label>

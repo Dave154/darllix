@@ -13,7 +13,7 @@ function TopBalanceCard({ balance, setBalance, onWithdraw, withdrawing, onRefres
   return (
     <div className="rounded-2xl bg-gradient-to-b from-white/60 to-white/30 backdrop-blur-md border border-white/10 p-6 shadow-[0_8px_30px_rgba(15,23,42,0.06)]">
       <div className="flex items-center justify-between">
-        <div className="text-sm font-medium text-slate-600">Spend & Save</div>
+        <div className="text-sm font-medium text-slate-600">Sell & Save</div>
         {/* <div>
           <button
             onClick={onRefresh}
@@ -177,7 +177,7 @@ export default function SellSavePage({store}) {
     }
   } catch (err) {
     console.error("fetchData error", err);
-    toast.error("Failed to load spend & save data");
+    toast.error("Failed to load sell & save data");
   } finally {
     setLoading(false);
   }
@@ -205,9 +205,9 @@ export default function SellSavePage({store}) {
         throw new Error(json?.error || json?.message || "Failed to update percentage");
       }
       setActivated(Number(json?.store?.sell_save_percentage ?? percentage) > 0);
-      toast.success("Spend & Save updated");
+      toast.success("Sell & Save updated");
       setActivities((prev) => [
-        { id: String(Date.now()), title: `Spend & Save set to ${percentage}%`, when: Date.now(), meta: "" },
+        { id: String(Date.now()), title: `Sell & Save set to ${percentage}%`, when: Date.now(), meta: "" },
         ...prev,
       ]);
     } catch (err) {
@@ -268,7 +268,7 @@ export default function SellSavePage({store}) {
                 className={`w-full h-14 text-white font-semibold ${activated ? "bg-emerald-600 hover:bg-emerald-700" : "bg-indigo-600 hover:bg-indigo-700"}`}
                 disabled={loadingActivate}
               >
-                {loadingActivate ? "Saving…" : activated ? "Activated" : "Activate Spend & Save"}
+                {loadingActivate ? "Saving…" : activated ? "Activated" : "Activate Sell & Save"}
               </Button>
             </div>
           </div>

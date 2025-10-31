@@ -91,7 +91,7 @@ export default function WithdrawalsPage() {
                 </div>
                 <div className="text-right">
                   <p className="font-semibold">₦{Number(w.amount).toLocaleString()}</p>
-                  <p className="text-sm">{w.status}</p>
+                  <p className={`text-sm ${w.status === 'pending' ? "bg-red-" : 'bg-color2'}`}>{w.status}</p>
                 </div>
               </div>
 

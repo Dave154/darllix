@@ -226,7 +226,7 @@ export default function DashboardPage({user,store,hasStore}){
             <CardHeader><CardTitle>Darllix Capital</CardTitle></CardHeader>
             <CardContent>
               <p className="text-sm text-gray-600 mb-2">
-                Lorem ipsum dolor sit amet consectetur, adipisicing elit. Est, pariatur.
+               Darllix tracks your sales performance and savings history, then offers small business loans and credits based on your activity.
               </p>
               <Button variant="" onClick={()=>router.push('/dashboard/finance')}>Start now</Button>
             </CardContent>
