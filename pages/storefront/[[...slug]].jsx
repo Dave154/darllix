@@ -60,9 +60,10 @@ export default function StorefrontDynamic({ store, slug }) {
   } else if(slug[0] === "storefront") {
     content = <StoreFront404 store={store} />;
   }else{
-    router.push(window.location.href)
-    // or for hard navigation
-    router.replace(window.location.href)
+    // Use replace with the pathname/asPath on the client to avoid aborting Next's component fetch
+    if (typeof window !== "undefined") {
+      router.replace(window.location.pathname || router.asPath);
+    }
   }
 
 
