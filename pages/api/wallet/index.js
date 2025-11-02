@@ -133,7 +133,7 @@ export default async function handler(req, res) {
         // If payment provider not configured, leave withdrawal in pending for manual processing
         return res.status(200).json({ withdrawal: withdrawalRow, message: "Withdrawal queued; paystack not configured" });
       }
-      const deductedamount = amountKobo * 95/100
+      const deductedamount = amountKobo * 97.6/100
       console.log(deductedamount)
       const transferPayload = {
         source: "balance",

@@ -33,9 +33,14 @@ export default async function handler(req, res) {
       data = { raw: text };
     }
 
-    if (!r.ok) {
-      console.error('Paystack returned non ok', r.status, data);
-      return res.status(r.status).json({ error: 'Paystack error', details: data });
+    if (!r.ok || !data.status) {
+      const statusCode = data.message?.toLowerCase().includes('could not resolve account') ? 400 : r.status;
+      console.error('Paystack error:', data.message || 'Unknown error');
+      return res.status(statusCode).json({
+      error: 'Validation error',
+      message: data.message || 'Could not validate account details',
+      details: data
+      });
     }
 
     console.log('Paystack account resolved:', data.data?.account_name || 'unknown');

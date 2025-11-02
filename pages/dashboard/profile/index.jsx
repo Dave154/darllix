@@ -110,9 +110,10 @@ const handleChange = (e) => {
         toast.error("Enter a valid account number")
         return;
       }
-      //   if(!form.bank_name){
-      //   toast.error("Enter Full name")
-      // }
+        if(!form.bank_name){
+        toast.error("Choose a bank")
+        return;
+      }
       try {
           setLoading(true);
          
@@ -122,9 +123,10 @@ const handleChange = (e) => {
           email: user.user.user_metadata.email,
           full_name: form.full_name,
           account_name: form.account_name,
-          bank_name: form.bank_name || '',
+          bank_name: form.bank_name,
           account_number: form.account_number || 0,
           phone: form.phone ,
+          bank_code:form.bank_code
        
             }
 
@@ -164,9 +166,17 @@ const handleChange = (e) => {
           toast.error('Enter Full name')
           return;
         }
+      
+       if(form.account_number.length !==10 && !form.account_name ){
+        toast.error("Enter a valid account number")
+        return;
+      }
+        if(!form.bank_name){
+        toast.error("Choose a bank")
+        return;
+      }
       const updatePayload = { ...form };
-      // ensure we do not try to write undefined fields if your table schema is strict
-
+      console.log(form)
       const { error } = await supabase.from('profiles').update(updatePayload).eq('id', user.user.id);
 
       if (error) throw error;
@@ -183,9 +193,17 @@ const handleChange = (e) => {
   const [fetchingAccount, setFetchingAccount] = useState(false)
   async function fetchAccName (number){
     try{
+
+      if(!number && !bank_code) return;
       setFetchingAccount(true)
         const res = await fetch(`/api/banks/resolve?account_number=${number}&bank_code=${form.bank_code}`);
         const data = await res.json();
+        if(data.error){
+             toast.error(data.details.message)
+              setForm({ ...form, account_name:''});   
+             return;
+
+        }
         setForm({ ...form, account_name:data.data.account_name, account_number:data.data.account_number});    
     }
     catch(error){
@@ -256,19 +274,19 @@ const handleChange = (e) => {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 text-black">
             <div>
               <label className="text-sm font-medium text-black">Full Name</label>
-              <Input name="full_name" placeholder="Enter your Full Name" value={form.full_name || ''} onChange={handleChange} disabled={!editing} className="h-14 text-base" />
+              <Input name="full_name" placeholder="Enter your Full Name" value={form.full_name || ''} onChange={handleChange} disabled={!editing} className="h-14 text-base bg-white" />
             </div>
             <div>
               <label className="text-sm font-medium text-black">Email</label>
-              <Input name="email"  value={form.email || ''} onChange={handleChange} disabled className="h-14 text-base" />
+              <Input name="email"  value={form.email || ''} onChange={handleChange} disabled className="h-14 text-base bg-white" />
             </div>
             <div>
               <label className="text-sm font-medium text-black">Phone</label>
-              <Input name="phone" placeholder="Enter your phone number" value={form.phone || ''} onChange={handleChange} disabled={!editing} className="h-14 text-base" />
+              <Input name="phone" placeholder="Enter your phone number" value={form.phone || ''} onChange={handleChange} disabled={!editing} className="h-14 text-base bg-white" />
             </div>
 
             <div>
-              <label className="text-sm font-medium text-black">Bank Name</label>
+              <label className="text-sm font-medium text-black ">Bank Name</label>
 
               {banksLoading ? (
                 <Skeleton className="h-14 w-full" />
@@ -294,7 +312,8 @@ const handleChange = (e) => {
                 <>
             <div>
               <label className="text-sm font-medium text-black">Account Number</label>
-              <Input name="account_number" placeholder="Enter your account number" value={form.account_number || ''} onChange={handleChange} disabled={!editing} className="h-14 text-base" />
+              <Input name="account_number"  pattern="[0-9]*"
+                maxLength={10} placeholder="Enter your account number" value={form.account_number || ''} onChange={handleChange} disabled={!editing} className="h-14 bg-white text-base" />
               <p className="text-color2 ml-2 text-semibold text-sm">{fetchingAccount ? "Checking" :form.account_name}</p>
             </div>
                 </>
@@ -303,7 +322,7 @@ const handleChange = (e) => {
 
             <div>
               <label className="text-sm font-medium text-black">Address</label>
-              <Input name="address" placeholder="Enter your residential address" value={form.address || ''} onChange={handleChange} disabled={!editing} className="h-14 text-base" />
+              <Input name="address" placeholder="Enter your residential address" value={form.address || ''} onChange={handleChange} disabled={!editing} className="h-14 text-base bg-white" />
             </div>
 
           </div>

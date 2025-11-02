@@ -106,6 +106,10 @@ useEffect(()=>{
 },[user])
 
 async function handleWithdraw() {
+  if (profile?.bank_code) {
+    toast.error("Add bank details");
+    return;
+  }
   if (Number(profile?.available_balance || 0) <= 0) {
     toast.error("No balance to withdraw");
     return;
@@ -115,7 +119,7 @@ async function handleWithdraw() {
       accountname: profile.account_name,
       accountnumber: profile?.account_number,
       bankname: profile?.bank_name,
-      amount: profile?.available_balance * 95/100,
+      amount: profile?.available_balance * 97.6/100,
       paymentreference: `PAY_REF_${crypto.randomUUID()}`,
       date: new Date(),
       status: "pending",
@@ -172,7 +176,7 @@ async function handleWithdraw() {
         description = {`You are about to withdraw ₦${profile?.available_balance.toLocaleString()
           
         }  to ${profile?.account_number} ${profile?.bank_name}. 
-         You will be charged 5% for each withdrawal`}
+         You will be charged 2.4% for each withdrawal`}
         confirmLabel = "Yes, continue"
         cancelLabel = "Cancel"
         loading = {withdrawing}
