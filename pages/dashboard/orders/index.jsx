@@ -71,6 +71,7 @@ export default function OrdersPage({ store, hasStore }) {
 
     useEffect(()=>{
       if(id){
+        console.log(id)
         setViewing(true)
       }else{
         setViewing(false)

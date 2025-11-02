@@ -96,7 +96,7 @@ export default function PaymentPage({ store }) {
             buyer_email: checkoutData.email,
             order_amount: total,
           });
-          if(store?.store_email){
+          if(store.store_email){
 
             await sendEmail(EMAIL_TEMPLATES.orderSeller, {
                        order_id: orderId,
