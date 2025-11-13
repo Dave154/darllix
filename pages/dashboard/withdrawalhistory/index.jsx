@@ -12,18 +12,6 @@ export default function WithdrawalsPage() {
   const [error, setError] = useState(null);
     const supabase = useSupabaseClient()
     const {user, profile } = useUser()
-const payoutData = [{
-  id: "txn_9021X",
-  owner_id: "user_12984",
-  accountname: "David Johnson",
-  accountnumber: "2248893031",
-  bankname: "Access Bank",
-  amount: 75000,
-  paymentreference: "PAY-REF-9982331",
-  date: "2025-11-02T15:20:00Z",
-  status: "pending",
-  created_at: "2025-11-02T15:22:10Z"
-}]
   const fetchWithdrawalsForUser = useCallback(async () => {
     const uid = user?.id;
     if (!uid) return [];
@@ -36,9 +24,7 @@ const payoutData = [{
         .order("created_at", { ascending: false });
 
       if (error) throw error;
-      setWithdrawals(payoutData)
-
-      // setWithdrawals(data || [])
+      setWithdrawals(data || [])
     } catch (err) {
       console.error("fetchWithdrawalsForUser error", err);
       throw err;

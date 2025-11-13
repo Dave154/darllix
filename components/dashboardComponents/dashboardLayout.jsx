@@ -33,6 +33,7 @@ import { useUser } from "../../hooks/useUser";
 import { withAuth } from "../../lib/withAuth";
 import AreYouSureModal from "./areYouSure";
 import Notification from "./bannerNotification";
+import SupportButton from "./supportButton";
 
 const menuItems = [
   { title: "Dashboard", icon: Home, href: "/dashboard" },
@@ -164,7 +165,7 @@ async function handleWithdraw() {
   return (
    
     <>
-
+     <SupportButton />
     <Toaster
       position="top-right"
     />
