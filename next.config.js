@@ -63,27 +63,20 @@ const nextConfig = {
       {
         source: "/",
         has: [{ type: "host", value: ":subdomain.darllix.shop" }],
-        destination: "/storefront?store=:subdomain",
+        destination: "/storefront",
       },
 
-      // Example: store.darllix.shop/product/123  -> /storefront/product/123?store=store
       {
-        source: "/:path*",
+        source: "/:slug*",
         has: [{ type: "host", value: ":subdomain.darllix.shop" }],
-        destination: "/storefront/:path*?store=:subdomain",
+        destination: "/storefront/:slug",
       },
 
-      // === Optional explicit product route mapping for non-subdomain requests to storefront ===
-      // If you keep product pages on the storefront under the root domain as well,
-      // map them explicitly (avoid a global :slug* rule).
       {
         source: "/product/:id",
         destination: "/storefront/product/:id",
       },
 
-      // Add any other explicit mappings you actually need here.
-      // Do NOT use a global `"/:slug*"` -> `"/storefront/:slug*"` rewrite
-      // unless you intend every path to hit the storefront.
     ]
   },
 }
