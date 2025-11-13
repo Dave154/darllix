@@ -19,8 +19,10 @@ const nextConfig = {
       },
       {
         source: "/:slug*",
+       has: [{ type: "host", value: ":subdomain.darllix.shop" }],
         destination: "/storefront/:slug*",
       },
+      
 
         {
       source: "/product/:id",
