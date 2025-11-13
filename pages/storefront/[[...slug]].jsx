@@ -42,23 +42,24 @@ export default function StorefrontDynamic({ store, slug }) {
 console.log(store,slug)
   if (!store && slug[0] === "storefront") {
     content = <Global404 />;
-  } else if (pathname.startsWith("/payment-success")) {
+  } else if (slug[0] === "storefront" && pathname.startsWith("/payment-success")) {
     content = <PaymentSuccess />;
-  } else if ( pathname === "/") {
+  } else if (slug[0] === "storefront" && pathname === "/") {
     content = <Storefront store={store} />;
-  } else if ( pathname === "/cart") {
+  } else if (slug[0] === "storefront" && pathname === "/cart") {
     content = <CartPage store={store} />;
-  } else if ( pathname === "/checkout") {
+  } else if (slug[0] === "storefront" && pathname === "/checkout") {
     content = <Checkout store={store} />;
-  } else if (pathname === "/checkout/payment") {
+  } else if (slug[0] === "storefront" && pathname === "/checkout/payment") {
     content = <PaymentPage store={store} />;
-  } else if (athname === "/checkout/shipping") {
+  } else if (slug[0] === "storefront" && pathname === "/checkout/shipping") {
     content = <ShippingPage store={store} />;
-  } else if (pathname.startsWith("/product/")) {
+  } else if (slug[0] === "storefront" && pathname.startsWith("/product/")) {
     const productId = pathname.split("/")[2];
     content = <ProductPage store={store} productId={productId} />;
-  }else{
+  } else if(slug[0] === "storefront") {
     content = <StoreFront404 store={store} />;
+  }else{
     console.log(pathname)
   }
 
