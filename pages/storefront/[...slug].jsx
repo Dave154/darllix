@@ -60,11 +60,7 @@ export default function StorefrontDynamic({ store, slug }) {
   } else if(slug[0] === "storefront") {
     content = <StoreFront404 store={store} />;
   }else{
-    console.log(window.location.pathname,)
-    // preserve ?query and #hash when reloading
-    const fullUrl = window.location.pathname + window.location.search + window.location.hash;
-    window.location.assign(fullUrl); // hard navigation + reload
-    // or: window.location.replace(fullUrl); // replace history entry
+    console.log(pathname)
   }
 
 
