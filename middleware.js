@@ -26,9 +26,11 @@ export function middleware(req) {
       : cleanHost.replace(`.${rootDomain}`, "");
 
     if (subdomain && subdomain.trim() !== "") {
-      url.searchParams.set("store", subdomain);
-      url.pathname = "/storefront";
-      return NextResponse.rewrite(url);
+      if (url.pathname === "/" || url.pathname === "") {
+        url.searchParams.set("store", subdomain);
+        url.pathname = "/storefront";
+        return NextResponse.rewrite(url);
+  }
     }
   }
 
