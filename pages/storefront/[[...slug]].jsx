@@ -48,13 +48,13 @@ console.log(store,slug)
     content = <Storefront store={store} />;
   } else if (slug[0] === "storefront" && pathname === "/cart") {
     content = <CartPage store={store} />;
-  } else if (slug[0] === "storefront" && pathname === "/checkout") {
+  } else if ( pathname === "/checkout") {
     content = <Checkout store={store} />;
-  } else if (slug[0] === "storefront" && pathname === "/checkout/payment") {
+  } else if ( pathname === "/checkout/payment") {
     content = <PaymentPage store={store} />;
-  } else if (slug[0] === "storefront" && pathname === "/checkout/shipping") {
+  } else if (pathname === "/checkout/shipping") {
     content = <ShippingPage store={store} />;
-  } else if (slug[0] === "storefront" && pathname.startsWith("/product/")) {
+  } else if (pathname.startsWith("/product/")) {
     const productId = pathname.split("/")[2];
     content = <ProductPage store={store} productId={productId} />;
   } else if(slug[0] === "storefront") {
