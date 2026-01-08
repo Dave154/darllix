@@ -25,7 +25,7 @@ export default function SupportButton() {
       title: "WhatsApp",
       description: "Chat with us instantly on WhatsApp",
       value: "Chat on WhatsApp",
-      action: "https://wa.me/9045058791",
+      action: "https://wa.me/+2349045058791",
       color: "from-green-500 to-emerald-500"
     },
     {

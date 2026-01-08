@@ -64,7 +64,7 @@ async function handleUpdateProduct(product) {
   toast.success('Product updated succesfully')
 
   const { product: updated } = await res.json();
-  return updated;
+  return updated; 
 }
 
 function ModalImpl({ resolvePromise, options = {} }) {
@@ -108,9 +108,22 @@ function ModalImpl({ resolvePromise, options = {} }) {
   useEffect(() => {
     if (!initialProduct) return;
     const { name, price, discountPrice, description, available,images: imgs = [], categories: cats = [] } = initialProduct;
+      
+    const categoryIds = Array.isArray(cats) 
+      ? cats.map(c => typeof c === 'object' ? c.id : c) 
+      : [];
 
-    reset({ name, price: price ?? "", available: available ?? "", discountPrice: discountPrice ?? "", description: description ?? "", categories: cats ?? [] });
+    reset({ 
+      name, 
+      price: price ?? "", 
+      available: available ?? "", 
+      discountPrice: discountPrice ?? "", 
+      description: description ?? "", 
+      categories: categoryIds 
+    });
+
     setSelectedCats(Array.isArray(cats) ? cats.slice(0, 3) : []);
+ 
     const imgsNormalized = imgs.map((it, idx) => {
       if (!it) return null;
       if (typeof it === "string") return { file: null, preview: it, id: `existing-${idx}`, path: null };

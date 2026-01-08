@@ -580,12 +580,12 @@ async function confirmDelete() {
                         <TableCell>
                           <StatusBadge status={p.status || "Draft"} />
                         </TableCell>
-                        <TableCell className="text-sm text-muted-foreground">₦{Number(p.price).toFixed(2)}</TableCell>
+                        <TableCell className="text-sm text-muted-foreground">₦{p.price?.toLocaleString()}</TableCell>
                        <TableCell className="text-sm text-muted-foreground line-clamp-1  overflow-hidden">
 
                          {
-                         p.categories.map(i=>{
-                          return `${i.name} , `
+                         p.categories.map((i,index)=>{
+                          return `${i.name} ${index < p.categories.length - 1 ? ', ' : ''}`
                          })
                          
                          }
