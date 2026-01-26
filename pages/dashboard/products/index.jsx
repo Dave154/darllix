@@ -585,7 +585,7 @@ async function confirmDelete() {
 
                          {
                          p.categories.map((i,index)=>{
-                          return `${i.name} ${index < p.categories.length - 1 ? ', ' : ''}`
+                          return `${categories.find(cat=> i === cat.id)?.name || ''} ${index < p.categories.length - 1 ? ', ' : ''}`
                          })
                          
                          }
