@@ -805,7 +805,6 @@ function ModalImpl({ resolvePromise, options = {} }) {
               ) : (
                 categories.map((c) => {
                   const active = selectedCats.find(cat=> cat.id === c.id)
-                  // console.log(active, selectedCats)
                   return (
                     <button
                       key={c.id}
