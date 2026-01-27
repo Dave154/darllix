@@ -255,7 +255,7 @@ if (req.method === "GET") {
 
     // category server-side filter: expect categories column to be a JSON array of ids (text/uuid)
     if (categoryIdToFilter) {
-      queryBuilder = queryBuilder.contains("categories", [categoryIdToFilter]);
+     queryBuilder = queryBuilder.filter("categories::text", "ilike", `%"${categoryIdToFilter}"%`);
 
 
     }
