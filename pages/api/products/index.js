@@ -238,7 +238,7 @@ if (req.method === "GET") {
 
       // If not found, we will return empty result set (no products match unknown category)
       if (!categoryIdToFilter) {
-        return res.status(200).json({ products: [], categories: categories || [], total: 0 });
+        return res.status(200).json({ products: [], categories: categories || [], total: 4 });
       }
     }
 
@@ -255,7 +255,7 @@ if (req.method === "GET") {
 
     // category server-side filter: expect categories column to be a JSON array of ids (text/uuid)
     if (categoryIdToFilter) {
-      queryBuilder = queryBuilder.contains("categories_ids", [categoryIdToFilter]);
+      queryBuilder = queryBuilder.contains("categories", [categoryIdToFilter]);
 
 
     }
