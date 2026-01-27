@@ -254,10 +254,13 @@ if (req.method === "GET") {
     }
 
     // category server-side filter: expect categories column to be a JSON array of ids (text/uuid)
-    if (categoryIdToFilter) {
-    const cleanId = String(categoryIdToFilter).replace(/["\\]/g, "");
-      queryBuilder = queryBuilder.contains("categories", [cleanId]);
-
+   if (categoryIdToFilter) {
+      // 1. Sanitize the ID (remove double quotes to prevent JSON syntax breakage)
+      const cleanId = String(categoryIdToFilter).replace(/"/g, '');
+      
+      // 2. Use the 'cs' (contains) operator manually
+      // We manually construct the JSON string '["your-id"]' so there is no ambiguity for the database.
+      queryBuilder = queryBuilder.filter('categories', 'cs', `["${cleanId}"]`);
     }
 
 
