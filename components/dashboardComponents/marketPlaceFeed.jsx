@@ -4,6 +4,7 @@ import MarketplaceSearch from './marketPlaceSearch';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Play, X, Heart, Search, Loader2, WifiOff, RefreshCw } from 'lucide-react';
 import { toast } from 'sonner';
+import { useUser } from '../../hooks/useUser';
 
 const mockStories = [
   { id: 1, vendor: 'Zenath', image: '/darllix_logo.png', trending: true },
@@ -16,6 +17,7 @@ const loopedStories = Array(10).fill(mockStories).flat().map((story, index) => (
 }));
 
 export default function MarketplaceFeed() {
+    const {user}= useUser()
   const [activeModalPost, setActiveModalPost] = useState(null);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   
@@ -29,7 +31,8 @@ export default function MarketplaceFeed() {
   const [refreshing, setRefreshing] = useState(false);
   const [pullProgress, setPullProgress] = useState(0);
   
-  const observerTarget = useRef(null);
+  const mobileObserverRef = useRef(null);
+  const desktopObserverRef = useRef(null);
   const scrollRef = useRef(null);
   const desktopScrollRef = useRef(null);
   const touchStart = useRef(0);
@@ -100,12 +103,10 @@ export default function MarketplaceFeed() {
   }, [currentSearch]);
 
   useEffect(() => {
-    if (!isOffline && posts.length === 0 && !loading) {
-      setPage(0);
-      setHasMore(true);
+    if (!isOffline && posts.length === 0 && !loading && hasMore) {
       fetchPosts(0, currentSearch, true);
     }
-  }, [isOffline, posts.length, loading, currentSearch]);
+  }, [isOffline]);
 
   const handleObserver = useCallback((entries) => {
     const target = entries[0];
@@ -119,12 +120,14 @@ export default function MarketplaceFeed() {
   }, [hasMore, loading, currentSearch, isOffline]);
 
   useEffect(() => {
-    const element = observerTarget.current;
     const option = { threshold: 0.1 };
     const observer = new IntersectionObserver(handleObserver, option);
-    if (element) observer.observe(element);
-    return () => { if (element) observer.unobserve(element); };
-  }, [handleObserver]);
+    
+    if (mobileObserverRef.current) observer.observe(mobileObserverRef.current);
+    if (desktopObserverRef.current) observer.observe(desktopObserverRef.current);
+    
+    return () => observer.disconnect();
+  }, [handleObserver, posts]);
 
   const handleExecuteSearch = (searchTerm) => {
     setIsSearchOpen(false);
@@ -179,6 +182,10 @@ export default function MarketplaceFeed() {
     touchStart.current = 0;
   };
 
+  const handlePostDeleted = (deletedPostId) => {
+  setPosts(prevPosts => prevPosts.filter(post => post.id !== deletedPostId));
+};
+
   if (isOffline && posts.length === 0) {
     return (
       <div className="w-full h-[calc(100dvh-56px)] md:h-full flex flex-col items-center justify-center bg-color4 px-6 relative z-50">
@@ -212,10 +219,19 @@ export default function MarketplaceFeed() {
         
         {currentSearch ? (
           <div className="relative w-full shrink-0 bg-white z-30 px-4 py-3 border-b border-gray-100 shadow-sm flex items-center">
-            <div className="flex-1 flex items-center bg-gray-50 border border-gray-200 rounded-full px-4 py-2.5">
+            <div 
+              onClick={() => setIsSearchOpen(true)}
+              className="flex-1 flex items-center bg-gray-50 border border-gray-200 rounded-full px-4 py-2.5 cursor-pointer"
+            >
               <Search className="w-4 h-4 text-gray-400 mr-2 shrink-0" />
               <span className="flex-1 text-sm text-color3 truncate font-medium">{currentSearch}</span>
-              <button onClick={clearSearch} className="p-1 rounded-full hover:bg-gray-200 transition-colors shrink-0">
+              <button 
+                onClick={(e) => {
+                  e.stopPropagation();
+                  clearSearch();
+                }} 
+                className="p-1 rounded-full hover:bg-gray-200 transition-colors shrink-0"
+              >
                 <X className="w-4 h-4 text-gray-500" />
               </button>
             </div>
@@ -263,24 +279,37 @@ export default function MarketplaceFeed() {
             onTouchEnd={handleTouchEnd}
             className="w-full h-full flex flex-col overflow-y-scroll snap-y snap-mandatory scrollbar-none overscroll-y-contain relative z-10"
           >
-            {posts.map((post) => (
-              <div key={post.id} className="w-full h-full shrink-0 snap-start relative">
-                <MarketplacePost post={post} />
-              </div>
-            ))}
+            {posts.length === 0 && !loading && currentSearch ? (
+               <div className="w-full h-full flex flex-col items-center justify-center p-8 text-center shrink-0">
+                  <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mb-4">
+                    <Search className="w-10 h-10 text-gray-400" />
+                  </div>
+                  <h3 className="text-xl font-bold text-color3 mb-2">No results found</h3>
+                  <p className="text-gray-500 text-sm max-w-xs">We couldn't find anything for "{currentSearch}". Try a different keyword.</p>
+               </div>
+            ) : (
+              posts.map((post) => (
+                <div key={post.id} className="w-full h-full shrink-0 snap-start relative">
+                  <MarketplacePost post={post} 
+                  currentUserId={user?.id}
+                   onDeleteCallback={handlePostDeleted}
+                  />
+                </div>
+              ))
+            )}
             
-            <div ref={observerTarget} className="w-full h-full shrink-0 snap-start flex flex-col items-center justify-center gap-3">
-              {isOffline ? (
-                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex flex-col items-center gap-2">
-                   <WifiOff className="w-6 h-6 text-gray-400" />
-                   <span className="text-gray-400 text-sm font-medium">Waiting for connection...</span>
-                </motion.div>
-              ) : loading && !refreshing ? (
-                <Loader2 className="w-8 h-8 animate-spin text-color1" />
-              ) : !hasMore && posts.length > 0 ? (
-                <span className="text-gray-400 text-sm font-medium">You've reached the end!</span>
-              ) : null}
-            </div>
+            {hasMore && (
+              <div ref={mobileObserverRef} className="w-full h-full shrink-0 snap-start flex flex-col items-center justify-center gap-3">
+                {isOffline ? (
+                  <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex flex-col items-center gap-2">
+                     <WifiOff className="w-6 h-6 text-gray-400" />
+                     <span className="text-gray-400 text-sm font-medium">Waiting for connection...</span>
+                  </motion.div>
+                ) : (
+                  <Loader2 className="w-8 h-8 animate-spin text-color1" />
+                )}
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -297,10 +326,19 @@ export default function MarketplaceFeed() {
             </button>
             
             {currentSearch ? (
-              <div className="flex items-center gap-2 bg-white pl-4 pr-2 py-1.5 rounded-full shadow-sm border border-gray-200">
+              <div 
+                onClick={() => setIsSearchOpen(true)}
+                className="flex items-center gap-2 bg-white pl-4 pr-2 py-1.5 rounded-full shadow-sm border border-gray-200 cursor-pointer hover:bg-gray-50 transition-colors"
+              >
                 <Search className="w-4 h-4 text-gray-500" />
                 <span className="text-sm font-medium text-color3 max-w-[150px] truncate">{currentSearch}</span>
-                <button onClick={clearSearch} className="p-1.5 hover:bg-gray-100 rounded-full transition-colors">
+                <button 
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    clearSearch();
+                  }} 
+                  className="p-1.5 hover:bg-gray-100 rounded-full transition-colors"
+                >
                   <X className="w-4 h-4 text-gray-500" />
                 </button>
               </div>
@@ -334,51 +372,61 @@ export default function MarketplaceFeed() {
           </div>
         )}
 
-        <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {posts.map((post) => (
-            <motion.div 
-              key={post.id} 
-              whileHover={{ y: -5 }}
-              onClick={() => setActiveModalPost(post)}
-              className="group cursor-pointer bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100 hover:shadow-xl transition-all"
-            >
-              <div className="relative aspect-[4/5] w-full bg-gray-100 overflow-hidden">
-                {post.isVideo ? (
-                  <video src={post.mediaUrl} autoPlay muted loop playsInline className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
-                ) : (
-                  <img src={post.mediaUrl} alt={post.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
-                )}
-                {post.isVideo && (
-                  <div className="absolute top-3 right-3 w-8 h-8 bg-black/50 backdrop-blur-md rounded-full flex items-center justify-center">
-                    <Play className="w-4 h-4 text-white fill-white ml-0.5" />
+        {posts.length === 0 && !loading && currentSearch ? (
+          <div className="w-full flex flex-col items-center justify-center p-16 text-center">
+            <div className="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mb-6">
+              <Search className="w-12 h-12 text-gray-400" />
+            </div>
+            <h3 className="text-2xl font-bold text-color3 mb-3">No results found</h3>
+            <p className="text-gray-500 max-w-md">We couldn't find any products matching "{currentSearch}". Try a different keyword or category.</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {posts.map((post) => (
+              <motion.div 
+                key={post.id} 
+                whileHover={{ y: -5 }}
+                onClick={() => setActiveModalPost(post)}
+                className="group cursor-pointer bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100 hover:shadow-xl transition-all"
+              >
+                <div className="relative aspect-[4/5] w-full bg-gray-100 overflow-hidden">
+                  {post.isVideo ? (
+                    <video src={post.mediaUrl} autoPlay muted loop playsInline className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                  ) : (
+                    <img src={post.mediaUrl} alt={post.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                  )}
+                  {post.isVideo && (
+                    <div className="absolute top-3 right-3 w-8 h-8 bg-black/50 backdrop-blur-md rounded-full flex items-center justify-center">
+                      <Play className="w-4 h-4 text-white fill-white ml-0.5" />
+                    </div>
+                  )}
+                  <div className="absolute bottom-3 left-3 bg-white/90 backdrop-blur-sm px-2 py-1 rounded-lg flex items-center gap-1.5 shadow-sm">
+                    <Heart className="w-3.5 h-3.5 text-red-500 fill-red-500" />
+                    <span className="text-color3 text-xs font-bold">{post.likesCount}</span>
                   </div>
-                )}
-                <div className="absolute bottom-3 left-3 bg-white/90 backdrop-blur-sm px-2 py-1 rounded-lg flex items-center gap-1.5 shadow-sm">
-                  <Heart className="w-3.5 h-3.5 text-red-500 fill-red-500" />
-                  <span className="text-color3 text-xs font-bold">{post.likesCount}</span>
                 </div>
-              </div>
-              <div className="p-4">
-                <p className="text-gray-500 text-xs font-semibold uppercase tracking-wider mb-1">{post.vendorName}</p>
-                <h3 className="text-color3 font-bold text-base truncate">{post.title}</h3>
-                <p className="text-color2 font-black mt-1">₦{post.price}</p>
-              </div>
-            </motion.div>
-          ))}
-        </div>
-
-        <div ref={observerTarget} className="w-full h-24 flex items-center justify-center mt-6 gap-3">
-            {isOffline ? (
-              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex items-center gap-2 px-4 py-2 bg-gray-100 rounded-full">
-                 <WifiOff className="w-4 h-4 text-gray-500" />
-                 <span className="text-gray-500 text-sm font-medium">Network lost. Paused.</span>
+                <div className="p-4">
+                  <p className="text-gray-500 text-xs font-semibold uppercase tracking-wider mb-1">{post.vendorName}</p>
+                  <h3 className="text-color3 font-bold text-base truncate">{post.title}</h3>
+                  <p className="text-color2 font-black mt-1">₦{post.price}</p>
+                </div>
               </motion.div>
-            ) : loading && !refreshing ? (
-              <Loader2 className="w-8 h-8 animate-spin text-color1" />
-            ) : !hasMore && posts.length > 0 ? (
-              <span className="text-gray-400 text-sm font-medium">You've reached the end!</span>
-            ) : null}
-        </div>
+            ))}
+          </div>
+        )}
+
+        {hasMore && (
+          <div ref={desktopObserverRef} className="w-full flex items-center justify-center mt-6 gap-3 pb-8">
+              {isOffline ? (
+                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex items-center gap-2 px-4 py-2 bg-gray-100 rounded-full">
+                   <WifiOff className="w-4 h-4 text-gray-500" />
+                   <span className="text-gray-500 text-sm font-medium">Network lost. Paused.</span>
+                </motion.div>
+              ) : (
+                <Loader2 className="w-8 h-8 animate-spin text-color1" />
+              )}
+          </div>
+        )}
       </div>
 
       <AnimatePresence>
@@ -394,7 +442,7 @@ export default function MarketplaceFeed() {
               initial={{ scale: 0.95, opacity: 0, y: 20 }} animate={{ scale: 1, opacity: 1, y: 0 }} exit={{ scale: 0.95, opacity: 0, y: 20 }}
               className="relative w-[500px] h-[90vh] max-h-[900px] bg-black rounded-[2.5rem] overflow-hidden shadow-2xl border-4 border-gray-800 z-10"
             >
-              <MarketplacePost post={activeModalPost} />
+              <MarketplacePost post={activeModalPost} currentUserId={user?.id} onDeleteCallback={handlePostDeleted} />
               <button 
                 onClick={() => setActiveModalPost(null)}
                 className="absolute top-4 right-4 w-10 h-10 bg-black/50 backdrop-blur-md rounded-full flex items-center justify-center text-white hover:bg-white/20 transition-colors z-50"
