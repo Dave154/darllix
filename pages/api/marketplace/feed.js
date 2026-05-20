@@ -74,20 +74,26 @@ export default async function handler(req, res) {
         }
       }
 
-      const formattedPosts = posts.map(post => ({
-        id: post.id,
-        vendorId: post.vendor_id,
-        vendorName: post.profiles?.full_name || 'Vendor',
-        vendorSlug: post.stores?.subdomain || '', 
-        title: post.title,
-        price: post.price,
-        description: post.description,
-        likesCount: post.likes_count,
-        mediaUrl: post.media_url,
-        isVideo: post.media_type === 'video',
-        isPromoted: post.is_promoted,
-        user_has_liked: userLikedPostIds.has(post.id)
-      }));
+      const now = new Date().getTime();
+
+      const formattedPosts = posts.map(post => {
+        const isCurrentlyPromoted = post.is_promoted && post.promoted_until && new Date(post.promoted_until).getTime() > now;
+        
+        return {
+          id: post.id,
+          vendorId: post.vendor_id,
+          vendorName: post.profiles?.full_name || 'Vendor',
+          vendorSlug: post.stores?.subdomain || '', 
+          title: post.title,
+          price: post.price,
+          description: post.description,
+          likesCount: post.likes_count,
+          mediaUrl: post.media_url,
+          isVideo: post.media_type === 'video',
+          isPromoted: isCurrentlyPromoted,
+          user_has_liked: userLikedPostIds.has(post.id)
+        };
+      });
 
       return res.status(200).json({ posts: formattedPosts });
     }
@@ -146,12 +152,15 @@ export default async function handler(req, res) {
     let finalFeed = [...organicPosts];
     
     if (organicPosts.length > 0) {
+      const currentPage = parseInt(page);
+      
       const { data: promotedData } = await supabase
         .from('marketplace_posts')
         .select('*, profiles(full_name), stores(subdomain)')
         .eq('is_promoted', true)
+        .gt('promoted_until', new Date().toISOString())
         .order('created_at', { ascending: false })
-        .limit(1); 
+        .range(currentPage, currentPage); 
         
       if (promotedData && promotedData.length > 0) {
         const ad = promotedData[0];
@@ -182,12 +191,10 @@ export default async function handler(req, res) {
           user_has_liked: adLiked
         };
         
-        const isDuplicate = finalFeed.some(p => p.id === formattedAd.id);
+        finalFeed = finalFeed.filter(p => p.id !== formattedAd.id);
         
-        if (!isDuplicate) {
-          const insertIndex = finalFeed.length >= 2 ? 2 : finalFeed.length;
-          finalFeed.splice(insertIndex, 0, formattedAd);
-        }
+        const insertIndex = finalFeed.length >= 2 ? 2 : finalFeed.length;
+        finalFeed.splice(insertIndex, 0, formattedAd);
       }
     }
 

@@ -1,14 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Search, X, Clock, TrendingUp, ArrowLeft, Loader2, User } from 'lucide-react';
+import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 
 export default function MarketplaceSearch({ isOpen, onClose, onSearch }) {
   const [query, setQuery] = useState('');
-  const [recentSearches, setRecentSearches] = useState(['leather bag', 'wireless earbuds', 'sneakers']);
-  
+  const [recentSearches, setRecentSearches] = useState([]);
+  const [trendingTerms, setTrendingTerms] = useState([]);
   const [suggestions, setSuggestions] = useState([]);
   const [isLoadingSuggestions, setIsLoadingSuggestions] = useState(false);
-
+  const supabase = createClientComponentClient();
   useEffect(() => {
     if (isOpen) {
       document.body.style.overflow = 'hidden';
@@ -19,6 +20,30 @@ export default function MarketplaceSearch({ isOpen, onClose, onSearch }) {
       document.body.style.overflow = 'unset';
     };
   }, [isOpen]);
+
+
+  useEffect(() => {
+    if (isOpen) {
+      const fetchTrending = async () => {
+        try {
+          const { data, error } = await supabase
+            .from('marketplace_posts')
+            .select('title')
+            .order('likes_count', { ascending: false })
+            .limit(5);
+
+          if (!error && data && data.length > 0) {
+            const terms = data.map(post => post.title);
+            setTrendingTerms(terms);
+          }
+        } catch (err) {
+          console.error("Failed to fetch trends", err);
+        }
+      };
+
+      fetchTrending();
+    }
+  }, [isOpen, supabase]);
 
   useEffect(() => {
     if (query.startsWith('@') && query.length > 1) {
@@ -182,7 +207,7 @@ export default function MarketplaceSearch({ isOpen, onClose, onSearch }) {
                       <TrendingUp className="w-4 h-4 text-color1" /> Trending Now
                     </h3>
                     <div className="flex flex-wrap gap-2">
-                      {['perfume oils', 'macbook pro', 'nike dunks', 'skincare', 'office wear'].map((trend, i) => (
+                      {trendingTerms.map((trend, i) => (
                         <motion.button
                           key={i}
                           whileTap={{ scale: 0.95 }}

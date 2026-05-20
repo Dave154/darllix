@@ -98,7 +98,7 @@ export default function DashboardLayout({ children }) {
   }, [user]);
 
   async function handleWithdraw() {
-    if (profile?.bank_code) {
+    if (!profile?.bank_code) {
       toast.error("Add bank details");
       return;
     }

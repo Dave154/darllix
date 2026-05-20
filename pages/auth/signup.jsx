@@ -90,7 +90,10 @@ const images = ["/vendor1.jpg", "/vendor6.jpg", "/vendor6.jpg"];
         // },
       });
       if (error) throw error;
-      router.push('/auth/login')
+      
+      // Preserve returnUrl if provided
+      const returnUrl = router.query.returnUrl || '';
+      router.push(`/auth/login${returnUrl ? `?returnUrl=${encodeURIComponent(returnUrl)}` : ''}`);
       setLoading(false)
     } catch (err) {
       setLoading(false)

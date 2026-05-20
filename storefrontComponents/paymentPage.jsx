@@ -22,9 +22,10 @@ import Image from "next/image";
 import dynamic from "next/dynamic";
 import { useEffect, useRef, useState } from "react";
 import Loader from "./loader";
-import { toast } from "sonner"
+import { toast } from "sonner";
 import { sendEmail } from "../lib/emailClient";
 import { EMAIL_TEMPLATES } from "../lib/emailTemplates";
+
 export default function PaymentPage({ store }) {
   const { cart, checkoutData, setCheckoutData, cartTotal, clearCart } = useStore();
   const subtotal = cart.reduce((sum, i) => sum + i.price * i.quantity, 0);
@@ -62,7 +63,6 @@ export default function PaymentPage({ store }) {
   async function handlePaystackSuccess(response) {
     setLoading(true);   
     try {
-      // call server verify endpoint
       const verifyRes = await fetch("/api/orders?action=verify", {
         method: "POST",
         headers: { "Content-Type": "application/json", Accept: "application/json" },
@@ -70,55 +70,22 @@ export default function PaymentPage({ store }) {
         credentials: "same-origin",
       });
 
-      const verifyText = await verifyRes.text();
-      let verifyJson;
-      try {
-        verifyJson = JSON.parse(verifyText);
-      } catch (parseErr) {
-        console.error("Non-JSON verify response from server:", verifyText);
-         
-                toast.error("Something went wrong")
-
-        throw new Error("Payment verification returned non-JSON. Check server logs.");
-      }
-
-      if (!verifyRes.ok) {
-        toast.error("Something went wrong")
-        console.error("Verify failed:", verifyJson);
-        throw new Error(verifyJson?.error || "Payment verification failed");
-      }
+      if (!verifyRes.ok) throw new Error("Payment verification failed");
       
+      const verifyJson = await verifyRes.json();
       const orderId = verifyJson.order?.id || response.metadata?.orderId || response.reference;
-      toast.success("Payment successful")
-            await sendEmail(EMAIL_TEMPLATES.orderBuyer, {
-            buyer_name: checkoutData.firstName,
-            order_id: orderId,
-            buyer_email: checkoutData.email,
-            order_amount: total,
-          });
-          if(store.store_email){
-
-            await sendEmail(EMAIL_TEMPLATES.orderSeller, {
-                       order_id: orderId,
-                       seller_email: store.store_email,
-                       order_amount: subtotal,
-                       buyer_name: checkoutData.firstName,
-           
-                     });
-          }
-
-         
+      
+      toast.success("Payment successful");
       router.push(`/payment-success?order_id=${orderId}&ref=${response.reference}`);
     } catch (err) {
       console.error("Error verifying payment:", err);
-        toast.error("Error verifying payment:", err)   
+      toast.error("Error verifying payment. If charged, contact support.");   
     } finally {
       setLoading(false);
     }
   }
 
   function handlePaystackClose() {
-      
     setLoading(false);
   }
 
@@ -176,7 +143,7 @@ async function createOrderAndInitPaystack() {
         status: "pending",
         shipping_address: checkoutData.address || null,
         billing_address: checkoutData.address || null,
-        meta: { createdFromClient: true },
+        meta: { createdFromClient: true,  buyer_email: checkoutData.email},
         items: cart.map((it) => ({
           product_id: it.id || null,
           name: it.name,
@@ -219,7 +186,7 @@ async function createOrderAndInitPaystack() {
       email: checkoutData.email,
       amount: amountKobo,
       publicKey: process.env.NEXT_PUBLIC_PAYSTACK_KEY,
-      metadata: { orderId: order.id, storeId: order.store_id },
+      metadata: { orderId: order.id, storeId: order.store_id, type: 'product_order' },
     };
     setPaystackConfig(cfg);
 
@@ -252,11 +219,11 @@ async function createOrderAndInitPaystack() {
           store_id: checkoutData.storefrontId || checkoutData.storeId || store?.id,
           name: checkoutData.firstName + ' ' + checkoutData.lastName,
           email: checkoutData.email,
-          phone,
-          address,
+          phone: checkoutData.phone,
+          address: checkoutData.address,
         }),
       }).then(r => r.json());
-     
+      
 
       const orderPayload = {
         store_id: checkoutData.storefrontId || checkoutData.storeId || store?.id,
@@ -265,10 +232,11 @@ async function createOrderAndInitPaystack() {
         currency: "NGN",
         payment_method: method || "other",
         payment_provider: method === "darllix" ? "paystack" : null,
+        payment_reference: reference,
         status: "pending",
         shipping_address: checkoutData.address || null,
         billing_address: checkoutData.address || null,
-        meta: { createdFromClient: true },
+        meta: { createdFromClient: true,  buyer_email: checkoutData.email },
         items: cart.map((it) => ({
           product_id: it.id || null,
           name: it.name,
@@ -277,6 +245,7 @@ async function createOrderAndInitPaystack() {
           meta: {},
         })),
       };
+
 
       const createRes = await fetch("/api/orders", {
         method: "POST",

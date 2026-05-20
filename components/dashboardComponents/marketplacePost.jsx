@@ -1,10 +1,11 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { useRouter } from 'next/router';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Heart, Share2, Store, MoreHorizontal, Play, Volume2, VolumeX, Edit, Trash2, TrendingUp, Info, X, Flag, AlertTriangle, Loader2, Check } from 'lucide-react';
+import { Heart, Share2, Store, MoreHorizontal, Play, Volume2, VolumeX, Edit, Trash2, TrendingUp, Info, X, Flag, AlertTriangle, Loader2, Check, Search } from 'lucide-react';
 import { toast } from 'sonner';
 
-export default function MarketplacePost({ post, currentUserId, onDeleteCallback }) {
+export default function MarketplacePost({ post, currentUserId, onDeleteCallback, onVendorSearch, profileview = false, isPublic = false, onAuthRequired = null }) {
   const [isLiked, setIsLiked] = useState(post?.user_has_liked || false);
   const [likesCount, setLikesCount] = useState(post?.likesCount || 0);
   const [showBigHeart, setShowBigHeart] = useState(false);
@@ -122,6 +123,12 @@ export default function MarketplacePost({ post, currentUserId, onDeleteCallback 
     if (e) e.stopPropagation();
     if (isLikeLoading) return;
 
+    // Check if user is authenticated
+    if (!currentUserId) {
+      if (onAuthRequired) onAuthRequired('like posts');
+      return;
+    }
+
     setIsLikeLoading(true);
     const previousLikedState = isLiked;
     const previousCount = likesCount;
@@ -155,6 +162,12 @@ export default function MarketplacePost({ post, currentUserId, onDeleteCallback 
   };
 
   const handleDoubleTap = () => {
+    // Check if user is authenticated
+    if (!currentUserId) {
+      if (onAuthRequired) onAuthRequired('like posts');
+      return;
+    }
+    
     if (!isLiked) {
       handleLike();
     } else {
@@ -185,7 +198,7 @@ export default function MarketplacePost({ post, currentUserId, onDeleteCallback 
     
     if (!isOwner) trackAction('share');
 
-    const shareUrl = `${window.location.origin}/post/${post.id}`;
+    const shareUrl = `${window.location.origin}/dashboard/marketplace?tab=discover&post=${post.id}`;
     const shareData = {
       title: displayData.title,
       text: `Check out ${displayData.title} by ${post.vendorName} on Darllix.shop!`,
@@ -398,7 +411,7 @@ export default function MarketplacePost({ post, currentUserId, onDeleteCallback 
 
         <div className="mt-1">
           <p 
-            className={`text-white/90 text-sm drop-shadow-md ${!isExpanded ? 'line-clamp-2' : 'whitespace-pre-wrap pb-2'} cursor-pointer`}
+            className={`text-white/90 text-sm drop-shadow-md cursor-pointer transition-all duration-300 ${!isExpanded ? 'line-clamp-2' : 'whitespace-pre-wrap pb-2 max-h-[25vh] overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] overscroll-contain'}`}
             onClick={(e) => {
               if (displayData.description?.length > 80) {
                 e.stopPropagation();
@@ -520,13 +533,14 @@ export default function MarketplacePost({ post, currentUserId, onDeleteCallback 
                       <span className="text-xs font-semibold text-red-500">Report</span>
                     </button>
                   )}
-
+                  {!profileview && 
                   <button onClick={(e) => handleMenuAction(e, 'info')} className="flex flex-col items-center gap-3 min-w-[70px]">
                     <div className="w-16 h-16 rounded-full bg-gray-50 flex items-center justify-center hover:bg-gray-100 transition-colors">
                       <Info className="w-6 h-6 text-color3" />
                     </div>
                     <span className="text-xs font-semibold text-color3">Vendor Info</span>
                   </button>
+                  }
                 </div>
               </motion.div>
             </>
@@ -569,6 +583,19 @@ export default function MarketplacePost({ post, currentUserId, onDeleteCallback 
                     className="w-full py-4 bg-color1 text-white rounded-2xl font-bold text-lg hover:bg-color1/90 transition-colors shadow-lg flex items-center justify-center gap-2"
                   >
                     <Store className="w-5 h-5" /> Visit Full Store
+                  </button>
+
+                  <button 
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setShowVendorInfo(false);
+                      if (onVendorSearch && post?.vendorSlug) {
+                        onVendorSearch(post.vendorSlug);
+                      }
+                    }}
+                    className="w-full py-3 mt-3 bg-gray-100 text-color3 rounded-2xl font-bold text-md hover:bg-gray-200 transition-colors flex items-center justify-center gap-2"
+                  >
+                    <Search className="w-4 h-4" /> See all posts
                   </button>
                 </div>
               </motion.div>

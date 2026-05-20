@@ -106,7 +106,7 @@ const handleChange = (e) => {
         toast.error("Enter Full name")
         return;
       }
-       if(form.account_number.length !==10 && !form.account_name ){
+       if(form.account_number?.length !==10 && !form.account_name ){
         toast.error("Enter a valid account number")
         return;
       }
@@ -274,15 +274,15 @@ const handleChange = (e) => {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 text-black">
             <div>
               <label className="text-sm font-medium text-black">Full Name</label>
-              <Input name="full_name" placeholder="Enter your Full Name" value={form.full_name || ''} onChange={handleChange} disabled={!editing} className="h-14 text-base bg-white" />
+              <Input name="full_name" placeholder="Enter your Full Name" value={form?.full_name || ''} onChange={handleChange} disabled={!editing} className="h-14 text-base bg-white" />
             </div>
             <div>
               <label className="text-sm font-medium text-black">Email</label>
-              <Input name="email"  value={form.email || ''} onChange={handleChange} disabled className="h-14 text-base bg-white" />
+              <Input name="email"  value={form?.email || ''} onChange={handleChange} disabled className="h-14 text-base bg-white" />
             </div>
             <div>
               <label className="text-sm font-medium text-black">Phone</label>
-              <Input name="phone" placeholder="Enter your phone number" value={form.phone || ''} onChange={handleChange} disabled={!editing} className="h-14 text-base bg-white" />
+              <Input name="phone" placeholder="Enter your phone number" value={form?.phone || ''} onChange={handleChange} disabled={!editing} className="h-14 text-base bg-white" />
             </div>
 
             <div>
