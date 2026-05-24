@@ -113,7 +113,10 @@ export default function DarllixLogin() {
     //   user_email: values.email,
     //   to_email: values.email,
     // });
-    router.push(`/dashboard`);
+    
+    // Check if there's a returnUrl in query params
+    const returnUrl = router.query.returnUrl || '/dashboard';
+    router.push(returnUrl);
    } catch (err) {
     if (err.message === 'Failed to fetch'){
       toast.error('Network error')

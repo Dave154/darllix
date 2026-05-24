@@ -4,7 +4,8 @@ export const createDashboardSlice = (set, get) => ({
   sidebarOpen: true,
   loading: false,
   error: null,
-
+  isUploadModalOpen: false,
+  setUploadModalOpen: (isOpen) => set({ isUploadModalOpen: isOpen }),
   setHasStore: (has) => set({ hasStore: has }),
   setStore: (store) =>
     set({
