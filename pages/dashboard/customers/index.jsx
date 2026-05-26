@@ -28,12 +28,23 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { useRouter } from "next/router";
 import { useStore } from "@/store";
 import { withAuth } from "../../../lib/withAuth";
+import { withAuthAndSubscriptionData } from "../../../lib/withSubscription";
 import CustomerDetailsModal from "../../../components/dashboardComponents/customerDetailsModal";
+import SubscriptionRequired from "../../../components/dashboardComponents/subscriptionRequired";
 
-export default function CustomersPage({ store, hasStore }) {
+export default function CustomersPage({ store, hasStore, hasActiveSubscription }) {
   const setStore = useStore((s) => s.setStore);
   const router = useRouter();
   const { id } = router.query;
+
+  // If subscription is not active, show overlay
+  if (!hasActiveSubscription) {
+    return (
+      <DashboardLayout>
+        <SubscriptionRequired feature="Customer management" />
+      </DashboardLayout>
+    );
+  }
 
   // UI
   const [query, setQuery] = useState("");
@@ -246,4 +257,4 @@ export default function CustomersPage({ store, hasStore }) {
   );
 }
 
-export const getServerSideProps = withAuth();
+export const getServerSideProps = withAuthAndSubscriptionData();

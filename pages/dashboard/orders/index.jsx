@@ -41,13 +41,24 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useRouter } from "next/router";
 import { withAuth } from "@/lib/withAuth";
+import { withAuthAndSubscriptionData } from "@/lib/withSubscription";
 import AreYouSureModal from "@/components/dashboardComponents/areYouSure";
+import SubscriptionRequired from "@/components/dashboardComponents/subscriptionRequired";
 import { BsPeople } from "react-icons/bs";
 import OrderPage from "../../../components/dashboardComponents/orderPage";
 import { toast } from "sonner";
 
-export default function OrdersPage({ store, hasStore }) {
+export default function OrdersPage({ store, hasStore, hasActiveSubscription }) {
   const router = useRouter();
+
+  // If subscription is not active, show overlay
+  if (!hasActiveSubscription) {
+    return (
+      <DashboardLayout>
+        <SubscriptionRequired feature="Order management" />
+      </DashboardLayout>
+    );
+  }
 
   // UI + state
   const [query, setQuery] = useState("");
@@ -448,4 +459,4 @@ export default function OrdersPage({ store, hasStore }) {
   );
 }
 
-export const getServerSideProps = withAuth();
+export const getServerSideProps = withAuthAndSubscriptionData();

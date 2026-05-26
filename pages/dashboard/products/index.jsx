@@ -46,18 +46,29 @@ import {
 import { useRouter } from "next/router";
 import { useStore } from "@/store";
 import { withAuth } from "../../../lib/withAuth";
+import { withAuthAndSubscriptionData } from "../../../lib/withSubscription";
 import { openProductModal } from "../../../components/dashboardComponents/productModal";
 import AreYouSureModal from "../../../components/dashboardComponents/areYouSure";
+import SubscriptionRequired from "../../../components/dashboardComponents/subscriptionRequired";
 import { toast } from "sonner";
 import { useUser } from "../../../hooks/useUser";
 import { useSupabaseClient } from "@supabase/auth-helpers-react";
 
 
-export default function ProductsPage({ store, hasStore }) {
+export default function ProductsPage({ store, hasStore, hasActiveSubscription }) {
   const setStore = useStore((s) => s.setStore);
   const router = useRouter();
   const [addingCat, setAddingCat] = useState(false)
   const {user} = useUser()
+
+  // If subscription is not active, show overlay
+  if (!hasActiveSubscription) {
+    return (
+      <DashboardLayout>
+        <SubscriptionRequired feature="Product management" />
+      </DashboardLayout>
+    );
+  }
 
   // UI state
   const [query, setQuery] = useState("");
@@ -655,7 +666,7 @@ async function confirmDelete() {
   );
 }
 
-export const getServerSideProps = withAuth();
+export const getServerSideProps = withAuthAndSubscriptionData();
 
 
 

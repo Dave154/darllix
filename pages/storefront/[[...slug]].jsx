@@ -11,7 +11,7 @@ import Global404 from "../../components/errors/global404";
 import StoreFront404 from "../../components/errors/storefront404";
 import { Toaster } from "@/components/ui/sonner";
 
-export default function StorefrontDynamic({ store, slug }) {
+export default function StorefrontDynamic({ store, slug, isStoreInactive }) {
 
   const [pathname, setPath] = useState("");
   const router = useRouter();
@@ -75,12 +75,31 @@ export default function StorefrontDynamic({ store, slug }) {
         position="top-center"
       />
 
+      {isStoreInactive && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[9999] flex-col gap-4">
+          <div className="bg-white rounded-2xl p-8 max-w-md text-center shadow-2xl">
+            <h2 className="text-3xl font-black text-gray-900 mb-2">Store Inactive</h2>
+            <p className="text-gray-600 mb-6">
+              This store's subscription has expired. Please contact the store owner to reactivate it.
+            </p>
+            <button
+              onClick={() => window.history.back()}
+              className="px-6 py-3 bg-gray-900 text-white rounded-lg font-bold hover:bg-black transition-colors"
+            >
+              Go Back
+            </button>
+          </div>
+        </div>
+      )}
+
       {content}
     </ main>
   );
 }
 
 import { getSupabaseServer } from "../../lib/supabaseClient";
+import { getStoreSubscription } from "../../lib/withSubscription";
+import { getSubscriptionStatus } from "../../lib/subscriptionUtils";
 
 export async function getServerSideProps({ params, req, res }) {
   const slug = params.slug
@@ -123,10 +142,30 @@ export async function getServerSideProps({ params, req, res }) {
     return { notFound: true };
   }
 
+  // Check if store has active subscription
+  let isStoreInactive = false;
+  if (store) {
+    try {
+      const supabaseWithAuth = getSupabaseServer({ req, res });
+      const subscription = await getStoreSubscription(supabaseWithAuth, store.id);
+      const subStatus = getSubscriptionStatus(subscription);
+      
+      // If no active subscription, mark store as inactive
+      if (!subStatus.isActive) {
+        isStoreInactive = true;
+      }
+    } catch (error) {
+      console.error('Error checking subscription:', error);
+      // On error, show as inactive (safer approach)
+      isStoreInactive = true;
+    }
+  }
+
   return {
     props: {
       store,
       slug: params.slug || [],
+      isStoreInactive,
     },
   };
 }

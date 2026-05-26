@@ -41,6 +41,8 @@ export default function MarketplacePost({ post, currentUserId, onDeleteCallback,
 
   const isOwner = currentUserId && post?.vendorId && currentUserId === post.vendorId;
 
+  console.log(post);
+
   useEffect(() => {
     setMounted(true);
   }, []);
@@ -324,7 +326,7 @@ export default function MarketplacePost({ post, currentUserId, onDeleteCallback,
   return (
     <div 
       ref={containerRef}
-      className="relative w-full h-full snap-start bg-black overflow-hidden flex justify-center items-center group"
+      className={`relative  h-full ${isPublic ? "md:h-[70vh] md:aspect-[9/16]" : "h-full"} snap-start bg-black overflow-hidden flex justify-center items-center group`}
       onDoubleClick={handleDoubleTap}
       onClick={post?.isVideo ? togglePlay : undefined}
     >
@@ -377,41 +379,41 @@ export default function MarketplacePost({ post, currentUserId, onDeleteCallback,
         )}
       </AnimatePresence>
 
-      <div className="absolute bottom-24 left-4 right-16 z-10 flex flex-col gap-2 pointer-events-auto pr-2">
+      <div className="absolute md:bottom-6 bottom-32 left-4 right-16 z-10 flex flex-col gap-2 pointer-events-auto pr-2">
         <div className="flex items-center gap-3 mb-1">
           <div className="w-9 h-9 rounded-full bg-color1 border border-white/20 flex items-center justify-center text-white font-bold shadow-lg flex-shrink-0">
             {post?.vendorName?.charAt(0) || "V"}
           </div>
           <div className="flex flex-col">
             <div className="flex items-center gap-2">
-              <p className="text-white font-bold text-[15px] drop-shadow-md leading-none">
+              <p className={`text-white font-bold ${isPublic ? 'md:text-[10px]' : 'text-[15px]'} drop-shadow-md leading-none`}>
                 {post?.vendorName || "Vendor Name"}
               </p>
               {post?.isPromoted && (
-                <span className="text-white/90 text-[10px] px-2 py-0.5 rounded-full bg-white/20 backdrop-blur-md border border-white/20 leading-none">
+                <span className={`text-white/90 ${isPublic ? 'md:text-[8px]' : 'text-[10px]'} px-2 py-0.5 rounded-full bg-white/20 backdrop-blur-md border border-white/20 leading-none`}>
                   Sponsored
                 </span>
               )}
             </div>
             {post?.vendorSlug && (
-              <p className="text-white/80 text-xs font-medium drop-shadow-md mt-1 leading-none">
+              <p className={`text-white/80 ${isPublic ? 'md:text-[8px]' : 'text-[10px]'} font-medium drop-shadow-md mt-1 leading-none`}>
                 @{post.vendorSlug}
               </p>
             )}
           </div>
         </div>
 
-        <h2 className="text-white text-xl font-bold leading-tight drop-shadow-lg mt-1">
+        <h2 className={`text-white ${isPublic ? 'md:text-sm' : 'text-lg'} font-bold leading-tight drop-shadow-lg mt-1`}>
           {displayData.title || "Premium Product Title"}
         </h2>
         
-        <p className="text-color2 text-lg font-black drop-shadow-md">
+        <p className={`text-color2 ${isPublic ? 'md:text-sm' : 'text-md'} font-black drop-shadow-md`}>
           ₦{displayData.price?.toLocaleString() || "0"}
         </p>
 
         <div className="mt-1">
           <p 
-            className={`text-white/90 text-sm drop-shadow-md cursor-pointer transition-all duration-300 ${!isExpanded ? 'line-clamp-2' : 'whitespace-pre-wrap pb-2 max-h-[25vh] overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] overscroll-contain'}`}
+            className={`text-white/90 ${isPublic ? 'md:text-[10px]' : 'text-base'} drop-shadow-md cursor-pointer transition-all duration-300 ${!isExpanded ? 'line-clamp-2' : 'whitespace-pre-wrap pb-2 max-h-[25vh] overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] overscroll-contain'}`}
             onClick={(e) => {
               if (displayData.description?.length > 80) {
                 e.stopPropagation();
@@ -424,7 +426,7 @@ export default function MarketplacePost({ post, currentUserId, onDeleteCallback,
           {displayData.description?.length > 80 && (
             <button 
               onClick={(e) => { e.stopPropagation(); setIsExpanded(!isExpanded); }}
-              className="text-white font-bold text-xs underline drop-shadow-md mt-0.5"
+              className={`text-white font-bold ${isPublic ? 'md:text-xs' : 'text-sm'} underline drop-shadow-md mt-0.5`}
             >
               {isExpanded ? "Show less" : "Read more"}
             </button>
@@ -432,15 +434,15 @@ export default function MarketplacePost({ post, currentUserId, onDeleteCallback,
         </div>
       </div>
 
-      <div className="absolute bottom-28 right-4 z-10 flex flex-col items-center gap-6 pointer-events-auto">
+      <div className="absolute md:bottom-6 bottom-32 right-4 z-10 flex flex-col items-center gap-6 pointer-events-auto">
         <div className="flex flex-col items-center gap-1">
           <motion.button 
             whileTap={{ scale: 0.8 }}
             onClick={handleLike}
             disabled={isLikeLoading}
-            className="w-12 h-12 rounded-full bg-black/30 backdrop-blur-md border border-white/20 flex items-center justify-center shadow-xl transition-colors disabled:opacity-70"
+            className={`${isPublic ? 'md:w-8 md:h-8' : 'w-12 h-12'} w-12 h-12 rounded-full bg-black/30 backdrop-blur-md border border-white/20 flex items-center justify-center shadow-xl transition-colors disabled:opacity-70`}
           >
-            <Heart className={`w-6 h-6 transition-colors ${isLiked ? 'text-red-500 fill-red-500' : 'text-white'}`} />
+            <Heart className={` w-6 h-6  ${isPublic ? 'md:w-4 md:h-4' : "" } transition-colors ${isLiked ? 'text-red-500 fill-red-500' : 'text-white'}`} />
           </motion.button>
           <span className="text-white text-xs font-semibold drop-shadow-md">{likesCount}</span>
         </div>
@@ -449,9 +451,9 @@ export default function MarketplacePost({ post, currentUserId, onDeleteCallback,
           <motion.button 
             whileTap={{ scale: 0.8 }} 
             onClick={handleShare}
-            className="w-12 h-12 rounded-full bg-black/30 backdrop-blur-md border border-white/20 flex items-center justify-center shadow-xl"
+            className={`${isPublic ? 'md:w-8 md:h-8' : 'w-12 h-12'} w-12 h-12 rounded-full bg-black/30 backdrop-blur-md border border-white/20 flex items-center justify-center shadow-xl`}
           >
-            <Share2 className="w-6 h-6 text-white" />
+            <Share2 className={`w-6 h-6  ${isPublic ? 'md:w-4 md:h-4' : "" } text-white`} />
           </motion.button>
           <span className="text-white text-xs font-semibold drop-shadow-md">Share</span>
         </div>
@@ -460,9 +462,9 @@ export default function MarketplacePost({ post, currentUserId, onDeleteCallback,
           <motion.button 
             whileTap={{ scale: 0.8 }} 
             onClick={handleStoreClick}
-            className="w-12 h-12 rounded-full bg-color1/90 backdrop-blur-md border border-color1/50 flex items-center justify-center shadow-[0_0_15px_rgba(74,33,239,0.5)]"
+            className={`${isPublic ? 'md:w-8 md:h-8' : 'w-12 h-12'} w-12 h-12 rounded-full bg-color1/90 backdrop-blur-md border border-color1/50 flex items-center justify-center shadow-[0_0_15px_rgba(74,33,239,0.5)]`}
           >
-            <Store className="w-5 h-5 text-white" />
+            <Store className={`w-5 h-5  ${isPublic ? 'md:w-4 md:h-4' : "" } text-white`} />
           </motion.button>
           <span className="text-white text-xs font-semibold drop-shadow-md">Store</span>
         </div>
@@ -475,7 +477,7 @@ export default function MarketplacePost({ post, currentUserId, onDeleteCallback,
           }}
           className="mt-2 p-2"
         >
-          <MoreHorizontal className="w-6 h-6 text-white/90 drop-shadow-md" />
+          <MoreHorizontal className={`w-6 h-6  ${isPublic ? 'md:w-4 md:h-4' : "" } text-white/90 drop-shadow-md`} />
         </motion.button>
       </div>
 
@@ -491,7 +493,7 @@ export default function MarketplacePost({ post, currentUserId, onDeleteCallback,
               <motion.div
                 initial={{ y: "100%" }} animate={{ y: 0 }} exit={{ y: "100%" }}
                 transition={{ type: "spring", damping: 25, stiffness: 300 }}
-                className="fixed bottom-0 left-0 right-0 bg-white rounded-t-3xl z-[999999] flex flex-col overflow-hidden pb-[calc(env(safe-area-inset-bottom)+2rem)]"
+                className="max-w-2xl mx-auto fixed bottom-0 left-0 right-0 bg-white rounded-t-3xl z-[999999] flex flex-col overflow-hidden pb-[calc(env(safe-area-inset-bottom)+2rem)] "
                 onClick={(e) => e.stopPropagation()}
               >
                 <div className="w-full flex items-center justify-between p-4 border-b border-gray-100 mt-2">

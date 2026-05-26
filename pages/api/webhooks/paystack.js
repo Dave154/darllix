@@ -1,6 +1,6 @@
 import crypto from 'crypto';
 import { createClient } from '@supabase/supabase-js';
-import { handlePostPromotion, handleProductOrder } from '../../../lib/paymentHandlers';
+import { handlePostPromotion, handleProductOrder, handleSubscriptionPayment } from '../../../lib/paymentHandlers';
 
 
 export const config = {
@@ -59,6 +59,9 @@ export default async function handler(req, res) {
           break;
         case 'product_order':
           await handleProductOrder(supabaseAdmin, metadata);
+          break;
+        case 'subscription':
+          await handleSubscriptionPayment(supabaseAdmin, metadata);
           break;
         default:
           console.log(`Unhandled payment type: ${metadata.type}`);

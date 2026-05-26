@@ -1,5 +1,6 @@
 // pages/api/orders/index.js
 import { getSupabaseServer, supabaseAdmin } from "@/lib/supabaseClient";
+import { hasActiveSubscription } from "@/lib/withSubscription";
 
 
 export default async function handler(req, res) {
@@ -17,6 +18,15 @@ export default async function handler(req, res) {
       const { order } = req.body;
       if (!order || !order.store_id || !Array.isArray(order.items) || order.items.length === 0) {
         return res.status(400).json({ error: "Invalid order payload" });
+      }
+
+      // CHECK: Store must have active subscription
+      const hasSubscription = await hasActiveSubscription(admin, order.store_id);
+      if (!hasSubscription) {
+        return res.status(403).json({
+          error: "Store subscription expired",
+          message: "This store does not have an active subscription. Orders cannot be processed.",
+        });
       }
 
       // normalize items

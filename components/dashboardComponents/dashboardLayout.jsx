@@ -31,6 +31,7 @@ import { withAuth } from "../../lib/withAuth";
 import AreYouSureModal from "./areYouSure";
 import Notification from "./bannerNotification";
 import SupportButton from "./supportButton";
+import SubscriptionBanner from "./subscriptionBanner";
 
 const menuItems = [
   { title: "Dashboard", icon: Home, href: "/dashboard" },
@@ -50,6 +51,7 @@ export default function DashboardLayout({ children }) {
   const [withdrawing, setWithdrawing] = useState(false);
   const [requesting, setRequesting] = useState(false);
   const [pendingWithdrawal, setPendingWithdrawal] = useState([]);
+  const [subscription, setSubscription] = useState(null);
   const { user, profile } = useUser();
   const supabase = useSupabaseClient();
   const router = useRouter();
@@ -96,6 +98,25 @@ export default function DashboardLayout({ children }) {
   useEffect(() => {
     fetchPendingWithdrawals();
   }, [user]);
+
+  // Fetch subscription status
+  useEffect(() => {
+    if (!user?.id) return;
+
+    const fetchSubscription = async () => {
+      try {
+        const res = await fetch('/api/subscriptions/status');
+        const data = await res.json();
+        if (data.success && data.subscription) {
+          setSubscription(data.subscription);
+        }
+      } catch (error) {
+        console.error('Failed to fetch subscription:', error);
+      }
+    };
+
+    fetchSubscription();
+  }, [user?.id]);
 
   async function handleWithdraw() {
     if (!profile?.bank_code) {
@@ -260,8 +281,9 @@ export default function DashboardLayout({ children }) {
           {mobileOpen && <div className="fixed inset-0 bg-black/40 z-40 md:hidden" onClick={() => setMobileOpen(false)} />}
 
           <main className={`flex-1 overflow-y-auto ${isMarketplace ? 'p-0' : 'p-1 md:p-6 space-y-6'}`}>
-            {pendingWithdrawal.length > 0 && <Notification message={`Your request of ₦${pendingWithdrawal[0].amount.toLocaleString()} is pending and will be disbursed shortly`} />}
-            {!isMarketplace && <TrialBanner />}
+            {pendingWithdrawal.length > 0 && !isMarketplace && <Notification message={`Your request of ₦${pendingWithdrawal[0].amount.toLocaleString()} is pending and will be disbursed shortly`} />}
+            {/* {!isMarketplace && <TrialBanner />} */}
+            {!isMarketplace && subscription && <SubscriptionBanner subscription={subscription} />}
             {children}
           </main>
         </div>

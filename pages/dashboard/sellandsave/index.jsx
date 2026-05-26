@@ -7,7 +7,9 @@ import { Button } from "@/components/ui/button";
 import { ChevronLeft, ChevronRight, RefreshCcw } from "lucide-react";
 import DashboardLayout from "../../../components/dashboardComponents/dashboardLayout";
 import { toast } from "sonner";
+import SubscriptionRequired from "../../../components/dashboardComponents/subscriptionRequired";
 import { withAuth } from "../../../lib/withAuth";
+import { withAuthAndSubscriptionData } from "../../../lib/withSubscription";
 
 function TopBalanceCard({ balance, setBalance, onWithdraw, withdrawing, onRefresh }) {
   return (
@@ -155,7 +157,15 @@ function RecentActivities({ activities = [] }) {
   );
 }
 
-export default function SellSavePage({store}) {
+export default function SellSavePage({store, hasActiveSubscription}) {
+  // If subscription is not active, show overlay
+  if (!hasActiveSubscription) {
+    return (
+      <DashboardLayout>
+        <SubscriptionRequired feature="Sell & Save feature" />
+      </DashboardLayout>
+    );
+  }
   const [balance, setBalance] = useState(0.0);
   const [percentage, setPercentage] = useState(16.0);
   const [source, setSource] = useState("Darllix Wallet");
@@ -287,4 +297,4 @@ export default function SellSavePage({store}) {
   );
 }
 
-export const getServerSideProps = withAuth();
+export const getServerSideProps = withAuthAndSubscriptionData();

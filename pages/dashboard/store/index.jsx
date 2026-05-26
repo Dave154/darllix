@@ -22,6 +22,7 @@ import DashboardLayout from "../../../components/dashboardComponents/dashboardLa
 import SubdomainChecker from "../../../components/dashboardComponents/subdomainChecker";
 import Loader from "../../../components/dashboardComponents/loader";
 import { withAuth } from "../../../lib/withAuth";
+import { withAuthAndSubscription } from "../../../lib/withSubscription";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 

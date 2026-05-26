@@ -326,11 +326,9 @@ export default function DarllixLogin() {
           <div className="relative z-10 flex h-full flex-col justify-end p-10">
             <blockquote className="max-w-md text-white">
               <p className="text-base opacity-90">
-                "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt."
+                "Darllix is the commerce growth platform powering the next generation of small businesses across Africa, helping everyday entrepreneurs launch e-commerce stores, receive payments, grow visibility, unlock saving tools, credits, and scale beyond the limits of physical stores"
               </p>
-              <footer className="mt-3 text-sm opacity-70">
-                Daniel Oseni, Founder .....
-              </footer>
+              
             </blockquote>
           </div>
         </div>

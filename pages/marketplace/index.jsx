@@ -54,6 +54,7 @@ export default function PublicMarketplace() {
           isPublic={true}
           user={user}
           currentPath="/marketplace"
+          layout='public'
         />
       </div>
     </>

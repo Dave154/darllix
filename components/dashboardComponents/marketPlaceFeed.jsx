@@ -31,7 +31,7 @@ export default function MarketplaceFeed({upload, isPublic = false, currentPath =
   const [authReturnUrl, setAuthReturnUrl] = useState('/marketplace');
   
   const [posts, setPosts] = useState([]);
-  const [trendingStories, setTrendingStories] = useState([]);
+  const [trendingStories, setTrendingStories] = useState([{id:"jdjdj", media_url:'https://darllix-assets.s3.af-south-1.amazonaws.com/sample-story.jpg', media_type:'image', vendor_name:'Sample Store'}]);
   const [activeStoryIndex, setActiveStoryIndex] = useState(null);
   
   const [page, setPage] = useState(0);
@@ -101,7 +101,7 @@ export default function MarketplaceFeed({upload, isPublic = false, currentPath =
       const res = await fetch('/api/marketplace/trending');
       if (res.ok) {
         const data = await res.json();
-        setTrendingStories(data.stories || []);
+        // setTrendingStories(data.stories || []);
       }
     } catch (error) {
       console.error("Failed to fetch trending stories", error);
@@ -406,7 +406,7 @@ export default function MarketplaceFeed({upload, isPublic = false, currentPath =
         )}
       </AnimatePresence>
       <div className="md:hidden relative flex flex-col w-full h-[calc(100dvh)] overflow-hidden bg-black">
-        
+
         {currentSearch ? (
           <div className="w-full shrink-0 z-30 px-4 py-3 bg-white/10 backdrop-blur-md shadow-sm flex items-center pt-safe border-b border-white/10">
             <div 
@@ -554,23 +554,31 @@ export default function MarketplaceFeed({upload, isPublic = false, currentPath =
       </div>
       
 
-      <div ref={desktopScrollRef} className="hidden md:block w-full h-full relative overflow-y-auto scrollbar-thin">
-        {layout === 'instagram' ? (
-          // Instagram-like layout for /marketplace
-          <div className="w-full max-w-2xl mx-auto">
+      <div ref={desktopScrollRef} className="hidden md:block w-full h-full relative overflow-y-auto snap-y snap-mandatory scrollbar-thin bg-[radial-gradient(1200px_700px_at_80%_-10%,#6fd8ac_0%,transparent_60%),radial-gradient(1200px_700px_at_20%_110%,#4a21ef_0%,#fff_60%)]">
+        
+        {isPublic ? (<>
+          <div className="sticky max-w-4xl mx-auto top-0 z-30 backdrop-blur-sm  px-4 py-3 flex items-center justify-between">
+              <div className="flex-1">
+                <img src="/darllix_logo.png" alt="Darllix" className="h-8 object-contain" />
+              </div>
+              <button onClick={() => setIsSearchOpen(true)} className="p-2 hover:bg-gray-100 rounded-full transition-colors text-gray-900">
+                <Search className="w-5 h-5" />
+              </button>
+            </div>      
+          <div className="w-full max-w-2xl mx-auto">     
             {/* Stories Section */}
             {!currentSearch && trendingStories.length > 0 && (
-              <div className="sticky top-0 z-20 bg-white border-b border-gray-200 py-4">
+              <div className="sticky top-14 z-20 backdrop-blur-sm  py-4">
                 <div className="px-4">
                   <div className="flex gap-4 overflow-x-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
                     {trendingStories.map((story, index) => (
                       <motion.div
                         key={story.id}
-                        whileHover={{ scale: 1.05 }}
+                        whileHover={{ scale: 1.01 }}
                         onClick={() => setActiveStoryIndex(index)}
                         className="flex flex-col items-center gap-2 cursor-pointer shrink-0"
                       >
-                        <div className="w-16 h-16 rounded-full p-[2px] bg-gradient-to-tr from-color1 to-color2">
+                        <div className="w-8 h-8 rounded-full p-[2px] bg-gradient-to-tr from-color1 to-color2">
                           <div className="w-full h-full rounded-full overflow-hidden border-2 border-white bg-gray-100 flex items-center justify-center">
                             {story.vendor_avatar ? (
                               <img src={story.vendor_avatar} alt={story.vendor_name} className="w-full h-full object-cover" />
@@ -590,7 +598,9 @@ export default function MarketplaceFeed({upload, isPublic = false, currentPath =
             )}
 
             {/* Feed Section */}
-            <div className="py-6">
+            <div 
+            className="py-6">
+              
               {posts.length === 0 && !loading && currentSearch ? (
                 <div className="w-full flex flex-col items-center justify-center p-16 text-center">
                   <div className="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mb-6">
@@ -600,16 +610,16 @@ export default function MarketplaceFeed({upload, isPublic = false, currentPath =
                   <p className="text-gray-500 max-w-md">We couldn't find any products matching "{currentSearch}". Try a different keyword or category.</p>
                 </div>
               ) : (
-                <div className="space-y-6 px-4">
+                <div className="space-y-6 px-4 flex flex-col items-center justify-center">
                   {posts.map((post, index) => (
                     <motion.div
                       key={post.id}
                       ref={index === posts.length - 1 ? desktopObserverRef : null}
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
-                      className="bg-white rounded-lg border border-gray-200 overflow-hidden shadow-sm hover:shadow-md transition-shadow"
+                      className="bg-white rounded-lg border border-gray-200 overflow-hidden shadow-sm hover:shadow-md transition-shadow w-fit snap-center"
                     >
-                      <MarketplacePost
+                     <MarketplacePost
                         post={post}
                         currentUserId={user?.id}
                         onDeleteCallback={handlePostDeleted}
@@ -636,6 +646,7 @@ export default function MarketplaceFeed({upload, isPublic = false, currentPath =
               )}
             </div>
           </div>
+          </>
         ) : (
           // Grid layout for /dashboard/marketplace
           <div className="p-8">
@@ -699,7 +710,7 @@ export default function MarketplaceFeed({upload, isPublic = false, currentPath =
                       onClick={() => setActiveStoryIndex(index)}
                       className="flex flex-col items-center gap-2 cursor-pointer shrink-0"
                     >
-                      <div className="w-20 h-20 rounded-full p-[2px] bg-gradient-to-tr from-color1 to-color2 shadow-md">
+                      <div className="w-20 h-20 rounded-full p-[2px]  shadow-md">
                         <div className="w-full h-full rounded-full overflow-hidden border-4 border-white bg-gray-100 flex items-center justify-center">
                           {story.vendor_avatar ? (
                             <img src={story.vendor_avatar} alt={story.vendor_name} className="w-full h-full object-cover" />
