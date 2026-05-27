@@ -6,7 +6,7 @@ export default function SubscriptionRequired({ feature = 'This feature' }) {
   const router = useRouter();
 
   return (
-    <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-[9999] pointer-events-none">
+    <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-[999] pointer-events-none">
       <motion.div
         initial={{ scale: 0.8, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}

@@ -379,7 +379,7 @@ export default function MarketplacePost({ post, currentUserId, onDeleteCallback,
         )}
       </AnimatePresence>
 
-      <div className="absolute md:bottom-6 bottom-32 left-4 right-16 z-10 flex flex-col gap-2 pointer-events-auto pr-2">
+      <div className={`absolute md:bottom-6 ${isPublic ?" bottom-6": "bottom-32" } left-4 right-16 z-10 flex flex-col gap-2 pointer-events-auto pr-2`}>
         <div className="flex items-center gap-3 mb-1">
           <div className="w-9 h-9 rounded-full bg-color1 border border-white/20 flex items-center justify-center text-white font-bold shadow-lg flex-shrink-0">
             {post?.vendorName?.charAt(0) || "V"}
@@ -434,15 +434,15 @@ export default function MarketplacePost({ post, currentUserId, onDeleteCallback,
         </div>
       </div>
 
-      <div className="absolute md:bottom-6 bottom-32 right-4 z-10 flex flex-col items-center gap-6 pointer-events-auto">
+      <div className={`absolute md:bottom-6 ${isPublic ? "bottom-6" :"bottom-32"} right-4 z-10 flex flex-col items-center gap-3 pointer-events-auto`}>
         <div className="flex flex-col items-center gap-1">
           <motion.button 
             whileTap={{ scale: 0.8 }}
             onClick={handleLike}
             disabled={isLikeLoading}
-            className={`${isPublic ? 'md:w-8 md:h-8' : 'w-12 h-12'} w-12 h-12 rounded-full bg-black/30 backdrop-blur-md border border-white/20 flex items-center justify-center shadow-xl transition-colors disabled:opacity-70`}
+            className={`${isPublic ? 'md:w-6 md:h-6' : 'w-12 h-12'} w-12 h-12 rounded-full bg-black/30 backdrop-blur-md border border-white/20 flex items-center justify-center shadow-xl transition-colors disabled:opacity-70`}
           >
-            <Heart className={` w-6 h-6  ${isPublic ? 'md:w-4 md:h-4' : "" } transition-colors ${isLiked ? 'text-red-500 fill-red-500' : 'text-white'}`} />
+            <Heart className={` w-6 h-6  ${isPublic ? 'md:w-3 md:h-3' : "" } transition-colors ${isLiked ? 'text-red-500 fill-red-500' : 'text-white'}`} />
           </motion.button>
           <span className="text-white text-xs font-semibold drop-shadow-md">{likesCount}</span>
         </div>
@@ -451,9 +451,9 @@ export default function MarketplacePost({ post, currentUserId, onDeleteCallback,
           <motion.button 
             whileTap={{ scale: 0.8 }} 
             onClick={handleShare}
-            className={`${isPublic ? 'md:w-8 md:h-8' : 'w-12 h-12'} w-12 h-12 rounded-full bg-black/30 backdrop-blur-md border border-white/20 flex items-center justify-center shadow-xl`}
+            className={`${isPublic ? 'md:w-6 md:h-6' : 'w-12 h-12'} w-12 h-12 rounded-full bg-black/30 backdrop-blur-md border border-white/20 flex items-center justify-center shadow-xl`}
           >
-            <Share2 className={`w-6 h-6  ${isPublic ? 'md:w-4 md:h-4' : "" } text-white`} />
+            <Share2 className={`w-6 h-6  ${isPublic ? 'md:w-3 md:h-3' : "" } text-white`} />
           </motion.button>
           <span className="text-white text-xs font-semibold drop-shadow-md">Share</span>
         </div>
@@ -462,9 +462,9 @@ export default function MarketplacePost({ post, currentUserId, onDeleteCallback,
           <motion.button 
             whileTap={{ scale: 0.8 }} 
             onClick={handleStoreClick}
-            className={`${isPublic ? 'md:w-8 md:h-8' : 'w-12 h-12'} w-12 h-12 rounded-full bg-color1/90 backdrop-blur-md border border-color1/50 flex items-center justify-center shadow-[0_0_15px_rgba(74,33,239,0.5)]`}
+            className={`${isPublic ? 'md:w-6 md:h-6' : 'w-12 h-12'} w-12 h-12 rounded-full bg-color1/90 backdrop-blur-md border border-color1/50 flex items-center justify-center shadow-[0_0_15px_rgba(74,33,239,0.5)]`}
           >
-            <Store className={`w-5 h-5  ${isPublic ? 'md:w-4 md:h-4' : "" } text-white`} />
+            <Store className={`w-5 h-5  ${isPublic ? 'md:w-3 md:h-3' : "" } text-white`} />
           </motion.button>
           <span className="text-white text-xs font-semibold drop-shadow-md">Store</span>
         </div>
@@ -475,7 +475,7 @@ export default function MarketplacePost({ post, currentUserId, onDeleteCallback,
             e.stopPropagation();
             setShowMoreMenu(true);
           }}
-          className="mt-2 p-2"
+          className="p-2"
         >
           <MoreHorizontal className={`w-6 h-6  ${isPublic ? 'md:w-4 md:h-4' : "" } text-white/90 drop-shadow-md`} />
         </motion.button>
